@@ -39,7 +39,8 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
-
+      env:
+        SPRING_PROFILES_ACTIVE: test
     # 빌드 성공 메시지
     - name: Notify Slack on Success
       if: success()
