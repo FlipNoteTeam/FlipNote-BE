@@ -40,6 +40,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             export IMAGE_TAG=${{ steps.meta.outputs.version }}
             bash ~/deploy/deploy-flipnote.sh
