@@ -27,7 +27,7 @@ public class UserService {
 			.name(req.name())
 			.nickname(req.nickname())
 			.smsAgree(req.smsAgree())
-			.phone(req.phone())
+			.phone(req.getCleanedPhone())
 			.profileImageUrl(req.profileImageUrl())
 			.build();
 		userRepository.save(user);

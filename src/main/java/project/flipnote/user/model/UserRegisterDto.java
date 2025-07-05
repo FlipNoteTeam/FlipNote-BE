@@ -28,6 +28,10 @@ public class UserRegisterDto {
 
 		String profileImageUrl
 	) {
+
+		public String getCleanedPhone() {
+			return phone == null ? null : phone.replaceAll("-", "");
+		}
 	}
 
 	public record Response(
