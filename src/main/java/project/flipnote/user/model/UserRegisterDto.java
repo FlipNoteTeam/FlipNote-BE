@@ -3,6 +3,7 @@ package project.flipnote.user.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import project.flipnote.common.annotation.ValidPassword;
 
 public class UserRegisterDto {
 
@@ -10,7 +11,7 @@ public class UserRegisterDto {
 		@Email @NotEmpty
 		String email,
 
-		@NotEmpty
+		@ValidPassword
 		String password,
 
 		@NotEmpty
