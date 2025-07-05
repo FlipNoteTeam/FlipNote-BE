@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import project.flipnote.common.annotation.ValidPassword;
+import project.flipnote.common.annotation.ValidPhone;
 
 public class UserRegisterDto {
 
@@ -23,7 +24,7 @@ public class UserRegisterDto {
 		@NotNull
 		Boolean smsAgree,
 
-		@NotEmpty
+		@ValidPhone
 		String phone,
 
 		String profileImageUrl
