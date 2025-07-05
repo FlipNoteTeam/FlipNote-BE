@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.user.model.UserRegisterDto;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
+import project.flipnote.user.model.UserRegisterDto;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
