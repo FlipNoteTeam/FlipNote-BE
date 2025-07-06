@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationDto;
@@ -52,6 +53,12 @@ class AuthServiceTest {
 
 			verify(emailVerificationRedisRepository, times(1)).saveCode(any(String.class), any(String.class));
 			verify(eventPublisher, times(1)).publishEvent(any(EmailVerificationSendEvent.class));
+
+			int codeLength = VerificationConstants.CODE_LENGTH;
+			verify(emailVerificationRedisRepository).saveCode(
+				eq(req.email()),
+				argThat(code -> code.length() == codeLength && code.matches("\\d{%s}".formatted(codeLength)))
+			);
 		}
 
 		@DisplayName("가입된 이메일인 경우 예외 발생")
