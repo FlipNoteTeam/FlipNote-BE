@@ -1,5 +1,7 @@
 package project.flipnote.user.service;
 
+import java.util.Objects;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +52,12 @@ public class UserService {
 	}
 
 	private void validatePhoneDuplicate(String phone) {
+		if (Objects.isNull(phone)) {
+			return;
+		}
+
 		if (userRepository.existsByPhone(phone)) {
-			throw  new BizException(UserErrorCode.DUPLICATE_PHONE);
+			throw new BizException(UserErrorCode.DUPLICATE_PHONE);
 		}
 	}
 }
