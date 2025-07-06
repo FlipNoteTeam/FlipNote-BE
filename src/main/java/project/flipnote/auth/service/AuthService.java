@@ -54,10 +54,6 @@ public class AuthService {
 		validateEmailIsAvailable(email);
 		validateVerificationCodeNotExists(email);
 
-		if (emailVerificationRedisRepository.existCode(email)) {
-			throw new BizException(AuthErrorCode.ALREADY_ISSUED_VERIFICATION_CODE);
-		}
-
 		final String code = generateVerificationCode(VerificationConstants.CODE_LENGTH);
 
 		emailVerificationRedisRepository.saveCode(email, code);
