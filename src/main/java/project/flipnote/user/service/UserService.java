@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.service.AuthService;
@@ -23,9 +24,10 @@ public class UserService {
 
 	public UserRegisterDto.Response register(UserRegisterDto.Request req) {
 		String email = req.email();
+		String phone = req.getCleanedPhone();
 
 		validateEmailDuplicate(email);
-		validatePhoneDuplicate(req.phone());
+		validatePhoneDuplicate(phone);
 
 		authService.validateEmail(email);
 
@@ -35,7 +37,7 @@ public class UserService {
 			.name(req.name())
 			.nickname(req.nickname())
 			.smsAgree(req.smsAgree())
-			.phone(req.getCleanedPhone())
+			.phone(phone)
 			.profileImageUrl(req.profileImageUrl())
 			.build();
 		User savedUser = userRepository.save(user);
