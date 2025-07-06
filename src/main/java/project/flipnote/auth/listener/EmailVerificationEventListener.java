@@ -23,6 +23,7 @@ public class EmailVerificationEventListener {
 
 	@Async
 	@Retryable(
+		maxAttempts = 3,
 		retryFor = { EmailSendException.class },
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
