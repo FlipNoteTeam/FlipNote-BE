@@ -15,6 +15,7 @@ import project.flipnote.user.model.UserRegisterDto;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class UserService {
 
@@ -22,6 +23,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final AuthService authService;
 
+	@Transactional
 	public UserRegisterDto.Response register(UserRegisterDto.Request req) {
 		String email = req.email();
 		String phone = req.getCleanedPhone();
