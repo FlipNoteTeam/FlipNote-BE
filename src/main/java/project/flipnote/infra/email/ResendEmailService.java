@@ -40,7 +40,7 @@ public class ResendEmailService implements EmailService {
 		try {
 			resend.emails().send(params);
 		} catch (ResendException e) {
-			log.error("이메일 인증번호 발송 실패: to={}, code={}, ttl={}분", to, code, ttl, e);
+			log.error("이메일 인증번호 발송 실패: to={}, ttl={}분", to, ttl, e);
 			throw new EmailSendException(e);
 		}
 	}
