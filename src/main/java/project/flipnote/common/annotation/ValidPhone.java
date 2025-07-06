@@ -6,10 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import jakarta.validation.Constraint;
-import project.flipnote.common.validator.PasswordConstraintValidator;
+import jakarta.validation.Payload;
+import project.flipnote.common.validator.PhoneConstraintValidator;
 
-@Constraint(validatedBy = PasswordConstraintValidator.class)
+@Constraint(validatedBy = PhoneConstraintValidator.class)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidPhone {
+	String message() default "휴대전화 번호 형식이 올바르지 않습니다.";
+	Class<?>[] groups() default {};
+	Class<? extends Payload>[] payload() default {};
 }
