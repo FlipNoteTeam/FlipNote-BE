@@ -49,4 +49,4 @@ async:
 
 resend:
   api-key:
-  from-email: onboarding@resend.dev
+  from-email: FlipNote <no-reply@flipnote.site>
