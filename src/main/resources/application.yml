@@ -5,8 +5,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/flipnote?useSSL=false&allowPublicKeyRetrieval=true
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:root}
+    username:
+    password:
 
   jpa:
     open-in-view: false
@@ -20,6 +20,19 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+  data:
+    redis:
+      host: localhost
+      password:
+      port: 6379
+
 management:
   endpoints:
     web:
@@ -28,7 +41,15 @@ management:
           - health
 
 jwt:
-  secret: ${JWT_SECRET:55ca298dcfc216e215622e3f48a251abaa4e8bb973074f065ab170e311acc15811d01a2407290c3ac143648196306d4a6f666a4ed364d3df633e08eb184bb0aea0f2edde4fd2d7fa68ea95ddbc421ff532ce47bde775975911042d665bc22d88a9fa26a03bb4d25530b8cdeb1247d87c9e3efcd721e368b0566b00a43308a729}
+  secret:
   access-token-expiration: 1h
   refresh-token-expiration: 7d
 
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+
+resend:
+  api-key:
+  from-email: onboarding@resend.dev
