@@ -1,7 +1,7 @@
 package project.flipnote.user.model;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import project.flipnote.common.annotation.ValidPassword;
 import project.flipnote.common.annotation.ValidPhone;
@@ -9,16 +9,16 @@ import project.flipnote.common.annotation.ValidPhone;
 public class UserRegisterDto {
 
 	public record Request(
-		@Email @NotEmpty
+		@Email @NotBlank
 		String email,
 
 		@ValidPassword
 		String password,
 
-		@NotEmpty
+		@NotBlank
 		String name,
 
-		@NotEmpty
+		@NotBlank
 		String nickname,
 
 		@NotNull

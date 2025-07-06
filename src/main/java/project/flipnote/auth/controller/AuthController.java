@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.model.EmailVerificationConfirmDto;
 import project.flipnote.auth.model.EmailVerificationDto;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginDto;
@@ -45,6 +46,15 @@ public class AuthController {
 	@PostMapping("/email")
 	public ResponseEntity<Void> sendEmailVerificationCode(@Valid @RequestBody EmailVerificationDto.Request req) {
 		authService.sendEmailVerificationCode(req);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/email/confirm")
+	public ResponseEntity<Void> confirmEmailVerificationCode(
+		@Valid @RequestBody EmailVerificationConfirmDto.Request req
+	) {
+		authService.confirmEmailVerificationCode(req);
 
 		return ResponseEntity.ok().build();
 	}

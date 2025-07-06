@@ -1,6 +1,7 @@
 package project.flipnote.auth.service;
 
 import java.security.SecureRandom;
+import java.util.Objects;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.exception.AuthErrorCode;
+import project.flipnote.auth.model.EmailVerificationConfirmDto;
 import project.flipnote.auth.model.EmailVerificationDto;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginDto;
@@ -16,7 +18,6 @@ import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.event.EmailVerificationSendEvent;
-import project.flipnote.infra.email.EmailService;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.repository.UserRepository;
 
@@ -55,16 +56,29 @@ public class AuthService {
 		}
 
 		final String code = generateVerificationCode(VerificationConstants.CODE_LENGTH);
-		int ttl = VerificationConstants.CODE_TTL_MINUTES;
 
-		emailVerificationRedisRepository.saveCode(email, code, ttl);
+		emailVerificationRedisRepository.saveCode(email, code);
 
-		eventPublisher.publishEvent(new EmailVerificationSendEvent(email, code, ttl));
+		eventPublisher.publishEvent(new EmailVerificationSendEvent(email, code));
+	}
+
+	public void confirmEmailVerificationCode(EmailVerificationConfirmDto.Request req) {
+		String email = req.email();
+
+		String code = emailVerificationRedisRepository.findCode(email)
+			.orElseThrow(() -> new BizException(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE));
+
+		if (!Objects.equals(req.code(), code)) {
+			throw new BizException(AuthErrorCode.INVALID_VERIFICATION_CODE);
+		}
+
+		emailVerificationRedisRepository.deleteCode(email);
+		emailVerificationRedisRepository.markAsVerified(email);
 	}
 
 	private String generateVerificationCode(int length) {
-		int origin = (int) Math.pow(10, length - 1);
-		int bound = (int) Math.pow(10, length);
+		int origin = (int)Math.pow(10, length - 1);
+		int bound = (int)Math.pow(10, length);
 		return String.valueOf(random.nextInt(origin, bound));
 	}
 }
