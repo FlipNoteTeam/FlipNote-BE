@@ -36,9 +36,7 @@ public class AuthService {
 	public TokenPair login(UserLoginDto.Request req) {
 		User user = findByEmailOrThrow(req);
 
-		if (!passwordEncoder.matches(req.password(), user.getPassword())) {
-			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
-		}
+		validatePasswordMatch(req.password(), user.getPassword());
 
 		return jwtComponent.generateTokenPair(user.getEmail(), user.getId(), user.getRole().name());
 	}
@@ -46,6 +44,12 @@ public class AuthService {
 	private User findByEmailOrThrow(UserLoginDto.Request req) {
 		return userRepository.findByEmail(req.email())
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
+	}
+
+	private void validatePasswordMatch(String rawPassword, String encodedPassword) {
+		if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
+		}
 	}
 
 	public void sendEmailVerificationCode(EmailVerificationDto.Request req) {
@@ -76,15 +80,23 @@ public class AuthService {
 	public void confirmEmailVerificationCode(EmailVerificationConfirmDto.Request req) {
 		String email = req.email();
 
-		String code = emailVerificationRedisRepository.findCode(email)
-			.orElseThrow(() -> new BizException(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE));
+		String code = findVerificationCodeOrThrow(email);
 
-		if (!Objects.equals(req.code(), code)) {
-			throw new BizException(AuthErrorCode.INVALID_VERIFICATION_CODE);
-		}
+		validateVerificationCode(req.code(), code);
 
 		emailVerificationRedisRepository.deleteCode(email);
 		emailVerificationRedisRepository.markAsVerified(email);
+	}
+
+	private String findVerificationCodeOrThrow(String email) {
+		return emailVerificationRedisRepository.findCode(email)
+			.orElseThrow(() -> new BizException(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE));
+	}
+
+	private void validateVerificationCode(String inputCode, String savedCode) {
+		if (!Objects.equals(inputCode, savedCode)) {
+			throw new BizException(AuthErrorCode.INVALID_VERIFICATION_CODE);
+		}
 	}
 
 	public void validateEmail(String email) {
