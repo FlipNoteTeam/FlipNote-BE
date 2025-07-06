@@ -60,9 +60,9 @@ class UserServiceTest {
 	@Nested
 	class Register {
 
-		@DisplayName("회원가입 성공")
+		@DisplayName("성공")
 		@Test
-		void success_register() {
+		void success() {
 			UserRegisterDto.Request req = new UserRegisterDto.Request(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
@@ -80,9 +80,9 @@ class UserServiceTest {
 			verify(authService, times(1)).deleteVerifiedEmail(any(String.class));
 		}
 
-		@DisplayName("회원가입 성공 - 폰 번호가 null일 때")
+		@DisplayName("휴대전화 번호가 null일 때 성공")
 		@Test
-		void success_register_phoneIsNull() {
+		void success_ifPhoneIsNull() {
 			UserRegisterDto.Request req = new UserRegisterDto.Request(
 				"test@test.com", "testPass", "테스트", "테스트", false, null, null
 			);
@@ -101,7 +101,7 @@ class UserServiceTest {
 
 		@DisplayName("이메일 중복 시 예외 발생")
 		@Test
-		void fail_register_duplicateEmail() {
+		void fail_duplicateEmail() {
 			UserRegisterDto.Request req = new UserRegisterDto.Request(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
@@ -117,7 +117,7 @@ class UserServiceTest {
 
 		@DisplayName("전화번호 중복 시 예외 발생")
 		@Test
-		void fail_register_duplicatePhone() {
+		void fail_duplicatePhone() {
 			UserRegisterDto.Request req = new UserRegisterDto.Request(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
@@ -133,7 +133,7 @@ class UserServiceTest {
 
 		@DisplayName("이메일 인증이 안 된 경우 예외 발생")
 		@Test
-		void fail_register_unverifiedEmail() {
+		void fail_unverifiedEmail() {
 			UserRegisterDto.Request req = new UserRegisterDto.Request(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
