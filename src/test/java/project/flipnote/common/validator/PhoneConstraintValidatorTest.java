@@ -27,6 +27,12 @@ class PhoneConstraintValidatorTest {
 	}
 
 	@Test
+	@DisplayName("null은 true를 반환한다")
+	void validPhoneNull() {
+		assertThat(validator.isValid(null, context)).isTrue();
+	}
+
+	@Test
 	@DisplayName("01012345678 형식은 false를 반환한다")
 	void validPhoneWithoutHyphens() {
 		assertThat(validator.isValid("01012345678", context)).isFalse();
@@ -56,9 +62,8 @@ class PhoneConstraintValidatorTest {
 	}
 
 	@Test
-	@DisplayName("null 또는 빈 문자열은 false")
-	void nullOrEmpty() {
-		assertThat(validator.isValid(null, context)).isFalse();
+	@DisplayName("빈 문자열은 false")
+	void invalidPhoneEmpty() {
 		assertThat(validator.isValid("", context)).isFalse();
 		assertThat(validator.isValid("   ", context)).isFalse();
 	}
