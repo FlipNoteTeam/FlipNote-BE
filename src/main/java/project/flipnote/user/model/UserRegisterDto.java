@@ -9,6 +9,7 @@ import project.flipnote.common.annotation.ValidPhone;
 public class UserRegisterDto {
 
 	public record Request(
+
 		@Email @NotBlank
 		String email,
 

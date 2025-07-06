@@ -36,11 +36,11 @@ public class UserService {
 			.phone(req.getCleanedPhone())
 			.profileImageUrl(req.profileImageUrl())
 			.build();
-		userRepository.save(user);
+		User savedUser = userRepository.save(user);
 
 		authService.deleteVerifiedEmail(email);
 
-		return UserRegisterDto.Response.from(user.getId());
+		return UserRegisterDto.Response.from(savedUser.getId());
 	}
 
 	private void validateEmailDuplicate(String email) {

@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.VerificationConstants;
-import project.flipnote.common.exception.EmailSendException;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
+import project.flipnote.common.exception.EmailSendException;
 import project.flipnote.infra.email.EmailService;
 
 @Slf4j

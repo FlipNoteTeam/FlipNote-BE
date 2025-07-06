@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.constants.VerificationConstants;
+import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmDto;
 import project.flipnote.auth.model.EmailVerificationDto;
@@ -17,7 +18,6 @@ import project.flipnote.auth.model.UserLoginDto;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.jwt.JwtComponent;
-import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.repository.UserRepository;
 
