@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
+import project.flipnote.auth.model.EmailVerificationConfirmDto;
 import project.flipnote.auth.model.EmailVerificationDto;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
@@ -89,5 +92,63 @@ class AuthServiceTest {
 			verify(emailVerificationRedisRepository, never()).saveCode(any(String.class), any(String.class));
 			verify(eventPublisher, never()).publishEvent(any(EmailVerificationSendEvent.class));
 		}
+	}
+
+	@DisplayName("이메일 인증번호 확인 테스트")
+	@Nested
+	class ConfirmEmailVerificationCode {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			EmailVerificationConfirmDto.Request req
+				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+
+			given(emailVerificationRedisRepository.findCode("test@test.com"))
+				.willReturn(Optional.of("123456"));
+
+			authService.confirmEmailVerificationCode(req);
+
+			verify(emailVerificationRedisRepository, times(1)).deleteCode(any(String.class));
+			verify(emailVerificationRedisRepository, times(1)).markAsVerified(any(String.class));
+		}
+
+		@DisplayName("발급된 인증번호가 없는 경우 예외 발생")
+		@Test
+		void fail_notIssuedVerificationCode() {
+			EmailVerificationConfirmDto.Request req
+				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+
+			given(emailVerificationRedisRepository.findCode("test@test.com")).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(
+				BizException.class,
+				() -> authService.confirmEmailVerificationCode(req)
+			);
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE);
+
+			verify(emailVerificationRedisRepository, never()).deleteCode(any(String.class));
+			verify(emailVerificationRedisRepository, never()).markAsVerified(any(String.class));
+		}
+
+		@DisplayName("잘못된 인증번호인 경우 예외 발생")
+		@Test
+		void fail_invalidVerificationCode() {
+			EmailVerificationConfirmDto.Request req
+				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+
+			given(emailVerificationRedisRepository.findCode("test@test.com"))
+				.willReturn(Optional.of("654321"));
+
+			BizException exception = assertThrows(
+				BizException.class,
+				() -> authService.confirmEmailVerificationCode(req)
+			);
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_VERIFICATION_CODE);
+
+			verify(emailVerificationRedisRepository, never()).deleteCode(any(String.class));
+			verify(emailVerificationRedisRepository, never()).markAsVerified(any(String.class));
+		}
+
 	}
 }
