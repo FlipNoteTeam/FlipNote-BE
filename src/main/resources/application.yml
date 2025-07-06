@@ -4,20 +4,17 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/flipnote?useSSL=false&allowPublicKeyRetrieval=true
+    url:
     username:
     password:
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
     properties:
       hibernate:
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
         dialect: org.hibernate.dialect.MySQLDialect
 
   thymeleaf:
@@ -29,9 +26,9 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host:
       password:
-      port: 6379
+      port:
 
 management:
   endpoints:
