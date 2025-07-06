@@ -76,6 +76,16 @@ public class AuthService {
 		emailVerificationRedisRepository.markAsVerified(email);
 	}
 
+	public void validateEmail(String email) {
+		if (!emailVerificationRedisRepository.isVerified(email)) {
+			throw new BizException(AuthErrorCode.UNVERIFIED_EMAIL);
+		}
+	}
+
+	public void deleteVerifiedEmail(String email) {
+		emailVerificationRedisRepository.deleteVerified(email);
+	}
+
 	private String generateVerificationCode(int length) {
 		int origin = (int)Math.pow(10, length - 1);
 		int bound = (int)Math.pow(10, length);

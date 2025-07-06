@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
@@ -16,13 +17,18 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final AuthService authService;
 
 	public UserRegisterDto.Response register(UserRegisterDto.Request req) {
-		validateEmailDuplicate(req.email());
+		String email = req.email();
+
+		validateEmailDuplicate(email);
 		validatePhoneDuplicate(req.phone());
 
+		authService.validateEmail(email);
+
 		User user = User.builder()
-			.email(req.email())
+			.email(email)
 			.password(passwordEncoder.encode(req.password()))
 			.name(req.name())
 			.nickname(req.nickname())
@@ -31,6 +37,8 @@ public class UserService {
 			.profileImageUrl(req.profileImageUrl())
 			.build();
 		userRepository.save(user);
+
+		authService.deleteVerifiedEmail(email);
 
 		return UserRegisterDto.Response.from(user.getId());
 	}
