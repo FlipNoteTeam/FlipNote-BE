@@ -80,6 +80,25 @@ class UserServiceTest {
 			verify(authService, times(1)).deleteVerifiedEmail(any(String.class));
 		}
 
+		@DisplayName("회원가입 성공 - 폰 번호가 null일 때")
+		@Test
+		void success_register_phoneIsNull() {
+			UserRegisterDto.Request req = new UserRegisterDto.Request(
+				"test@test.com", "testPass", "테스트", "테스트", false, null, null
+			);
+
+			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
+			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
+			given(userRepository.save(any(User.class))).willReturn(user);
+
+			UserRegisterDto.Response res = userService.register(req);
+
+			assertThat(res.userId()).isEqualTo(user.getId());
+
+			verify(authService, times(1)).validateEmail(any(String.class));
+			verify(authService, times(1)).deleteVerifiedEmail(any(String.class));
+		}
+
 		@DisplayName("이메일 중복 시 예외 발생")
 		@Test
 		void fail_register_duplicateEmail() {
