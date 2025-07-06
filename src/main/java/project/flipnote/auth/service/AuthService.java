@@ -51,6 +51,9 @@ public class AuthService {
 	public void sendEmailVerificationCode(EmailVerificationDto.Request req) {
 		final String email = req.email();
 
+		validateEmailIsAvailable(email);
+		validateVerificationCodeNotExists(email);
+
 		if (emailVerificationRedisRepository.existCode(email)) {
 			throw new BizException(AuthErrorCode.ALREADY_ISSUED_VERIFICATION_CODE);
 		}
@@ -60,6 +63,18 @@ public class AuthService {
 		emailVerificationRedisRepository.saveCode(email, code);
 
 		eventPublisher.publishEvent(new EmailVerificationSendEvent(email, code));
+	}
+
+	private void validateEmailIsAvailable(String email) {
+		if (userRepository.existsByEmail(email)) {
+			throw new BizException(AuthErrorCode.EXISTING_EMAIL);
+		}
+	}
+
+	private void validateVerificationCodeNotExists(String email) {
+		if (emailVerificationRedisRepository.existCode(email)) {
+			throw new BizException(AuthErrorCode.ALREADY_ISSUED_VERIFICATION_CODE);
+		}
 	}
 
 	public void confirmEmailVerificationCode(EmailVerificationConfirmDto.Request req) {
