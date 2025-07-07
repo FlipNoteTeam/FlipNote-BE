@@ -5,17 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import project.flipnote.auth.constants.VerificationConstants;
 
-public class EmailVerificationConfirmDto {
+public record EmailVerificationConfirmRequest(
 
-	public record Request(
+	@Email @NotBlank
+	String email,
 
-		@Email @NotBlank
-		String email,
-
-		@NotBlank
-		@Size(min = VerificationConstants.CODE_LENGTH, max = VerificationConstants.CODE_LENGTH)
-		String code
-	) {
-
-	}
+	@NotBlank
+	@Size(min = VerificationConstants.CODE_LENGTH, max = VerificationConstants.CODE_LENGTH)
+	String code
+) {
 }

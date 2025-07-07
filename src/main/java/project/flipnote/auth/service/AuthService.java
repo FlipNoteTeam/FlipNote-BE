@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
-import project.flipnote.auth.model.EmailVerificationConfirmDto;
-import project.flipnote.auth.model.EmailVerificationDto;
+import project.flipnote.auth.model.EmailVerificationConfirmRequest;
+import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginDto;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
@@ -52,7 +52,7 @@ public class AuthService {
 		}
 	}
 
-	public void sendEmailVerificationCode(EmailVerificationDto.Request req) {
+	public void sendEmailVerificationCode(EmailVerificationRequest req) {
 		final String email = req.email();
 
 		validateEmailIsAvailable(email);
@@ -77,7 +77,7 @@ public class AuthService {
 		}
 	}
 
-	public void confirmEmailVerificationCode(EmailVerificationConfirmDto.Request req) {
+	public void confirmEmailVerificationCode(EmailVerificationConfirmRequest req) {
 		String email = req.email();
 
 		String code = findVerificationCodeOrThrow(email);

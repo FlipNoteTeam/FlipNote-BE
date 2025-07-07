@@ -18,8 +18,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
-import project.flipnote.auth.model.EmailVerificationConfirmDto;
-import project.flipnote.auth.model.EmailVerificationDto;
+import project.flipnote.auth.model.EmailVerificationConfirmRequest;
+import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.repository.UserRepository;
@@ -47,7 +47,7 @@ class AuthServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			EmailVerificationDto.Request req = new EmailVerificationDto.Request("test@test.com");
+			EmailVerificationRequest req = new EmailVerificationRequest("test@test.com");
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(emailVerificationRedisRepository.existCode(any(String.class))).willReturn(false);
@@ -67,7 +67,7 @@ class AuthServiceTest {
 		@DisplayName("가입된 이메일인 경우 예외 발생")
 		@Test
 		void fail_existingEmail() {
-			EmailVerificationDto.Request req = new EmailVerificationDto.Request("test@test.com");
+			EmailVerificationRequest req = new EmailVerificationRequest("test@test.com");
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(true);
 
@@ -81,7 +81,7 @@ class AuthServiceTest {
 		@DisplayName("이미 발급된 인증번호가 존재할 경우 예외 발생")
 		@Test
 		void fail_alreadyIssuedVerificationCode() {
-			EmailVerificationDto.Request req = new EmailVerificationDto.Request("test@test.com");
+			EmailVerificationRequest req = new EmailVerificationRequest("test@test.com");
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(emailVerificationRedisRepository.existCode(any(String.class))).willReturn(true);
@@ -101,8 +101,7 @@ class AuthServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			EmailVerificationConfirmDto.Request req
-				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+			EmailVerificationConfirmRequest req = new EmailVerificationConfirmRequest("test@test.com", "123456");
 
 			given(emailVerificationRedisRepository.findCode("test@test.com"))
 				.willReturn(Optional.of("123456"));
@@ -116,8 +115,7 @@ class AuthServiceTest {
 		@DisplayName("발급된 인증번호가 없는 경우 예외 발생")
 		@Test
 		void fail_notIssuedVerificationCode() {
-			EmailVerificationConfirmDto.Request req
-				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+			EmailVerificationConfirmRequest req = new EmailVerificationConfirmRequest("test@test.com", "123456");
 
 			given(emailVerificationRedisRepository.findCode("test@test.com")).willReturn(Optional.empty());
 
@@ -134,8 +132,7 @@ class AuthServiceTest {
 		@DisplayName("잘못된 인증번호인 경우 예외 발생")
 		@Test
 		void fail_invalidVerificationCode() {
-			EmailVerificationConfirmDto.Request req
-				= new EmailVerificationConfirmDto.Request("test@test.com", "123456");
+			EmailVerificationConfirmRequest req = new EmailVerificationConfirmRequest("test@test.com", "123456");
 
 			given(emailVerificationRedisRepository.findCode("test@test.com"))
 				.willReturn(Optional.of("654321"));
