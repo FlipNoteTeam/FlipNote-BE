@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.user.model.UserRegisterDto;
+import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.service.UserService;
 
 @RequiredArgsConstructor
@@ -20,8 +21,8 @@ public class UserController {
 	private final UserService userService;
 
 	@PostMapping
-	public ResponseEntity<UserRegisterDto.Response> register(@Valid @RequestBody UserRegisterDto.Request req) {
-		UserRegisterDto.Response res = userService.register(req);
+	public ResponseEntity<UserRegisterResponse> register(@Valid @RequestBody UserRegisterRequest req) {
+		UserRegisterResponse res = userService.register(req);
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
 }

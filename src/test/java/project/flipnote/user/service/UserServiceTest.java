@@ -20,7 +20,8 @@ import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.UserRegisterDto;
+import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("회원 서비스 단위 테스트")
@@ -63,7 +64,7 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			UserRegisterDto.Request req = new UserRegisterDto.Request(
+			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
 
@@ -72,7 +73,7 @@ class UserServiceTest {
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
-			UserRegisterDto.Response res = userService.register(req);
+			UserRegisterResponse res = userService.register(req);
 
 			assertThat(res.userId()).isEqualTo(user.getId());
 
@@ -83,7 +84,7 @@ class UserServiceTest {
 		@DisplayName("휴대전화 번호가 null일 때 성공")
 		@Test
 		void success_ifPhoneIsNull() {
-			UserRegisterDto.Request req = new UserRegisterDto.Request(
+			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, null, null
 			);
 
@@ -91,7 +92,7 @@ class UserServiceTest {
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
-			UserRegisterDto.Response res = userService.register(req);
+			UserRegisterResponse res = userService.register(req);
 
 			assertThat(res.userId()).isEqualTo(user.getId());
 
@@ -102,7 +103,7 @@ class UserServiceTest {
 		@DisplayName("이메일 중복 시 예외 발생")
 		@Test
 		void fail_duplicateEmail() {
-			UserRegisterDto.Request req = new UserRegisterDto.Request(
+			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
 
@@ -118,7 +119,7 @@ class UserServiceTest {
 		@DisplayName("전화번호 중복 시 예외 발생")
 		@Test
 		void fail_duplicatePhone() {
-			UserRegisterDto.Request req = new UserRegisterDto.Request(
+			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
 
@@ -134,7 +135,7 @@ class UserServiceTest {
 		@DisplayName("이메일 인증이 안 된 경우 예외 발생")
 		@Test
 		void fail_unverifiedEmail() {
-			UserRegisterDto.Request req = new UserRegisterDto.Request(
+			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
 

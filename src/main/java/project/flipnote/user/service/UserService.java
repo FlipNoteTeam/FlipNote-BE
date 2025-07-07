@@ -11,7 +11,8 @@ import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.UserRegisterDto;
+import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class UserService {
 	private final AuthService authService;
 
 	@Transactional
-	public UserRegisterDto.Response register(UserRegisterDto.Request req) {
+	public UserRegisterResponse register(UserRegisterRequest req) {
 		String email = req.email();
 		String phone = req.getCleanedPhone();
 
@@ -46,7 +47,7 @@ public class UserService {
 
 		authService.deleteVerifiedEmail(email);
 
-		return UserRegisterDto.Response.from(savedUser.getId());
+		return UserRegisterResponse.from(savedUser.getId());
 	}
 
 	private void validateEmailDuplicate(String email) {
