@@ -1,22 +1,28 @@
 package project.flipnote.group.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.entity.GroupMember;
+import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GroupService {
 	private final GroupRepository groupRepository;
 
-	public GroupCreateDto.Response create(GroupCreateDto.@Valid Request req) {
-
+	@Transactional
+	public GroupCreateDto.Response create(/*@AuthenticationPrincipal UserPrincipal userPrincipal, */GroupCreateDto.@Valid Request req) {
+		
+		//1. 그룹 생성
 		Group group = Group.builder()
 			.name(req.name())
 			.category(req.category())
