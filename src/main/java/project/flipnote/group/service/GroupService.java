@@ -11,14 +11,18 @@ import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
+import project.flipnote.user.entity.User;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GroupService {
-	private final GroupRepository groupRepository;
 
+	private final GroupRepository groupRepository;
+	private final GroupMemberRepository groupMemberRepository;
+
+	//그룹 생성
 	@Transactional
 	public GroupCreateDto.Response create(/*@AuthenticationPrincipal UserPrincipal userPrincipal, */GroupCreateDto.@Valid Request req) {
 		
@@ -36,6 +40,15 @@ public class GroupService {
 		groupRepository.save(group);
 
 		log.info("생성 시간: "+group.getCreatedAt());
+
+		//2. 그룹 회원 정보 생성
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			// .user(user)
+			.role(GroupRole.OWNER)
+			.build();
+
+		groupMemberRepository.save(groupMember);
 
 		return GroupCreateDto.Response.from(group.getId());
 	}
