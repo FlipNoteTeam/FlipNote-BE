@@ -168,22 +168,20 @@ class AuthServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			String rawPassword = "testPass";
-			String encodedPassword = "encodedPass";
-			UserLoginRequest loginRequest = new UserLoginRequest("test@example.com", rawPassword);
+			UserLoginRequest req = new UserLoginRequest("test@example.com", "testPass");
 
 			User foundUser = UserFixture.createActiveUser();
 
 			TokenPair expectedTokenPair = new TokenPair("access-token", "refresh-token");
 
-			given(userRepository.findByEmailAndStatus(loginRequest.email(), UserStatus.ACTIVE))
+			given(userRepository.findByEmailAndStatus(req.email(), UserStatus.ACTIVE))
 				.willReturn(Optional.of(foundUser));
-			given(passwordEncoder.matches(rawPassword, encodedPassword))
+			given(passwordEncoder.matches(req.password(), foundUser.getPassword()))
 				.willReturn(true);
 			given(jwtComponent.generateTokenPair(foundUser.getEmail(), foundUser.getId(), foundUser.getRole().name()))
 				.willReturn(expectedTokenPair);
 
-			TokenPair resultTokenPair = authService.login(loginRequest);
+			TokenPair resultTokenPair = authService.login(req);
 
 			assertThat(resultTokenPair).isNotNull();
 			assertThat(resultTokenPair.accessToken()).isEqualTo(expectedTokenPair.accessToken());
