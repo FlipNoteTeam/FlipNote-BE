@@ -10,7 +10,7 @@ import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
-import project.flipnote.group.entity.GroupRole;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.user.entity.User;
@@ -58,7 +58,7 @@ public class GroupService {
 		GroupMember groupMember = GroupMember.builder()
 			.group(group)
 			.user(user)
-			.role(GroupRole.OWNER)
+			.role(GroupMemberRole.OWNER)
 			.build();
 
 		groupMemberRepository.save(groupMember);
