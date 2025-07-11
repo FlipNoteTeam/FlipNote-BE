@@ -8,8 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CookieUtil {
 
-	public static void addCookie(
-		HttpServletResponse response,
+	public static Cookie createCookie(
 		String name,
 		String value,
 		int maxAge,
@@ -20,14 +19,14 @@ public class CookieUtil {
 		cookie.setMaxAge(maxAge);
 		cookie.setHttpOnly(httpOnly);
 		cookie.setPath(path);
-		response.addCookie(cookie);
+		return cookie;
 	}
 
-	public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-		addCookie(response, name, value, maxAge, true, "/");
+	public static Cookie createCookie(String name, String value, int maxAge) {
+		return createCookie(name, value, maxAge, true, "/");
 	}
 
-	public static void deleteCookie(HttpServletResponse response, String name) {
-		addCookie(response, name, "", 0, true, "/");
+	public static Cookie createExpiredCookie(String name) {
+		return createCookie(name, "", 0, true, "/");
 	}
 }
