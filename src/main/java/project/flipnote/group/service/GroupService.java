@@ -6,12 +6,16 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import project.flipnote.common.exception.BizException;
+import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.exception.UserErrorCode;
+import project.flipnote.user.repository.UserRepository;
 
 @Slf4j
 @Service
@@ -21,11 +25,20 @@ public class GroupService {
 
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
+	private final UserRepository userRepository;
+
+	public User findUser(UserAuth userAuth) {
+		return userRepository.findById(userAuth.userId()).orElseThrow(
+			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
+		);
+	}
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateDto.Response create(/*@AuthenticationPrincipal UserPrincipal userPrincipal, */GroupCreateDto.@Valid Request req) {
-		
+	public GroupCreateDto.Response create(UserAuth userAuth, GroupCreateDto.@Valid Request req) {
+
+		User user = findUser(userAuth);
+
 		//1. 그룹 생성
 		Group group = Group.builder()
 			.name(req.name())
@@ -44,7 +57,7 @@ public class GroupService {
 		//2. 그룹 회원 정보 생성
 		GroupMember groupMember = GroupMember.builder()
 			.group(group)
-			// .user(user)
+			.user(user)
 			.role(GroupRole.OWNER)
 			.build();
 
