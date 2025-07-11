@@ -1,38 +1,53 @@
 package project.flipnote.user.service;
 
+import java.util.Objects;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.user.model.UserRegisterDto;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
+import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final AuthService authService;
 
-	public UserRegisterDto.Response register(UserRegisterDto.Request req) {
-		validateEmailDuplicate(req.email());
-		validatePhoneDuplicate(req.phone());
+	@Transactional
+	public UserRegisterResponse register(UserRegisterRequest req) {
+		String email = req.email();
+		String phone = req.getCleanedPhone();
+
+		validateEmailDuplicate(email);
+		validatePhoneDuplicate(phone);
+
+		authService.validateEmail(email);
 
 		User user = User.builder()
-			.email(req.email())
+			.email(email)
 			.password(passwordEncoder.encode(req.password()))
 			.name(req.name())
 			.nickname(req.nickname())
 			.smsAgree(req.smsAgree())
-			.phone(req.phone())
+			.phone(phone)
 			.profileImageUrl(req.profileImageUrl())
 			.build();
-		userRepository.save(user);
+		User savedUser = userRepository.save(user);
 
-		return UserRegisterDto.Response.from(user.getId());
+		authService.deleteVerifiedEmail(email);
+
+		return UserRegisterResponse.from(savedUser.getId());
 	}
 
 	private void validateEmailDuplicate(String email) {
@@ -42,8 +57,12 @@ public class UserService {
 	}
 
 	private void validatePhoneDuplicate(String phone) {
+		if (Objects.isNull(phone)) {
+			return;
+		}
+
 		if (userRepository.existsByPhone(phone)) {
-			throw  new BizException(UserErrorCode.DUPLICATE_PHONE);
+			throw new BizException(UserErrorCode.DUPLICATE_PHONE);
 		}
 	}
 }

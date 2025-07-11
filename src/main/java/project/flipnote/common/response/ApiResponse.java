@@ -5,15 +5,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.validation.BindingResult;
 
-import project.flipnote.common.exception.ErrorCode;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import project.flipnote.common.exception.ErrorCode;
+
 
 @Getter
 @Builder
-public class ApiResponse <T> {
+public class ApiResponse<T> {
 
 	private final int status;
 	private final String code;
