@@ -15,6 +15,7 @@ import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.repository.UserRepository;
 
@@ -29,7 +30,7 @@ public class GroupService {
 	private final UserRepository userRepository;
 
 	public User findUser(UserAuth userAuth) {
-		return userRepository.findById(userAuth.userId()).orElseThrow(
+		return userRepository.findByIdAndStatus(userAuth.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
