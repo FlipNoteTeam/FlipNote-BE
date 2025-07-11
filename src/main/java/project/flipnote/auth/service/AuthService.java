@@ -20,6 +20,7 @@ import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
 @Slf4j
@@ -36,23 +37,11 @@ public class AuthService {
 	private static final SecureRandom random = new SecureRandom();
 
 	public TokenPair login(UserLoginDto.Request req) {
-		User user = findByEmailOrThrow(req);
+		User user = findActiveUserByEmail(req.email());
 
 		validatePasswordMatch(req.password(), user.getPassword());
-		log.error("{}", user.getPhone());
 
 		return jwtComponent.generateTokenPair(user.getEmail(), user.getId(), user.getRole().name());
-	}
-
-	private User findByEmailOrThrow(UserLoginDto.Request req) {
-		return userRepository.findByEmail(req.email())
-			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
-	}
-
-	private void validatePasswordMatch(String rawPassword, String encodedPassword) {
-		if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
-		}
 	}
 
 	public void sendEmailVerificationCode(EmailVerificationRequest req) {
@@ -68,18 +57,6 @@ public class AuthService {
 		eventPublisher.publishEvent(new EmailVerificationSendEvent(email, code));
 	}
 
-	private void validateEmailIsAvailable(String email) {
-		if (userRepository.existsByEmail(email)) {
-			throw new BizException(AuthErrorCode.EXISTING_EMAIL);
-		}
-	}
-
-	private void validateVerificationCodeNotExists(String email) {
-		if (emailVerificationRedisRepository.existCode(email)) {
-			throw new BizException(AuthErrorCode.ALREADY_ISSUED_VERIFICATION_CODE);
-		}
-	}
-
 	public void confirmEmailVerificationCode(EmailVerificationConfirmRequest req) {
 		String email = req.email();
 
@@ -89,17 +66,6 @@ public class AuthService {
 
 		emailVerificationRedisRepository.deleteCode(email);
 		emailVerificationRedisRepository.markAsVerified(email);
-	}
-
-	private String findVerificationCodeOrThrow(String email) {
-		return emailVerificationRedisRepository.findCode(email)
-			.orElseThrow(() -> new BizException(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE));
-	}
-
-	private void validateVerificationCode(String inputCode, String savedCode) {
-		if (!Objects.equals(inputCode, savedCode)) {
-			throw new BizException(AuthErrorCode.INVALID_VERIFICATION_CODE);
-		}
 	}
 
 	public void validateEmail(String email) {
@@ -116,5 +82,39 @@ public class AuthService {
 		int origin = (int)Math.pow(10, length - 1);
 		int bound = (int)Math.pow(10, length);
 		return String.valueOf(random.nextInt(origin, bound));
+	}
+
+	private User findActiveUserByEmail(String email) {
+		return userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
+			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
+	}
+
+	private void validatePasswordMatch(String rawPassword, String encodedPassword) {
+		if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
+		}
+	}
+
+	private void validateEmailIsAvailable(String email) {
+		if (userRepository.existsByEmail(email)) {
+			throw new BizException(AuthErrorCode.EXISTING_EMAIL);
+		}
+	}
+
+	private void validateVerificationCodeNotExists(String email) {
+		if (emailVerificationRedisRepository.existCode(email)) {
+			throw new BizException(AuthErrorCode.ALREADY_ISSUED_VERIFICATION_CODE);
+		}
+	}
+
+	private String findVerificationCodeOrThrow(String email) {
+		return emailVerificationRedisRepository.findCode(email)
+			.orElseThrow(() -> new BizException(AuthErrorCode.NOT_ISSUED_VERIFICATION_CODE));
+	}
+
+	private void validateVerificationCode(String inputCode, String savedCode) {
+		if (!Objects.equals(inputCode, savedCode)) {
+			throw new BizException(AuthErrorCode.INVALID_VERIFICATION_CODE);
+		}
 	}
 }

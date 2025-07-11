@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -12,5 +13,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByPhone(String phone);
 
-	Optional<User> findByEmail(String email);
+	Optional<User> findByEmailAndStatus(String email, UserStatus status);
 }
