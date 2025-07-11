@@ -11,6 +11,7 @@ import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
+import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateDto;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.user.entity.User;
@@ -36,8 +37,12 @@ public class GroupService {
 	//그룹 생성
 	@Transactional
 	public GroupCreateDto.Response create(UserAuth userAuth, GroupCreateDto.@Valid Request req) {
-
+		
+		//유저 조회
 		User user = findUser(userAuth);
+		
+		//인원수 검증
+		validateMaxMember(req.maxMember());
 
 		//1. 그룹 생성
 		Group group = Group.builder()
@@ -65,4 +70,12 @@ public class GroupService {
 
 		return GroupCreateDto.Response.from(group.getId());
 	}
+	
+	//인원수 검증
+	private void validateMaxMember(int maxMember) {
+		if (maxMember < 1 || maxMember > 100) {
+			throw new BizException(GroupErrorCode.INVALID_MAX_MEMBER);
+		}
+	}
+
 }
