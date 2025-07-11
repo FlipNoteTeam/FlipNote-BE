@@ -1,20 +1,23 @@
 package project.flipnote.auth.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
-import project.flipnote.auth.model.UserLoginDto;
+import project.flipnote.auth.model.UserLoginRequest;
+import project.flipnote.auth.model.UserLoginResponse;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.security.jwt.JwtConstants;
+import project.flipnote.common.security.jwt.JwtProperties;
 import project.flipnote.common.util.CookieUtil;
 
 @RequiredArgsConstructor
@@ -23,24 +26,33 @@ import project.flipnote.common.util.CookieUtil;
 public class AuthController {
 
 	private final AuthService authService;
+	private final JwtProperties jwtProperties;
 
 	@PostMapping("/login")
-	public ResponseEntity<UserLoginDto.Response> login(
-		@Valid @RequestBody UserLoginDto.Request req,
-		HttpServletResponse servletResponse
+	public ResponseEntity<UserLoginResponse> login(
+		@Valid @RequestBody UserLoginRequest req
 	) {
 		TokenPair tokenPair = authService.login(req);
 
-		CookieUtil.addCookie(servletResponse, JwtConstants.REFRESH_TOKEN, tokenPair.refreshToken(), 30 * 24 * 60 * 60);
+		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
+		Cookie cookie = CookieUtil.createCookie(
+			JwtConstants.REFRESH_TOKEN,
+			tokenPair.refreshToken(),
+			Math.toIntExact(expirationSeconds)
+		);
 
-		return ResponseEntity.ok(UserLoginDto.Response.from(tokenPair.accessToken()));
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, cookie.toString())
+			.body(UserLoginResponse.from(tokenPair.accessToken()));
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout(HttpServletResponse servletResponse) {
-		CookieUtil.deleteCookie(servletResponse, JwtConstants.REFRESH_TOKEN);
+	public ResponseEntity<Void> logout() {
+		Cookie expiredCookie = CookieUtil.createExpiredCookie(JwtConstants.REFRESH_TOKEN);
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+			.build();
 	}
 
 	@PostMapping("/email")
