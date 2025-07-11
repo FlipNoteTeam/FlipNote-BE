@@ -18,8 +18,8 @@ public class AesCryptoProperties {
 
 	@NotBlank
 	@Pattern(
-		regexp = "^.{32}$",
-		message = "암호화 키는 32바이트여야 합니다."
+		regexp = "^[A-Za-z0-9+/]{32}$",
+		message = "암호화 키는 32자의 Base64 문자열이어야 합니다."
 	)
 	private String key;
 }
