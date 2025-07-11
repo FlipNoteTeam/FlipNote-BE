@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
@@ -21,6 +22,7 @@ import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.repository.UserRepository;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AuthService {
@@ -37,6 +39,7 @@ public class AuthService {
 		User user = findByEmailOrThrow(req);
 
 		validatePasswordMatch(req.password(), user.getPassword());
+		log.error("{}", user.getPhone());
 
 		return jwtComponent.generateTokenPair(user.getEmail(), user.getId(), user.getRole().name());
 	}

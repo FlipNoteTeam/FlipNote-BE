@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Validated
-@ConfigurationProperties("resend")
+@ConfigurationProperties("app.resend")
 @Component
 public class ResendProperties {
 

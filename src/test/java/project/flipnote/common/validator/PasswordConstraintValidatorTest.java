@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.validation.ConstraintValidatorContext;
+import project.flipnote.common.validation.validator.PasswordConstraintValidator;
 
 @DisplayName("비밀번호 유효성 검증기 단위 테스트")
 @ExtendWith(MockitoExtension.class)

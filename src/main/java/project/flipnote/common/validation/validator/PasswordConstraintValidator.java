@@ -1,11 +1,11 @@
-package project.flipnote.common.validator;
+package project.flipnote.common.validation.validator;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import project.flipnote.common.annotation.ValidPassword;
+import project.flipnote.common.validation.annotation.ValidPassword;
 
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
 

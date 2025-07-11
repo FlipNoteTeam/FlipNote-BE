@@ -4,9 +4,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url:
-    username:
-    password:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     open-in-view: false
@@ -26,9 +26,9 @@ spring:
 
   data:
     redis:
-      host:
-      password:
-      port:
+      host: ${SPRING_DATA_REDIS_HOST}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+      port: ${SPRING_DATA_REDIS_PORT}
 
 management:
   endpoints:
@@ -37,16 +37,20 @@ management:
         include:
           - health
 
-jwt:
-  secret:
-  access-token-expiration: 1h
-  refresh-token-expiration: 7d
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    access-token-expiration: 1h
+    refresh-token-expiration: 7d
 
-async:
-  core-pool-size: 4
-  max-pool-size: 10
-  queue-capacity: 100
+  async:
+    core-pool-size: 4
+    max-pool-size: 10
+    queue-capacity: 100
 
-resend:
-  api-key:
-  from-email: FlipNote <no-reply@flipnote.site>
+  resend:
+    api-key: ${APP_RESEND_API_KEY}
+    from-email: FlipNote <no-reply@flipnote.site>
+
+  encryption:
+    key: ${APP_ENCRYPTION_KEY}

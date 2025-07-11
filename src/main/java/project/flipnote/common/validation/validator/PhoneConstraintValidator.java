@@ -1,10 +1,10 @@
-package project.flipnote.common.validator;
+package project.flipnote.common.validation.validator;
 
 import java.util.Objects;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import project.flipnote.common.annotation.ValidPhone;
+import project.flipnote.common.validation.annotation.ValidPhone;
 
 public class PhoneConstraintValidator implements ConstraintValidator<ValidPhone, String> {
 

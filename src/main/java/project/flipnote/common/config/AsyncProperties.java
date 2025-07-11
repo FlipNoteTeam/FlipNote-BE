@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Validated
-@ConfigurationProperties(prefix = "async")
+@ConfigurationProperties(prefix = "app.async")
 @Component
 public class AsyncProperties {
 
