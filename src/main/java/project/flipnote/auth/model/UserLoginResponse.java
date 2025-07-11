@@ -4,7 +4,7 @@ public record UserLoginResponse(
 	String accessToken
 ) {
 
-	public static UserLoginDto.Response from(String accessToken) {
-		return new UserLoginDto.Response(accessToken);
+	public static UserLoginResponse from(String accessToken) {
+		return new UserLoginResponse(accessToken);
 	}
 }

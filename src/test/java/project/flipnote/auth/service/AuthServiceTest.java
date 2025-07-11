@@ -14,14 +14,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
+import project.flipnote.auth.model.TokenPair;
+import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.security.jwt.JwtComponent;
+import project.flipnote.fixture.UserFixture;
+import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("인증 서비스 단위 테스트")
@@ -39,6 +46,12 @@ class AuthServiceTest {
 
 	@Mock
 	ApplicationEventPublisher eventPublisher;
+
+	@Mock
+	PasswordEncoder passwordEncoder;
+
+	@Mock
+	JwtComponent jwtComponent;
 
 	@DisplayName("이메일 인증번호 전송 테스트")
 	@Nested
@@ -146,6 +159,83 @@ class AuthServiceTest {
 			verify(emailVerificationRedisRepository, never()).deleteCode(any(String.class));
 			verify(emailVerificationRedisRepository, never()).markAsVerified(any(String.class));
 		}
-
 	}
+
+	@DisplayName("로그인 테스트")
+	@Nested
+	class Login {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			String rawPassword = "testPass";
+			String encodedPassword = "encodedPass";
+			UserLoginRequest loginRequest = new UserLoginRequest("test@example.com", rawPassword);
+
+			User foundUser = UserFixture.createActiveUser();
+
+			TokenPair expectedTokenPair = new TokenPair("access-token", "refresh-token");
+
+			given(userRepository.findByEmailAndStatus(loginRequest.email(), UserStatus.ACTIVE))
+				.willReturn(Optional.of(foundUser));
+			given(passwordEncoder.matches(rawPassword, encodedPassword))
+				.willReturn(true);
+			given(jwtComponent.generateTokenPair(foundUser.getEmail(), foundUser.getId(), foundUser.getRole().name()))
+				.willReturn(expectedTokenPair);
+
+			TokenPair resultTokenPair = authService.login(loginRequest);
+
+			assertThat(resultTokenPair).isNotNull();
+			assertThat(resultTokenPair.accessToken()).isEqualTo(expectedTokenPair.accessToken());
+			assertThat(resultTokenPair.refreshToken()).isEqualTo(expectedTokenPair.refreshToken());
+
+			verify(userRepository).findByEmailAndStatus(anyString(), any(UserStatus.class));
+			verify(passwordEncoder).matches(anyString(), anyString());
+			verify(jwtComponent).generateTokenPair(anyString(), anyLong(), anyString());
+		}
+
+		@Test
+		@DisplayName("이메일이 존재하지 않는 경우 예외 발생")
+		void fail_invalidCredentials_wrongEmail() {
+			UserLoginRequest req = new UserLoginRequest("wrong@test.com", "testPass");
+
+			when(userRepository.findByEmailAndStatus(req.email(), UserStatus.ACTIVE))
+				.thenReturn(Optional.empty());
+
+			BizException exception = assertThrows(
+				BizException.class,
+				() -> authService.login(req)
+			);
+
+			assertThat(exception).isNotNull();
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
+
+			verify(passwordEncoder, never()).matches(anyString(), anyString());
+			verify(jwtComponent, never()).generateTokenPair(anyString(), anyLong(), anyString());
+		}
+
+		@Test
+		@DisplayName("비밀번호가 일치하지 않는 경우 예외 발생")
+		void fail_invalidCredentials_wrongPassword() {
+			UserLoginRequest req = new UserLoginRequest("wrong@test.com", "wrongPass");
+
+			User foundUser = UserFixture.createActiveUser();
+
+			given(userRepository.findByEmailAndStatus(req.email(), UserStatus.ACTIVE))
+				.willReturn(Optional.of(foundUser));
+			given(passwordEncoder.matches(req.password(), foundUser.getPassword()))
+				.willReturn(false);
+
+			BizException exception = assertThrows(
+				BizException.class,
+				() -> authService.login(req)
+			);
+
+			assertThat(exception).isNotNull();
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
+
+			verify(jwtComponent, never()).generateTokenPair(anyString(), anyLong(), anyString());
+		}
+	}
+
 }
