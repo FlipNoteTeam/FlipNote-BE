@@ -15,7 +15,7 @@ import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
-import project.flipnote.auth.model.UserLoginDto;
+import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.jwt.JwtComponent;
@@ -36,7 +36,7 @@ public class AuthService {
 
 	private static final SecureRandom random = new SecureRandom();
 
-	public TokenPair login(UserLoginDto.Request req) {
+	public TokenPair login(UserLoginRequest req) {
 		User user = findActiveUserByEmail(req.email());
 
 		validatePasswordMatch(req.password(), user.getPassword());

@@ -12,7 +12,8 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
-import project.flipnote.auth.model.UserLoginDto;
+import project.flipnote.auth.model.UserLoginRequest;
+import project.flipnote.auth.model.UserLoginResponse;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.common.util.CookieUtil;
@@ -25,15 +26,15 @@ public class AuthController {
 	private final AuthService authService;
 
 	@PostMapping("/login")
-	public ResponseEntity<UserLoginDto.Response> login(
-		@Valid @RequestBody UserLoginDto.Request req,
+	public ResponseEntity<UserLoginResponse> login(
+		@Valid @RequestBody UserLoginRequest req,
 		HttpServletResponse servletResponse
 	) {
 		TokenPair tokenPair = authService.login(req);
 
 		CookieUtil.addCookie(servletResponse, JwtConstants.REFRESH_TOKEN, tokenPair.refreshToken(), 30 * 24 * 60 * 60);
 
-		return ResponseEntity.ok(UserLoginDto.Response.from(tokenPair.accessToken()));
+		return ResponseEntity.ok(UserLoginResponse.from(tokenPair.accessToken()));
 	}
 
 	@PostMapping("/logout")
