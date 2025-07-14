@@ -22,7 +22,6 @@ import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Table(name = "groups")
 @Entity
 public class Group extends BaseEntity {
@@ -40,7 +39,7 @@ public class Group extends BaseEntity {
 	@Column(nullable = false)
 	private String description;
 
-	private Boolean applicationRequired ;
+	private Boolean applicationRequired;
 
 	@Column(name = "is_public", nullable = false)
 	private Boolean publicVisible;
@@ -61,8 +60,7 @@ public class Group extends BaseEntity {
 	private LocalDateTime modifiedAt;
 
 	@Builder
-	public Group
-		(
+	private Group(
 		String name,
 		Category category,
 		String description,

@@ -21,7 +21,9 @@ public class GroupController {
 	private final GroupService groupService;
 
 	@PostMapping("")
-	public ResponseEntity<GroupCreateDto.Response> create(@AuthenticationPrincipal UserAuth userAuth, @Valid @RequestBody GroupCreateDto.Request req) {
+	public ResponseEntity<GroupCreateDto.Response> create(
+		@AuthenticationPrincipal UserAuth userAuth,
+		@Valid @RequestBody GroupCreateDto.Request req) {
 		GroupCreateDto.Response res = groupService.create(userAuth, req);
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}

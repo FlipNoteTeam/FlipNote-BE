@@ -1,7 +1,6 @@
 package project.flipnote.group.model;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import project.flipnote.group.entity.Category;
@@ -16,6 +15,7 @@ public class GroupCreateDto {
 		Category category,
 
 		@NotBlank
+		@Size(max = 150)
 		String description,
 
 		@NotNull
@@ -33,7 +33,7 @@ public class GroupCreateDto {
 
 	public record Response(
 		Long groupId
-	){
+	) {
 		public static Response from(Long groupId) {
 			return new Response(groupId);
 		}
