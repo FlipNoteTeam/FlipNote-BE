@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -48,6 +49,18 @@ public class UserService {
 		authService.deleteVerifiedEmail(email);
 
 		return UserRegisterResponse.from(savedUser.getId());
+	}
+
+	@Transactional
+	public void unregister(Long userId) {
+		User user = findActiveUserById(userId);
+
+		user.softDelete();
+	}
+
+	private User findActiveUserById(Long userId) {
+		return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
 	}
 
 	private void validateEmailDuplicate(String email) {

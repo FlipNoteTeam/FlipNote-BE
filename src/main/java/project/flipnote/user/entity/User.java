@@ -76,4 +76,9 @@ public class User extends SoftDeletableEntity {
 		this.role = UserRole.USER;
 	}
 
+	@Override
+	public void softDelete() {
+		super.softDelete();
+		this.status = UserStatus.INACTIVE;
+	}
 }
