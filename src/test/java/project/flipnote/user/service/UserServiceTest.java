@@ -4,6 +4,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +21,7 @@ import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -151,4 +154,28 @@ class UserServiceTest {
 		}
 	}
 
+	@DisplayName("회원 탈퇴 테스트")
+	@Nested
+	class Unregister {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.of(user));
+
+			userService.unregister(user.getId());
+
+			assertThat(user.getStatus()).isEqualTo(UserStatus.INACTIVE);
+			assertThat(user.getDeletedAt()).isNotNull();
+		}
+
+		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
+		@Test
+		void fail_userNotFound() {
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class, () -> userService.unregister(user.getId()));
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+	}
 }
