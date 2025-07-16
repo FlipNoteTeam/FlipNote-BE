@@ -61,6 +61,7 @@ public class SecurityConfig {
 					HttpMethod.POST,
 					"/*/auth/login", "/*/auth/email", "/*/auth/email/confirm"
 				).permitAll()
+				.requestMatchers(HttpMethod.GET, "/*/users/*").permitAll()
 				.requestMatchers(
 					"/v3/api-docs/**",
 					"/v3/api-docs",
