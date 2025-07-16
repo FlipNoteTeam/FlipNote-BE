@@ -24,6 +24,7 @@ import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
@@ -287,6 +288,36 @@ class UserServiceTest {
 			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.empty());
 
 			BizException exception = assertThrows(BizException.class, () -> userService.getMyInfo(99L));
+
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+	}
+
+	@DisplayName("다른 회원 정보 조회 테스트")
+	@Nested
+	class GetUserInfo {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			User user = UserFixture.createActiveUser();
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+
+			UserInfoResponse res = userService.getUserInfo(user.getId());
+
+			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.nickname()).isEqualTo(user.getNickname());
+			assertThat(res.profileImageUrl()).isEqualTo(user.getProfileImageUrl());
+
+			verify(userRepository, times(1)).findByIdAndStatus(user.getId(), UserStatus.ACTIVE);
+		}
+
+		@DisplayName("존재하지 않는 회원 조회 시 예외 발생")
+		@Test
+		void fail_userNotFound() {
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class, () -> userService.getUserInfo(99L));
 
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
 		}
