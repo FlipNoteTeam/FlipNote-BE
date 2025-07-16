@@ -11,7 +11,8 @@ import project.flipnote.user.entity.UserRole;
 public record UserAuth(
 	Long userId,
 	String email,
-	UserRole userRole
+	UserRole userRole,
+	long tokenVersion
 ) {
 
 	public Collection<? extends GrantedAuthority> getAuthorities() {

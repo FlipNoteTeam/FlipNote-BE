@@ -13,9 +13,11 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.TokenPair;
+import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.common.security.exception.SecurityErrorCode;
 import project.flipnote.common.security.exception.SecurityException;
+import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserRole;
 
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ import project.flipnote.user.entity.UserRole;
 public class JwtComponent {
 
 	private final JwtProperties jwtProperties;
+	private final TokenVersionService tokenVersionService;
 	private SecretKey secretKey;
 
 	@PostConstruct
@@ -65,8 +68,10 @@ public class JwtComponent {
 
 	public UserAuth extractUserAuthFromToken(String token) {
 		Claims claims = parseClaims(token);
+		UserAuth userAuth = extractUserAuthFromClaims(claims);
+		validateToken(userAuth);
 
-		return extractUserAuthFromClaims(claims);
+		return userAuth;
 	}
 
 	private Claims parseClaims(String token) {
@@ -83,13 +88,23 @@ public class JwtComponent {
 		}
 	}
 
+	private void validateToken(UserAuth userAuth) {
+		long currentTokenVersion = tokenVersionService.findTokenVersion(userAuth.userId())
+			.orElseThrow(() -> new SecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
+
+		if (userAuth.tokenVersion() != currentTokenVersion) {
+			throw new SecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
+		}
+	}
+
 	private UserAuth extractUserAuthFromClaims(Claims claims) {
 		long userId = Long.parseLong(claims.getId());
 		UserRole userRole = UserRole.from(
 			claims.get(JwtConstants.ROLE, String.class)
 		);
 		String email = claims.getSubject();
+		long tokenVersion = claims.get(JwtConstants.TOKEN_VERSION, Long.class);
 
-		return new UserAuth(userId, email, userRole);
+		return new UserAuth(userId, email, userRole, tokenVersion);
 	}
 }

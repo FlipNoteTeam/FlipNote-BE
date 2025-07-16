@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
@@ -24,6 +25,7 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AuthService authService;
+	private final TokenVersionRedisRepository tokenVersionRedisRepository;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -55,7 +57,8 @@ public class UserService {
 	public void unregister(Long userId) {
 		User user = findActiveUserById(userId);
 
-		user.softDelete();
+		user.unregister();
+		tokenVersionRedisRepository.deleteTokenVersion(userId);
 	}
 
 	private User findActiveUserById(Long userId) {
