@@ -2,7 +2,6 @@ package project.flipnote.user.service;
 
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,7 @@ public class UserService {
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
 		String email = req.email();
-		String phone = req.getCleanedPhone();
+		String phone = req.getNormalizedPhone();
 
 		validateEmailDuplicate(email);
 		validatePhoneDuplicate(phone);
@@ -68,7 +67,7 @@ public class UserService {
 	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
 		User user = findActiveUserById(userId);
 
-		String phone = req.getCleanedPhone();
+		String phone = req.getNormalizedPhone();
 		if (!Objects.equals(user.getPhone(), phone)) {
 			validatePhoneDuplicate(phone);
 		}

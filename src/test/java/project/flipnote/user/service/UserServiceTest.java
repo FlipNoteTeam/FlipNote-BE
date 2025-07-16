@@ -185,16 +185,16 @@ class UserServiceTest {
 			UserUpdateRequest req = new UserUpdateRequest(
 				"새로운닉네임", "010-9876-5432", true, "new/image.jpg"
 			);
-			String cleanedPhone = req.getCleanedPhone();
+			String normalizedPhone = req.getNormalizedPhone();
 
 			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
-			given(userRepository.existsByPhone(cleanedPhone)).willReturn(false);
+			given(userRepository.existsByPhone(normalizedPhone)).willReturn(false);
 
 			UserUpdateResponse res = userService.update(user.getId(), req);
 
 			assertThat(res.userId()).isEqualTo(user.getId());
 			assertThat(res.nickname()).isEqualTo(req.nickname());
-			assertThat(res.phone()).isEqualTo(cleanedPhone);
+			assertThat(res.phone()).isEqualTo(normalizedPhone);
 			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
 			assertThat(res.profileImageUrl()).isEqualTo(req.profileImageUrl());
 
@@ -209,7 +209,7 @@ class UserServiceTest {
 			UserUpdateRequest req = new UserUpdateRequest(
 				"새로운닉네임", user.getPhone(), true, "new/image.jpg"
 			);
-			String cleanedPhone = req.getCleanedPhone();
+			String normalizedPhone = req.getNormalizedPhone();
 
 			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
 
@@ -217,7 +217,7 @@ class UserServiceTest {
 
 			assertThat(res.userId()).isEqualTo(user.getId());
 			assertThat(res.nickname()).isEqualTo(req.nickname());
-			assertThat(res.phone()).isEqualTo(cleanedPhone);
+			assertThat(res.phone()).isEqualTo(normalizedPhone);
 			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
 			assertThat(res.profileImageUrl()).isEqualTo(req.profileImageUrl());
 
@@ -245,7 +245,7 @@ class UserServiceTest {
 			UserUpdateRequest req = new UserUpdateRequest(
 				"새로운닉네임", "010-9999-9999", true, "new/image.jpg"
 			);
-			String duplicatePhone = req.getCleanedPhone();
+			String duplicatePhone = req.getNormalizedPhone();
 
 			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
 			given(userRepository.existsByPhone(duplicatePhone)).willReturn(true);

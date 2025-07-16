@@ -2,7 +2,7 @@ package project.flipnote.user.model;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import project.flipnote.common.util.StringUtil;
+import project.flipnote.common.util.PhoneUtil;
 import project.flipnote.common.validation.annotation.ValidPhone;
 
 public record UserUpdateRequest(
@@ -19,7 +19,7 @@ public record UserUpdateRequest(
 	String profileImageUrl
 ) {
 
-	public String getCleanedPhone() {
-		return StringUtil.cleanPhone(phone);
+	public String getNormalizedPhone() {
+		return PhoneUtil.normalize(phone);
 	}
 }
