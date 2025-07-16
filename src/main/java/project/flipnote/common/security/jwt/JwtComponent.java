@@ -30,35 +30,33 @@ public class JwtComponent {
 		this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
 	}
 
-	public TokenPair generateTokenPair(String email, Long userId, String role) {
-		return TokenPair.from(generateAccessToken(email, userId, role), generateRefreshToken(email, userId, role));
+	public TokenPair generateTokenPair(User user) {
+		String accessToken = generateAccessToken(user);
+		String refreshToken = generateRefreshToken(user);
+		return TokenPair.from(accessToken, refreshToken);
 	}
 
-	private String generateAccessToken(String email, Long userId, String role) {
+	private String generateAccessToken(User user) {
 		return generateToken(
-			email,
-			userId,
-			role,
+			user,
 			jwtProperties.getAccessTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateRefreshToken(String email, Long userId, String role) {
+	private String generateRefreshToken(User user) {
 		return generateToken(
-			email,
-			userId,
-			role,
+			user,
 			jwtProperties.getRefreshTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateToken(String email, Long userId, String role, Date expiration) {
+	private String generateToken(User user, Date expiration) {
 		Date now = new Date();
 
 		return Jwts.builder()
-			.subject(email)
-			.id(userId.toString())
-			.claim(JwtConstants.ROLE, role)
+			.subject(user.getEmail())
+			.id(String.valueOf(user.getId()))
+			.claim(JwtConstants.ROLE, user.getRole().name())
 			.issuedAt(now)
 			.expiration(expiration)
 			.signWith(secretKey, Jwts.SIG.HS256)
