@@ -13,6 +13,11 @@ public class UserFixture {
 		User user = User.builder()
 			.email(USER_EMAIL)
 			.password(ENCODED_PASSWORD)
+			.nickname("테스트닉네임")
+			.name("테스트이름")
+			.phone("+821012345678")
+			.smsAgree(true)
+			.profileImageUrl("test_image_url")
 			.build();
 
 		ReflectionTestUtils.setField(user, "id", 1L);
