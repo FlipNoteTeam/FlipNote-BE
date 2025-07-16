@@ -202,6 +202,28 @@ class UserServiceTest {
 			verify(userRepository, times(1)).existsByPhone(anyString());
 		}
 
+		@DisplayName("동일한 전화번호로 수정 시 성공")
+		@Test
+		void success_withSamePhone() {
+			User user = UserFixture.createActiveUser();
+			UserUpdateRequest req = new UserUpdateRequest(
+				"새로운닉네임", user.getPhone(), true, "new/image.jpg"
+			);
+			String cleanedPhone = req.getCleanedPhone();
+
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+
+			UserUpdateResponse res = userService.update(user.getId(), req);
+
+			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.nickname()).isEqualTo(req.nickname());
+			assertThat(res.phone()).isEqualTo(cleanedPhone);
+			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
+			assertThat(res.profileImageUrl()).isEqualTo(req.profileImageUrl());
+
+			verify(userRepository, never()).existsByPhone(anyString());
+		}
+
 		@DisplayName("존재하지 않는 회원 수정 시 예외 발생")
 		@Test
 		void fail_userNotFound() {
