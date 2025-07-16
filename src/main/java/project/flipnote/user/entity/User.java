@@ -55,6 +55,9 @@ public class User extends SoftDeletableEntity {
 	@Column(nullable = false)
 	private UserRole role;
 
+	@Column(nullable = false)
+	private long tokenVersion;
+
 	@Builder
 	public User(
 		String email,
@@ -74,11 +77,18 @@ public class User extends SoftDeletableEntity {
 		this.smsAgree = smsAgree;
 		this.status = UserStatus.ACTIVE;
 		this.role = UserRole.USER;
+		this.tokenVersion = 0L;
 	}
 
-	@Override
-	public void softDelete() {
+	public void unregister() {
 		super.softDelete();
+
 		this.status = UserStatus.INACTIVE;
+
+		increaseTokenVersion();
+	}
+
+	public void increaseTokenVersion() {
+		this.tokenVersion++;
 	}
 }

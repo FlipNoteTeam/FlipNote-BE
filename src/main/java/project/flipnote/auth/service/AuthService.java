@@ -41,7 +41,7 @@ public class AuthService {
 
 		validatePasswordMatch(req.password(), user.getPassword());
 
-		return jwtComponent.generateTokenPair(user.getEmail(), user.getId(), user.getRole().name());
+		return jwtComponent.generateTokenPair(user);
 	}
 
 	public void sendEmailVerificationCode(EmailVerificationRequest req) {

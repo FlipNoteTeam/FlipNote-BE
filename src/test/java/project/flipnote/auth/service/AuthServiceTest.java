@@ -178,8 +178,7 @@ class AuthServiceTest {
 				.willReturn(Optional.of(foundUser));
 			given(passwordEncoder.matches(req.password(), foundUser.getPassword()))
 				.willReturn(true);
-			given(jwtComponent.generateTokenPair(foundUser.getEmail(), foundUser.getId(), foundUser.getRole().name()))
-				.willReturn(expectedTokenPair);
+			given(jwtComponent.generateTokenPair(foundUser)).willReturn(expectedTokenPair);
 
 			TokenPair resultTokenPair = authService.login(req);
 
@@ -189,7 +188,7 @@ class AuthServiceTest {
 
 			verify(userRepository).findByEmailAndStatus(anyString(), any(UserStatus.class));
 			verify(passwordEncoder).matches(anyString(), anyString());
-			verify(jwtComponent).generateTokenPair(anyString(), anyLong(), anyString());
+			verify(jwtComponent).generateTokenPair(any(User.class));
 		}
 
 		@Test
@@ -209,7 +208,7 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
 
 			verify(passwordEncoder, never()).matches(anyString(), anyString());
-			verify(jwtComponent, never()).generateTokenPair(anyString(), anyLong(), anyString());
+			verify(jwtComponent, never()).generateTokenPair(any(User.class));
 		}
 
 		@Test
@@ -232,7 +231,7 @@ class AuthServiceTest {
 			assertThat(exception).isNotNull();
 			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
 
-			verify(jwtComponent, never()).generateTokenPair(anyString(), anyLong(), anyString());
+			verify(jwtComponent, never()).generateTokenPair(any(User.class));
 		}
 	}
 
