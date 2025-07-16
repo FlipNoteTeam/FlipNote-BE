@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.*;
 
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,6 +25,8 @@ import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
+import project.flipnote.user.model.UserUpdateRequest;
+import project.flipnote.user.model.UserUpdateResponse;
 import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("회원 서비스 단위 테스트")
@@ -170,6 +171,66 @@ class UserServiceTest {
 
 			BizException exception = assertThrows(BizException.class, () -> userService.unregister(1L));
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+	}
+
+	@DisplayName("회원 정보 수정 테스트")
+	@Nested
+	class Update {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			User user = UserFixture.createActiveUser();
+			UserUpdateRequest req = new UserUpdateRequest(
+				"새로운닉네임", "010-9876-5432", true, "new/image.jpg"
+			);
+			String cleanedPhone = req.getCleanedPhone();
+
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.existsByPhone(cleanedPhone)).willReturn(false);
+
+			UserUpdateResponse res = userService.update(user.getId(), req);
+
+			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.nickname()).isEqualTo(req.nickname());
+			assertThat(res.phone()).isEqualTo(cleanedPhone);
+			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
+			assertThat(res.profileImageUrl()).isEqualTo(req.profileImageUrl());
+
+			verify(userRepository, times(1)).findByIdAndStatus(anyLong(), any(UserStatus.class));
+			verify(userRepository, times(1)).existsByPhone(anyString());
+		}
+
+		@DisplayName("존재하지 않는 회원 수정 시 예외 발생")
+		@Test
+		void fail_userNotFound() {
+			UserUpdateRequest req = new UserUpdateRequest(
+				"새로운닉네임", "010-9876-5432", true, "new/image.jpg"
+			);
+
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class, () -> userService.update(99L, req));
+
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+
+		@DisplayName("중복된 전화번호로 수정 시 예외 발생")
+		@Test
+		void fail_duplicatePhone() {
+			User user = UserFixture.createActiveUser();
+			UserUpdateRequest req = new UserUpdateRequest(
+				"새로운닉네임", "010-9999-9999", true, "new/image.jpg"
+			);
+			String duplicatePhone = req.getCleanedPhone();
+
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.existsByPhone(duplicatePhone)).willReturn(true);
+
+			BizException exception = assertThrows(BizException.class, () -> userService.update(user.getId(), req));
+
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.DUPLICATE_PHONE);
 		}
 	}
 }
