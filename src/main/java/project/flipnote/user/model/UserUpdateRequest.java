@@ -1,30 +1,20 @@
 package project.flipnote.user.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import project.flipnote.common.util.StringUtil;
-import project.flipnote.common.validation.annotation.ValidPassword;
 import project.flipnote.common.validation.annotation.ValidPhone;
 
-public record UserRegisterRequest(
-	@Email @NotBlank
-	String email,
+public record UserUpdateRequest(
 
-	@ValidPassword
-	String password,
-
-	@NotBlank
-	String name,
-
-	@NotBlank
+	@NotEmpty
 	String nickname,
-
-	@NotNull
-	Boolean smsAgree,
 
 	@ValidPhone
 	String phone,
+
+	@NotNull
+	Boolean smsAgree,
 
 	String profileImageUrl
 ) {

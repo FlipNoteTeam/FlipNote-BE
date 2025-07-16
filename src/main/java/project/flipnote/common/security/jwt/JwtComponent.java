@@ -60,6 +60,7 @@ public class JwtComponent {
 			.subject(user.getEmail())
 			.id(String.valueOf(user.getId()))
 			.claim(JwtConstants.ROLE, user.getRole().name())
+			.claim(JwtConstants.TOKEN_VERSION, user.getTokenVersion())
 			.issuedAt(now)
 			.expiration(expiration)
 			.signWith(secretKey, Jwts.SIG.HS256)
