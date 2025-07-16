@@ -147,7 +147,7 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = UserFixture.createActiveUser();
+			User user = spy(UserFixture.createActiveUser());
 
 			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.of(user));
 
@@ -155,6 +155,8 @@ class UserServiceTest {
 
 			assertThat(user.getStatus()).isEqualTo(UserStatus.INACTIVE);
 			assertThat(user.getDeletedAt()).isNotNull();
+
+			verify(user, times(1)).softDelete();
 		}
 
 		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
