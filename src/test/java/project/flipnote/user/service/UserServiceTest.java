@@ -15,9 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import project.flipnote.auth.exception.AuthErrorCode;
+import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
@@ -43,6 +43,9 @@ class UserServiceTest {
 
 	@Mock
 	private PasswordEncoder passwordEncoder;
+
+	@Mock
+	private TokenVersionRedisRepository tokenVersionRedisRepository;
 
 	@DisplayName("회원가입 테스트")
 	@Nested
@@ -157,6 +160,7 @@ class UserServiceTest {
 			assertThat(user.getDeletedAt()).isNotNull();
 
 			verify(user, times(1)).softDelete();
+			verify(tokenVersionRedisRepository, times(1)).deleteTokenVersion(anyLong());
 		}
 
 		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
