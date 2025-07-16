@@ -2,6 +2,7 @@ package project.flipnote.user.service;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +69,9 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		String phone = req.getCleanedPhone();
-		validatePhoneDuplicate(phone);
+		if (!Objects.equals(user.getPhone(), phone)) {
+			validatePhoneDuplicate(phone);
+		}
 
 		user.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
 
