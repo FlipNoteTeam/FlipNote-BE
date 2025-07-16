@@ -4,6 +4,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,7 +20,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -40,23 +44,6 @@ class UserServiceTest {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
-	private User user;
-
-	@BeforeEach
-	void init() {
-		user = User.builder()
-			.email("test@test.com")
-			.password("testPass")
-			.name("테스트")
-			.nickname("테스트")
-			.smsAgree(false)
-			.phone("010-1234-5678")
-			.profileImageUrl(null)
-			.build();
-
-		ReflectionTestUtils.setField(user, "id", 1L);
-	}
-
 	@DisplayName("회원가입 테스트")
 	@Nested
 	class Register {
@@ -64,6 +51,7 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
+			User user = UserFixture.createActiveUser();
 			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
@@ -84,6 +72,7 @@ class UserServiceTest {
 		@DisplayName("휴대전화 번호가 null일 때 성공")
 		@Test
 		void success_ifPhoneIsNull() {
+			User user = UserFixture.createActiveUser();
 			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, null, null
 			);
@@ -151,4 +140,32 @@ class UserServiceTest {
 		}
 	}
 
+	@DisplayName("회원 탈퇴 테스트")
+	@Nested
+	class Unregister {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			User user = spy(UserFixture.createActiveUser());
+
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.of(user));
+
+			userService.unregister(user.getId());
+
+			assertThat(user.getStatus()).isEqualTo(UserStatus.INACTIVE);
+			assertThat(user.getDeletedAt()).isNotNull();
+
+			verify(user, times(1)).softDelete();
+		}
+
+		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
+		@Test
+		void fail_userNotFound() {
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class, () -> userService.unregister(1L));
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+	}
 }
