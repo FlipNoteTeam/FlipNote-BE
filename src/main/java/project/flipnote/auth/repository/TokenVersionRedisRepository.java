@@ -22,7 +22,7 @@ public class TokenVersionRedisRepository {
 		tokenVersionRedisTemplate.opsForValue().set(key, tokenVersion, ttl);
 	}
 
-	public Optional<Long> getTokenVersion(Long userId) {
+	public Optional<Long> getTokenVersion(long userId) {
 		String key = AuthRedisKey.TOKEN_VERSION.key(userId);
 		Long value = tokenVersionRedisTemplate.opsForValue().get(key);
 

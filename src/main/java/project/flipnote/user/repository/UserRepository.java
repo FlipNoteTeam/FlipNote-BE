@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 
