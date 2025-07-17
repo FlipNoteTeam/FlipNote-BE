@@ -1,9 +1,9 @@
 package project.flipnote.group.entity;
 
-import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +21,6 @@ import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Table(name = "groups")
 @Entity
 public class Group extends BaseEntity {
@@ -30,6 +28,7 @@ public class Group extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotBlank
 	@Column(nullable = false, length = 50)
 	private String name;
 
@@ -40,29 +39,20 @@ public class Group extends BaseEntity {
 	@Column(nullable = false)
 	private String description;
 
-	private Boolean applicationRequired ;
+	private Boolean applicationRequired;
 
 	@Column(name = "is_public", nullable = false)
 	private Boolean publicVisible;
 
 	@Column(nullable = false)
+	@Min(1)
+	@Max(100)
 	private Integer maxMember;
 
 	private String imageUrl;
 
-	//생성시 시간을 기준으로 저장
-	@Column(nullable = false)
-	@CreatedDate
-	private LocalDateTime createdAt;
-
-	//수정시 시간을 기준으로 저장
-	@Column(nullable = false)
-	@LastModifiedDate
-	private LocalDateTime modifiedAt;
-
 	@Builder
-	public Group
-		(
+	private Group(
 		String name,
 		Category category,
 		String description,

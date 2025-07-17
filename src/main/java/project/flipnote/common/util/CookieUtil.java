@@ -1,26 +1,32 @@
 package project.flipnote.common.util;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CookieUtil {
 
-	public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean httpOnly, String path) {
-		Cookie cookie = new Cookie(name, value);
-		cookie.setMaxAge(maxAge);
-		cookie.setHttpOnly(httpOnly);
-		cookie.setPath(path);
-		response.addCookie(cookie);
+	public static ResponseCookie createCookie(
+		String name,
+		String value,
+		int maxAge,
+		boolean httpOnly,
+		String path
+	) {
+		return ResponseCookie.from(name, value)
+			.maxAge(maxAge)
+			.httpOnly(httpOnly)
+			.path(path)
+			.build();
 	}
 
-	public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-		addCookie(response, name, value, maxAge, true, "/");
+	public static ResponseCookie createCookie(String name, String value, int maxAge) {
+		return createCookie(name, value, maxAge, true, "/");
 	}
 
-	public static void deleteCookie(HttpServletResponse response, String name) {
-		addCookie(response, name, "", 0, true, "/");
+	public static ResponseCookie createExpiredCookie(String name) {
+		return createCookie(name, "", 0, true, "/");
 	}
 }

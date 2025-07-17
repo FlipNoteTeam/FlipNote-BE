@@ -39,7 +39,9 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ApiResponse<List<ApiResponse.FieldError>>> handleValidationError(MethodArgumentNotValidException exception) {
+	public ResponseEntity<ApiResponse<List<ApiResponse.FieldError>>> handleValidationError(
+		MethodArgumentNotValidException exception
+	) {
 		return ResponseEntity
 			.badRequest()
 			.body(ApiResponse.error(CommonErrorCode.INVALID_INPUT_VALUE, exception.getBindingResult()));

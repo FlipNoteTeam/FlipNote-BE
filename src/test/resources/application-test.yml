@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  jwt:
+    secret: fBwvzR4gS8pL7C2R5E9Q3aV6y9wB2b8HkM5nP3sUaX7gS1rV4wE8yD2bF6jN9kL4
+
+  resend:
+    api-key: dummy_api_key
+
+  encryption:
+    key: 49015f426db2b8477d5251fd3de971ae
