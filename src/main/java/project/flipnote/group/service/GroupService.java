@@ -48,7 +48,7 @@ public class GroupService {
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateDto.Response create(UserAuth userAuth, GroupCreateDto.@Valid Request req) {
+	public GroupCreateDto.Response create(UserAuth userAuth, GroupCreateDto.Request req) {
 
 		//1. 유저 조회
 		User user = findUser(userAuth);
@@ -57,44 +57,67 @@ public class GroupService {
 		validateMaxMember(req.maxMember());
 
 		/* 3. 그룹 생성 */
-		Group group = Group.builder()
-			.name(req.name())
-			.category(req.category())
-			.description(req.description())
-			.applicationRequired(req.applicationRequired())
-			.publicVisible(req.publicVisible())
-			.maxMember(req.maxMember())
-			.imageUrl(req.image())
-			.build();
-
-		groupRepository.save(group);
-
-		log.info("생성 시간: " + group.getCreatedAt());
+		Group group = createGroup(req);
 
 		//4. 그룹 회원 정보 생성
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.user(user)
-			.role(GroupMemberRole.OWNER)
-			.build();
-
-		groupMemberRepository.save(groupMember);
+		saveGroupOwner(group, user);
 
 		//5. 그룹 내의 모든 권한 조회
+		initializeGroupPermissions(group);
+
+		return GroupCreateDto.Response.from(group.getId());
+	}
+	
+	/*
+	최초 그룹 권한 설정
+	 */
+	private void initializeGroupPermissions(Group group) {
 		List<GroupPermission> groupPermissions = groupPermissionRepository.findAll();
 
 		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupRole.values())
-			.flatMap(role -> groupPermissions.stream()
-				.map(permission -> GroupRolePermission.builder()
-					.group(group)
-					.groupPermission(permission)
-					.role(role)
-					.build()))
-			.toList();
+				.flatMap(role -> groupPermissions.stream()
+						.map(permission -> GroupRolePermission.builder()
+								.group(group)
+								.groupPermission(permission)
+								.role(role)
+								.build()))
+				.toList();
 
 		groupRolePermissionRepository.saveAll(groupRolePermissions);
+	}
+	
+	/*
+	그룹 생성 메서드
+	 */
+    private Group createGroup(GroupCreateDto.Request req) {
+		Group group = Group.builder()
+				.name(req.name())
+				.category(req.category())
+				.description(req.description())
+				.applicationRequired(req.applicationRequired())
+				.publicVisible(req.publicVisible())
+				.maxMember(req.maxMember())
+				.imageUrl(req.image())
+				.build();
 
-		return GroupCreateDto.Response.from(group.getId());
+		groupRepository.save(group);
+		
+        log.info("생성 시간: {}", group.getCreatedAt());
+
+		return group;
+	}
+	
+	/*
+	그룹 생성시 오너 멤버 추가
+	 */
+	private void saveGroupOwner(Group group, User user) {
+		GroupMember groupMember = GroupMember.builder()
+				.group(group)
+				.user(user)
+				.role(GroupMemberRole.OWNER)
+				.build();
+
+		groupMemberRepository.save(groupMember);
 	}
 
 	//인원수 검증
