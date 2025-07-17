@@ -102,7 +102,7 @@ public class GroupService {
 
 		groupRepository.save(group);
 		
-        log.info("생성 시간: {}", group.getCreatedDate());
+        log.info("생성 시간: {}", group.getCreatedAt());
 
 		return group;
 	}

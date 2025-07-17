@@ -25,7 +25,8 @@ import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.UserRegisterDto;
+import project.flipnote.user.model.UserRegisterRequest;
+import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.repository.UserRepository;
 import project.flipnote.user.service.UserService;
 
@@ -60,8 +61,8 @@ class GroupServiceTest {
 	@BeforeEach
 	void before() {
 		//1. 유저 생성
-		UserRegisterDto.Request req = new UserRegisterDto.Request("d@d.com", "1234", "name", "nickname", true, "01000000000", "www.~~");
-		UserRegisterDto.Response res = userService.register(req);
+		UserRegisterRequest req = new UserRegisterRequest("d@d.com", "1234", "name", "nickname", true, "01000000000", "www.~~");
+		UserRegisterResponse res = userService.register(req);
 
 		//2. 유저 조회
 		User user = userRepository.findById(res.userId()).orElseThrow(
@@ -69,7 +70,7 @@ class GroupServiceTest {
 		);
 
 		//3. 테스트용 userAuth 생성
-		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole());
+		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 
 		//4. 테스트용 퍼미션 설정
 		groupPermissionRepository.saveAll(List.of(
