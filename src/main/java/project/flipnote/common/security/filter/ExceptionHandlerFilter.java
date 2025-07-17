@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.response.ApiResponse;
-import project.flipnote.common.security.exception.SecurityException;
+import project.flipnote.common.security.exception.CustomSecurityException;
 
 @Slf4j
 @Component
@@ -27,12 +27,12 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		try {
 			filterChain.doFilter(request, response);
-		} catch (SecurityException ex) {
+		} catch (CustomSecurityException ex) {
 			setErrorResponse(response, ex);
 		}
 	}
 
-	private void setErrorResponse(HttpServletResponse response, SecurityException ex) throws IOException {
+	private void setErrorResponse(HttpServletResponse response, CustomSecurityException ex) throws IOException {
 		response.setStatus(ex.getErrorCode().getStatus());
 		response.setContentType("application/json; charset=utf-8");
 

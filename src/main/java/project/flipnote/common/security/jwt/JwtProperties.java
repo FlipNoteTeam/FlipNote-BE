@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "jwt")
+@ConfigurationProperties(prefix = "app.jwt")
 public class JwtProperties {
 	private String secret;
 	private Duration accessTokenExpiration;

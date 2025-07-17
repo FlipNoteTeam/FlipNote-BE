@@ -4,21 +4,31 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/flipnote?useSSL=false&allowPublicKeyRetrieval=true
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:root}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
     properties:
       hibernate:
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
         dialect: org.hibernate.dialect.MySQLDialect
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+      port: ${SPRING_DATA_REDIS_PORT}
 
 management:
   endpoints:
@@ -27,8 +37,20 @@ management:
         include:
           - health
 
-jwt:
-  secret: ${JWT_SECRET:55ca298dcfc216e215622e3f48a251abaa4e8bb973074f065ab170e311acc15811d01a2407290c3ac143648196306d4a6f666a4ed364d3df633e08eb184bb0aea0f2edde4fd2d7fa68ea95ddbc421ff532ce47bde775975911042d665bc22d88a9fa26a03bb4d25530b8cdeb1247d87c9e3efcd721e368b0566b00a43308a729}
-  access-token-expiration: 1h
-  refresh-token-expiration: 7d
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    access-token-expiration: 1h
+    refresh-token-expiration: 7d
 
+  async:
+    core-pool-size: 4
+    max-pool-size: 10
+    queue-capacity: 100
+
+  resend:
+    api-key: ${APP_RESEND_API_KEY}
+    from-email: FlipNote <no-reply@flipnote.site>
+
+  encryption:
+    key: ${APP_ENCRYPTION_KEY}
