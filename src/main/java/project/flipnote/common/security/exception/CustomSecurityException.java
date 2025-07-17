@@ -6,7 +6,7 @@ import project.flipnote.common.exception.ErrorCode;
 
 @Getter
 @AllArgsConstructor
-public class SecurityException extends RuntimeException {
+public class CustomSecurityException extends RuntimeException {
 
 	private ErrorCode errorCode;
 }

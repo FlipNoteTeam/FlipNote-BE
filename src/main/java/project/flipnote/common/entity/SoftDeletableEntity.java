@@ -9,13 +9,13 @@ import lombok.Getter;
 @MappedSuperclass
 public abstract class SoftDeletableEntity extends BaseEntity {
 
-	private LocalDateTime deletedDate;
+	private LocalDateTime deletedAt;
 
 	public void softDelete() {
-		this.deletedDate = LocalDateTime.now();
+		this.deletedAt = LocalDateTime.now();
 	}
 
 	public boolean isDeleted() {
-		return deletedDate != null;
+		return deletedAt != null;
 	}
 }
