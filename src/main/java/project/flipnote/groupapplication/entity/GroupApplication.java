@@ -29,7 +29,6 @@ import project.flipnote.user.entity.User;
 @Entity
 @Table(name = "group_applications")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class GroupApplication extends BaseEntity {
 
 	@Id
@@ -49,14 +48,6 @@ public class GroupApplication extends BaseEntity {
 	private GroupApplicationStatus status;
 
 	private String joinIntro;
-
-	@CreatedDate
-	@Column(nullable = false)
-	private LocalDateTime createdAt;
-
-	@LastModifiedDate
-	@Column(nullable = false)
-	private LocalDateTime modifiedAt;
 
 	@Builder
 	public GroupApplication
