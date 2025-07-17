@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.groupapplication.model.GroupApplicationJoinRequestDto;
+import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.groupapplication.model.GroupApplicationJoinRequest;
+import project.flipnote.groupapplication.model.GroupApplicationJoinResponse;
 import project.flipnote.groupapplication.service.GroupApplicationService;
 
 @RestController
@@ -18,10 +20,13 @@ public class GroupApplicationController {
 
 	private final GroupApplicationService groupApplicationService;
 
+	//가입 신청 요청
 	@PostMapping("/joins")
-	public ResponseEntity<GroupApplicationJoinRequestDto.Response> joinRequest(@PathVariable("groupId") Long groupId, GroupApplicationJoinRequestDto.Request req) {
-		GroupApplicationJoinRequestDto.Response res = groupApplicationService.joinRequest(1L, groupId, req);
+	public ResponseEntity<GroupApplicationJoinResponse> joinRequest(UserAuth userAuth, @PathVariable("groupId") Long groupId, GroupApplicationJoinRequest req) {
+		GroupApplicationJoinResponse res = groupApplicationService.joinRequest(userAuth, groupId, req);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
+
+	//가입 신청 리스트 조회
 }
