@@ -57,6 +57,6 @@ public class GroupMember extends BaseEntity {
 	private GroupMember(Group group, User user, GroupMemberRole role) {
 		this.group = group;
 		this.user = user;
-		this.role = role;
+		this.role = role != null ? role : GroupMemberRole.MEMBER;
 	}
 }
