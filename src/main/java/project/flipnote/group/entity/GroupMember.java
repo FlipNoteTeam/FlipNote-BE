@@ -45,14 +45,6 @@ public class GroupMember extends BaseEntity {
 	@Column(nullable = false)
 	private GroupMemberRole role = GroupMemberRole.MEMBER;
 
-	@CreatedDate
-	@Column(nullable = false)
-	private LocalDateTime createdAt;
-
-	@LastModifiedDate
-	@Column(nullable = false)
-	private LocalDateTime modifiedAt;
-
 	@Builder
 	private GroupMember(Group group, User user, GroupMemberRole role) {
 		this.group = group;

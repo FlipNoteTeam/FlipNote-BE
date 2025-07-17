@@ -49,16 +49,6 @@ public class Group extends BaseEntity {
 
 	private String imageUrl;
 
-	//생성시 시간을 기준으로 저장
-	@Column(nullable = false)
-	@CreatedDate
-	private LocalDateTime createdAt;
-
-	//수정시 시간을 기준으로 저장
-	@Column(nullable = false)
-	@LastModifiedDate
-	private LocalDateTime modifiedAt;
-
 	@Builder
 	private Group(
 		String name,
