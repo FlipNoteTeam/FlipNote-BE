@@ -2,6 +2,10 @@ package project.flipnote.group.entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -29,6 +33,7 @@ public class Group extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotBlank
 	@Column(nullable = false, length = 50)
 	private String name;
 
@@ -45,6 +50,8 @@ public class Group extends BaseEntity {
 	private Boolean publicVisible;
 
 	@Column(nullable = false)
+	@Min(1)
+	@Max(100)
 	private Integer maxMember;
 
 	private String imageUrl;
