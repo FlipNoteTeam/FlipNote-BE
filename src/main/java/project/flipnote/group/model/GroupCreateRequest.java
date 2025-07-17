@@ -22,8 +22,6 @@ public record GroupCreateRequest(
 		Boolean publicVisible,
 
 		@NotNull
-		@Min(1)
-		@Max(100)
 		Integer maxMember,
 
 		String image
