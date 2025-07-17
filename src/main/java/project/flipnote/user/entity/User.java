@@ -91,4 +91,11 @@ public class User extends SoftDeletableEntity {
 	public void increaseTokenVersion() {
 		this.tokenVersion++;
 	}
+
+	public void update(String nickname, String phone, boolean smsAgree, String profileImageUrl) {
+		this.nickname = nickname;
+		this.phone = phone;
+		this.smsAgree = smsAgree;
+		this.profileImageUrl = profileImageUrl;
+	}
 }

@@ -15,6 +15,8 @@ import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
+import project.flipnote.user.model.UserUpdateRequest;
+import project.flipnote.user.model.UserUpdateResponse;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class UserService {
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
 		String email = req.email();
-		String phone = req.getCleanedPhone();
+		String phone = req.getNormalizedPhone();
 
 		validateEmailDuplicate(email);
 		validatePhoneDuplicate(phone);
@@ -59,6 +61,20 @@ public class UserService {
 
 		user.unregister();
 		tokenVersionRedisRepository.deleteTokenVersion(userId);
+	}
+
+	@Transactional
+	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
+		User user = findActiveUserById(userId);
+
+		String phone = req.getNormalizedPhone();
+		if (!Objects.equals(user.getPhone(), phone)) {
+			validatePhoneDuplicate(phone);
+		}
+
+		user.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
+
+		return UserUpdateResponse.from(user);
 	}
 
 	private User findActiveUserById(Long userId) {
