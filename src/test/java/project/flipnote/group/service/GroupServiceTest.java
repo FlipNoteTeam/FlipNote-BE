@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,8 @@ import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupRolePermission;
-import project.flipnote.group.model.GroupCreateDto;
+import project.flipnote.group.model.GroupCreateRequest;
+import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
@@ -82,12 +82,12 @@ class GroupServiceTest {
 	@Test
 	void 그룹_생성() {
 		//given
-		GroupCreateDto.Request req = new GroupCreateDto.Request("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
-		GroupCreateDto.Request req1 = new GroupCreateDto.Request("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
+		GroupCreateRequest req1 = new GroupCreateRequest("그룹2", Category.ENGLISH, "설명2", true, true, 50, "www.~~~");
 
 		//when
-		GroupCreateDto.Response response = groupService.create(userAuth, req);
-		GroupCreateDto.Response response1 = groupService.create(userAuth, req1);
+		GroupCreateResponse response = groupService.create(userAuth, req);
+		GroupCreateResponse response1 = groupService.create(userAuth, req1);
 
 		//then
 		assertEquals(1L, response.groupId());
@@ -101,7 +101,7 @@ class GroupServiceTest {
 	@Test
 	void 그룹_생성_실패_음수_인원() {
 		//given
-		GroupCreateDto.Request req = new GroupCreateDto.Request("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
 
 		//when
 
@@ -114,7 +114,7 @@ class GroupServiceTest {
 	@Test
 	void 그룹_생성_실패_양수_인원() {
 		//given
-		GroupCreateDto.Request req = new GroupCreateDto.Request("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
 
 		//when
 

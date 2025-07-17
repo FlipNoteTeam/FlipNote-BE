@@ -3,8 +3,7 @@ package project.flipnote.group.model;
 import jakarta.validation.constraints.*;
 import project.flipnote.group.entity.Category;
 
-public class GroupCreateDto {
-	public record Request(
+public record GroupCreateRequest(
 		@NotBlank
 		@Size(max = 50)
 		String name,
@@ -28,14 +27,5 @@ public class GroupCreateDto {
 		Integer maxMember,
 
 		String image
-	) {
-	}
-
-	public record Response(
-		Long groupId
-	) {
-		public static Response from(Long groupId) {
-			return new Response(groupId);
-		}
-	}
+) {
 }

@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -18,7 +17,8 @@ import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
-import project.flipnote.group.model.GroupCreateDto;
+import project.flipnote.group.model.GroupCreateRequest;
+import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
@@ -48,7 +48,7 @@ public class GroupService {
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateDto.Response create(UserAuth userAuth, GroupCreateDto.Request req) {
+	public GroupCreateResponse create(UserAuth userAuth, GroupCreateRequest req) {
 
 		//1. 유저 조회
 		User user = findUser(userAuth);
@@ -65,7 +65,7 @@ public class GroupService {
 		//5. 그룹 내의 모든 권한 조회
 		initializeGroupPermissions(group);
 
-		return GroupCreateDto.Response.from(group.getId());
+		return GroupCreateResponse.from(group.getId());
 	}
 	
 	/*
@@ -89,7 +89,7 @@ public class GroupService {
 	/*
 	그룹 생성 메서드
 	 */
-    private Group createGroup(GroupCreateDto.Request req) {
+    private Group createGroup(GroupCreateRequest req) {
 		Group group = Group.builder()
 				.name(req.name())
 				.category(req.category())
