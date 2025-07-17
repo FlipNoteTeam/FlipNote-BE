@@ -16,7 +16,7 @@ import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.common.security.exception.SecurityErrorCode;
-import project.flipnote.common.security.exception.SecurityException;
+import project.flipnote.common.security.exception.CustomSecurityException;
 import project.flipnote.user.entity.User;
 
 @RequiredArgsConstructor
@@ -99,18 +99,18 @@ public class JwtComponent {
 				.parseSignedClaims(token)
 				.getPayload();
 		} catch (ExpiredJwtException expiredJwtException) {
-			throw new SecurityException(SecurityErrorCode.TOKEN_EXPIRED);
+			throw new CustomSecurityException(SecurityErrorCode.TOKEN_EXPIRED);
 		} catch (Exception ex) {
-			throw new SecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
+			throw new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 		}
 	}
 
 	private void validateToken(UserAuth userAuth) {
 		long currentTokenVersion = tokenVersionService.findTokenVersion(userAuth.userId())
-			.orElseThrow(() -> new SecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
+			.orElseThrow(() -> new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
 
 		if (userAuth.tokenVersion() != currentTokenVersion) {
-			throw new SecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
+			throw new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 		}
 	}
 }

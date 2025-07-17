@@ -24,7 +24,11 @@ import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
+import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.exception.CustomSecurityException;
+import project.flipnote.common.security.exception.SecurityErrorCode;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.User;
@@ -52,6 +56,12 @@ class AuthServiceTest {
 
 	@Mock
 	JwtComponent jwtComponent;
+
+	@Mock
+	TokenBlacklistRedisRepository tokenBlacklistRedisRepository;
+
+	@Mock
+	TokenVersionService tokenVersionService;
 
 	@DisplayName("이메일 인증번호 전송 테스트")
 	@Nested
@@ -235,4 +245,68 @@ class AuthServiceTest {
 		}
 	}
 
+	@DisplayName("토큰 갱신 테스트")
+	@Nested
+	class RefreshToken {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			String refreshToken = "valid-refresh-token";
+			long expirationMillis = System.currentTimeMillis() + 100000;
+			UserAuth userAuth = UserAuth.from(UserFixture.createActiveUser());
+			TokenPair expectedTokenPair = new TokenPair("new-access-token", "new-refresh-token");
+
+			given(tokenBlacklistRedisRepository.exist(refreshToken)).willReturn(false);
+			given(jwtComponent.getExpirationMillis(refreshToken)).willReturn(expirationMillis);
+			given(jwtComponent.extractUserAuthFromToken(refreshToken)).willReturn(userAuth);
+			given(jwtComponent.generateTokenPair(userAuth)).willReturn(expectedTokenPair);
+
+			TokenPair resultTokenPair = authService.refreshToken(refreshToken);
+
+			assertThat(resultTokenPair).isNotNull();
+			assertThat(resultTokenPair.accessToken()).isEqualTo(expectedTokenPair.accessToken());
+			assertThat(resultTokenPair.refreshToken()).isEqualTo(expectedTokenPair.refreshToken());
+
+			verify(tokenBlacklistRedisRepository, times(1)).exist(refreshToken);
+			verify(jwtComponent, times(1)).getExpirationMillis(refreshToken);
+			verify(tokenBlacklistRedisRepository, times(1)).save(refreshToken, expirationMillis);
+			verify(jwtComponent, times(1)).extractUserAuthFromToken(refreshToken);
+			verify(jwtComponent, times(1)).generateTokenPair(userAuth);
+		}
+
+		@DisplayName("이미 사용된 토큰(블랙리스트)인 경우 예외 발생")
+		@Test
+		void fail_whenTokenIsBlacklisted() {
+			String refreshToken = "blacklisted-refresh-token";
+			given(tokenBlacklistRedisRepository.exist(refreshToken)).willReturn(true);
+
+			BizException exception = assertThrows(BizException.class, () -> authService.refreshToken(refreshToken));
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_REFRESH_TOKEN);
+
+			verify(jwtComponent, never()).getExpirationMillis(anyString());
+			verify(tokenBlacklistRedisRepository, never()).save(anyString(), anyLong());
+			verify(jwtComponent, never()).extractUserAuthFromToken(anyString());
+		}
+
+		@DisplayName("유효하지 않은 토큰으로 갱신 시도 시 예외 발생")
+		@Test
+		void fail_whenTokenIsInvalid() {
+			String invalidToken = "invalid-refresh-token";
+			long expirationMillis = 1000L;
+			given(tokenBlacklistRedisRepository.exist(invalidToken)).willReturn(false);
+			given(jwtComponent.getExpirationMillis(invalidToken)).willReturn(expirationMillis);
+			given(jwtComponent.extractUserAuthFromToken(invalidToken))
+				.willThrow(new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
+
+			CustomSecurityException exception = assertThrows(
+				CustomSecurityException.class,
+				() -> authService.refreshToken(invalidToken)
+			);
+			assertThat(exception.getErrorCode()).isEqualTo(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
+
+			verify(tokenBlacklistRedisRepository, times(1)).save(invalidToken, expirationMillis);
+			verify(jwtComponent, never()).generateTokenPair(any(UserAuth.class));
+		}
+	}
 }
