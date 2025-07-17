@@ -17,7 +17,9 @@ import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
+import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
@@ -29,9 +31,11 @@ import project.flipnote.user.repository.UserRepository;
 public class AuthService {
 
 	private final UserRepository userRepository;
-	private final PasswordEncoder passwordEncoder;
 	private final JwtComponent jwtComponent;
 	private final EmailVerificationRedisRepository emailVerificationRedisRepository;
+	private final TokenBlacklistRedisRepository tokenBlacklistRedisRepository;
+
+	private final PasswordEncoder passwordEncoder;
 	private final ApplicationEventPublisher eventPublisher;
 
 	private static final SecureRandom random = new SecureRandom();
@@ -68,14 +72,17 @@ public class AuthService {
 		emailVerificationRedisRepository.markAsVerified(email);
 	}
 
-	public void validateEmail(String email) {
-		if (!emailVerificationRedisRepository.isVerified(email)) {
-			throw new BizException(AuthErrorCode.UNVERIFIED_EMAIL);
+	public TokenPair refreshToken(String refreshToken) {
+		if (tokenBlacklistRedisRepository.exist(refreshToken)) {
+			throw new BizException(AuthErrorCode.INVALID_REFRESH_TOKEN);
 		}
-	}
 
-	public void deleteVerifiedEmail(String email) {
-		emailVerificationRedisRepository.deleteVerified(email);
+		long expirationMillis = jwtComponent.getExpirationMillis(refreshToken);
+		tokenBlacklistRedisRepository.save(refreshToken, expirationMillis);
+
+		UserAuth userAuth = jwtComponent.extractUserAuthFromToken(refreshToken);
+
+		return jwtComponent.generateTokenPair(userAuth);
 	}
 
 	private String generateVerificationCode(int length) {

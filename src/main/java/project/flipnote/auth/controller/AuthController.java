@@ -1,13 +1,14 @@
 package project.flipnote.auth.controller;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
@@ -35,7 +36,7 @@ public class AuthController {
 		TokenPair tokenPair = authService.login(req);
 
 		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
-		Cookie cookie = CookieUtil.createCookie(
+		ResponseCookie cookie = CookieUtil.createCookie(
 			JwtConstants.REFRESH_TOKEN,
 			tokenPair.refreshToken(),
 			Math.toIntExact(expirationSeconds)
@@ -48,7 +49,7 @@ public class AuthController {
 
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout() {
-		Cookie expiredCookie = CookieUtil.createExpiredCookie(JwtConstants.REFRESH_TOKEN);
+		ResponseCookie expiredCookie = CookieUtil.createExpiredCookie(JwtConstants.REFRESH_TOKEN);
 
 		return ResponseEntity.ok()
 			.header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
@@ -69,5 +70,23 @@ public class AuthController {
 		authService.confirmEmailVerificationCode(req);
 
 		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/token/refresh")
+	public ResponseEntity<UserLoginResponse> refreshToken(
+		@CookieValue(name = JwtConstants.REFRESH_TOKEN) String refreshToken
+	) {
+		TokenPair tokenPair = authService.refreshToken(refreshToken);
+
+		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
+		ResponseCookie cookie = CookieUtil.createCookie(
+			JwtConstants.REFRESH_TOKEN,
+			tokenPair.refreshToken(),
+			Math.toIntExact(expirationSeconds)
+		);
+
+		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, cookie.toString())
+			.body(UserLoginResponse.from(tokenPair.accessToken()));
 	}
 }

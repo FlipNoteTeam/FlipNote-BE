@@ -15,9 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import project.flipnote.auth.exception.AuthErrorCode;
+import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
-import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.User;
@@ -36,19 +35,19 @@ import project.flipnote.user.repository.UserRepository;
 class UserServiceTest {
 
 	@InjectMocks
-	private UserService userService;
+	UserService userService;
 
 	@Mock
-	private UserRepository userRepository;
+	UserRepository userRepository;
 
 	@Mock
-	private AuthService authService;
+	PasswordEncoder passwordEncoder;
 
 	@Mock
-	private PasswordEncoder passwordEncoder;
+	TokenVersionRedisRepository tokenVersionRedisRepository;
 
 	@Mock
-	private TokenVersionRedisRepository tokenVersionRedisRepository;
+	EmailVerificationRedisRepository emailVerificationRedisRepository;
 
 	@DisplayName("회원가입 테스트")
 	@Nested
@@ -64,15 +63,14 @@ class UserServiceTest {
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(userRepository.existsByPhone(any(String.class))).willReturn(false);
+			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
+
 
 			UserRegisterResponse res = userService.register(req);
 
 			assertThat(res.userId()).isEqualTo(user.getId());
-
-			verify(authService, times(1)).validateEmail(any(String.class));
-			verify(authService, times(1)).deleteVerifiedEmail(any(String.class));
 		}
 
 		@DisplayName("휴대전화 번호가 null일 때 성공")
@@ -84,15 +82,13 @@ class UserServiceTest {
 			);
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
+			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
 			UserRegisterResponse res = userService.register(req);
 
 			assertThat(res.userId()).isEqualTo(user.getId());
-
-			verify(authService, times(1)).validateEmail(any(String.class));
-			verify(authService, times(1)).deleteVerifiedEmail(any(String.class));
 		}
 
 		@DisplayName("이메일 중복 시 예외 발생")
@@ -134,13 +130,12 @@ class UserServiceTest {
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
 
-			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
-			given(userRepository.existsByPhone(any(String.class))).willReturn(false);
-			doThrow(new BizException(AuthErrorCode.UNVERIFIED_EMAIL))
-				.when(authService).validateEmail(any(String.class));
+			given(userRepository.existsByEmail(anyString())).willReturn(false);
+			given(userRepository.existsByPhone(anyString())).willReturn(false);
+			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(false);
 
 			BizException exception = assertThrows(BizException.class, () -> userService.register(req));
-			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.UNVERIFIED_EMAIL);
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.UNVERIFIED_EMAIL);
 
 			verify(userRepository, never()).save(any(User.class));
 		}

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
-import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
@@ -28,8 +28,8 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final AuthService authService;
 	private final TokenVersionRedisRepository tokenVersionRedisRepository;
+	private final EmailVerificationRedisRepository emailVerificationRedisRepository;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -39,7 +39,9 @@ public class UserService {
 		validateEmailDuplicate(email);
 		validatePhoneDuplicate(phone);
 
-		authService.validateEmail(email);
+		if (!emailVerificationRedisRepository.isVerified(email)) {
+			throw new BizException(UserErrorCode.UNVERIFIED_EMAIL);
+		}
 
 		User user = User.builder()
 			.email(email)
@@ -52,7 +54,7 @@ public class UserService {
 			.build();
 		User savedUser = userRepository.save(user);
 
-		authService.deleteVerifiedEmail(email);
+		emailVerificationRedisRepository.deleteVerified(email);
 
 		return UserRegisterResponse.from(savedUser.getId());
 	}
