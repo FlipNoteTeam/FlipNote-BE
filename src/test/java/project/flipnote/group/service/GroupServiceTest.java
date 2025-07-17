@@ -1,127 +1,121 @@
 package project.flipnote.group.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import jakarta.transaction.Transactional;
+import org.springframework.test.util.ReflectionTestUtils;
+import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
+import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupPermission;
-import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.user.entity.User;
-import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.UserRegisterRequest;
-import project.flipnote.user.model.UserRegisterResponse;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
-import project.flipnote.user.service.UserService;
 
-@ActiveProfiles("test")
-@SpringBootTest
-@Transactional
+@ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
 
 	private static final Logger log = LoggerFactory.getLogger(GroupServiceTest.class);
-	//가짜 객체 생성
-	@Autowired
-	GroupRepository groupRepository;
-
-	//필드에 mock 객체 주입
-	@Autowired
+	@InjectMocks
 	GroupService groupService;
 
-	@Autowired
-	UserRepository userRepository;
+	@Mock
+	GroupRepository groupRepository;
 
-	@Autowired
-	UserService userService;
-
-	UserAuth userAuth;
-
-	@Autowired
+	@Mock
 	GroupPermissionRepository groupPermissionRepository;
 
-	@Autowired
+	@Mock
 	GroupRolePermissionRepository groupRolePermissionRepository;
+
+	@Mock
+	UserRepository userRepository;
+
+	@Mock
+	EmailVerificationRedisRepository emailVerificationRedisRepository;
+
+	@Mock
+	GroupMemberRepository groupMemberRepository;
+
+	User user;
+	UserAuth userAuth;
 
 	@BeforeEach
 	void before() {
-		//1. 유저 생성
-		UserRegisterRequest req = new UserRegisterRequest("d@d.com", "1234", "name", "nickname", true, "01000000000", "www.~~");
-		UserRegisterResponse res = userService.register(req);
-
-		//2. 유저 조회
-		User user = userRepository.findById(res.userId()).orElseThrow(
-			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
-		);
-
-		//3. 테스트용 userAuth 생성
+		user = UserFixture.createActiveUser();
 		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 
-		//4. 테스트용 퍼미션 설정
-		groupPermissionRepository.saveAll(List.of(
-			GroupPermission.builder().name("INVITE").build(),
-			GroupPermission.builder().name("KICK").build(),
-			GroupPermission.builder().name("JOIN_REQUEST_MANAGE").build()
-		));
+		// 사용자 검증 로직
+		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
 	}
 
 	@Test
-	void 그룹_생성() {
-		//given
+	void 그룹_생성_성공() {
+		// given
 		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
-		GroupCreateRequest req1 = new GroupCreateRequest("그룹2", Category.ENGLISH, "설명2", true, true, 50, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
-		//when
+		given(groupRepository.save(any(Group.class))).willReturn(group);
+
+		// 그룹 퍼미션 미리 세팅
+		List<GroupPermission> permissions = List.of(
+				GroupPermission.builder().name("INVITE").build(),
+				GroupPermission.builder().name("KICK").build(),
+				GroupPermission.builder().name("JOIN_REQUEST_MANAGE").build()
+		);
+		given(groupPermissionRepository.findAll()).willReturn(permissions);
+
+		// when
 		GroupCreateResponse response = groupService.create(userAuth, req);
-		GroupCreateResponse response1 = groupService.create(userAuth, req1);
 
-		//then
-		assertEquals(1L, response.groupId());
-		assertEquals(2L, response1.groupId());
-
-		List<GroupRolePermission> groupRolePermissions = groupRolePermissionRepository.findAll();
-		groupRolePermissions.forEach(p ->
-			log.info("그룹 = {}, 권한 = {}, 역할 = {}", p.getGroup().getId(),p.getGroupPermission().getName(), p.getRole()));
+		// then
+		assertThat(response.groupId()).isEqualTo(1L);
 	}
 
 	@Test
-	void 그룹_생성_실패_음수_인원() {
-		//given
+	void 그룹_생성_실패_음수() {
+		// given
 		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
-		//when
 
-		//then
-		assertThrows(BizException.class, () -> {
-			groupService.create(userAuth, req);
-		});
+		// when & then
+		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
 	}
 
 	@Test
-	void 그룹_생성_실패_양수_인원() {
-		//given
+	void 그룹_생성_실패_초과() {
+		// given
 		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
-		//when
-
-		//then
-		assertThrows(BizException.class, () -> {
-			groupService.create(userAuth, req);
-		});
+		// when & then
+		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
 	}
 }
