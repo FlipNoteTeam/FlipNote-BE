@@ -1,11 +1,6 @@
 package project.flipnote.group.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,11 +18,12 @@ public class GroupPermission {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 50, unique = true)
-	private String name;
+	private GroupPermissionStatus name;
 
 	@Builder
-	private GroupPermission(String name) {
+	private GroupPermission(GroupPermissionStatus name) {
 		this.name = name;
 	}
 }

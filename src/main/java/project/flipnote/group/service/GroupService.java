@@ -14,7 +14,6 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermission;
-import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
@@ -74,7 +73,7 @@ public class GroupService {
 	private void initializeGroupPermissions(Group group) {
 		List<GroupPermission> groupPermissions = groupPermissionRepository.findAll();
 
-		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupRole.values())
+		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupMemberRole.values())
 				.flatMap(role -> groupPermissions.stream()
 						.map(permission -> GroupRolePermission.builder()
 								.group(group)

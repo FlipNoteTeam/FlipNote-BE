@@ -26,6 +26,7 @@ import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupPermission;
+import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupPermissionRepository;
@@ -83,9 +84,9 @@ class GroupServiceTest {
 
 		// 그룹 퍼미션 미리 세팅
 		List<GroupPermission> permissions = List.of(
-				GroupPermission.builder().name("INVITE").build(),
-				GroupPermission.builder().name("KICK").build(),
-				GroupPermission.builder().name("JOIN_REQUEST_MANAGE").build()
+				GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
+				GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
+				GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
 		);
 		given(groupPermissionRepository.findAll()).willReturn(permissions);
 
