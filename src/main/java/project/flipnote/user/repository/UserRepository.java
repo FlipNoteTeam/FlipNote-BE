@@ -15,10 +15,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByPhone(String phone);
 
-	Optional<User> findByEmailAndStatus(String email, UserStatus status);
+	Optional<User> findByIdAndStatus(Long id, UserStatus userStatus);
 
-	Optional<User> findByIdAndStatus(Long userId, UserStatus status);
+	Optional<User> findByEmailAndStatus(String email, UserStatus status);
 
 	@Query("SELECT u.tokenVersion FROM User u WHERE u.id = :userId")
 	Optional<Long> findTokenVersionById(@Param("userId") Long userId);
-	}
+
+}
