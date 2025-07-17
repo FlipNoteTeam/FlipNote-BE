@@ -100,11 +100,11 @@ public class GroupService {
 				.imageUrl(req.image())
 				.build();
 
-		groupRepository.save(group);
-		
-        log.info("생성 시간: {}", group.getCreatedAt());
+		Group saveGroup = groupRepository.save(group);
 
-		return group;
+		log.info("생성 시간: {}", group.getCreatedAt());
+
+		return saveGroup;
 	}
 	
 	/*
