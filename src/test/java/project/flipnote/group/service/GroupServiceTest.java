@@ -123,17 +123,4 @@ class GroupServiceTest {
 			groupService.create(userAuth, req);
 		});
 	}
-
-	@SuppressWarnings("checkstyle:MethodName")
-	@Test
-	@DisplayName("")
-	void 그룹_생성시_그룹_회원_추가() {
-		//given
-		GroupCreateDto.Request req = new GroupCreateDto.Request("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
-		//when
-		groupService.create(userAuth, req);
-
-		//then
-		// assertEquals(1L, response.groupId());
-	}
 }
