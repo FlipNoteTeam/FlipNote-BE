@@ -13,6 +13,8 @@ import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
+import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
@@ -75,6 +77,18 @@ public class UserService {
 		user.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
 
 		return UserUpdateResponse.from(user);
+	}
+
+	public MyInfoResponse getMyInfo(Long userId) {
+		User user = findActiveUserById(userId);
+
+		return MyInfoResponse.from(user);
+	}
+
+	public UserInfoResponse getUserInfo(Long userId) {
+		User user = findActiveUserById(userId);
+
+		return UserInfoResponse.from(user);
 	}
 
 	private User findActiveUserById(Long userId) {
