@@ -1,8 +1,6 @@
 package project.flipnote.group.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import project.flipnote.group.entity.Category;
 
 public class GroupCreateDto {
@@ -25,6 +23,8 @@ public class GroupCreateDto {
 		Boolean publicVisible,
 
 		@NotNull
+		@Min(1)
+		@Max(100)
 		Integer maxMember,
 
 		String image
