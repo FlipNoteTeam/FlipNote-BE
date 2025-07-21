@@ -54,7 +54,7 @@ public class GroupApplicationService {
 	}
 	
 	//그룹 내 권한 정보 조회
-	private Boolean checkPermission(Group group, User user) {
+	private Boolean hasPermission(Group group, User user) {
 		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
 				() -> new BizException(GroupApplicationErrorCode.USER_NOT_IN_GROUP)
 		);
@@ -64,7 +64,7 @@ public class GroupApplicationService {
 
         return groupRolePermissionRepository.existByGroupAndRoleAndGroupPermission(group, groupMember.getRole(), groupPermission);
 	}
-
+	
 	private List<GroupApplication> findGroupApplications(Group group) {
         return groupApplicationRepository.findAllByGroup(group);
 	}
@@ -89,6 +89,7 @@ public class GroupApplicationService {
 		return GroupApplicationJoinResponse.from(saveGroupApplication.getId());
 	}
 
+	//그룹 가입 신청 리스트 조회
 	public GroupApplicationListResponse findGroupJoinList(UserAuth userAuth, Long groupId) {
 		//유저 조회
 		User user = findUser(userAuth);
@@ -97,10 +98,13 @@ public class GroupApplicationService {
 		Group group = findGroup(groupId);
 		
 		//그룹 내 권한 조회
-		Boolean isExistPermission = checkPermission(group, user);
+		Boolean isExistPermission = hasPermission(group, user);
 		
-		if(!isExistPermission) throw new BizException(GroupApplicationErrorCode.USER_NOT_PERMISSION);
-		
+		//권한 존재하지 않으면 에러
+		if (!isExistPermission) {
+			throw new BizException(GroupApplicationErrorCode.USER_NOT_PERMISSION);
+		}
+
 		//그룹 내 가입 신청 리스트 조회
 		List<GroupApplication> groupApplications = findGroupApplications(group);
 		
