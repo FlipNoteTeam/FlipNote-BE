@@ -39,16 +39,16 @@ public class GroupApplicationController {
 	}
 
 	//가입 신청 응답
-	@PatchMapping("/joins/{joinId}")
+	@PatchMapping("/{joinId}")
 	public ResponseEntity<GroupApplicationRespondResponse> respondToJoinRequest(
 			UserAuth userAuth,
 			@PathVariable("groupId") Long groupId,
 			@PathVariable("joinId") Long joinId,
 			@Valid @RequestBody GroupApplicationRespondRequest req) {
 
-		groupApplicationService.respondToJoinRequest(userAuth, groupId, joinId, req);
+		GroupApplicationRespondResponse res = groupApplicationService.respondToJoinRequest(userAuth, groupId, joinId, req);
 
+		return ResponseEntity.ok(res);
 	}
-
 
 }
