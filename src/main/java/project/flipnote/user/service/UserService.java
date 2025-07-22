@@ -69,7 +69,8 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		user.unregister();
-		tokenVersionRedisRepository.deleteTokenVersion(userId);
+		
+		tokenVersionService.incrementTokenVersion(userId);
 	}
 
 	@Transactional
