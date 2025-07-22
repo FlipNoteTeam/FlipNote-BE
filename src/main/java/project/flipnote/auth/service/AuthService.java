@@ -85,6 +85,12 @@ public class AuthService {
 		return jwtComponent.generateTokenPair(userAuth);
 	}
 
+	public void validatePasswordMatch(String rawPassword, String encodedPassword) {
+		if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
+		}
+	}
+
 	private String generateVerificationCode(int length) {
 		int origin = (int)Math.pow(10, length - 1);
 		int bound = (int)Math.pow(10, length);
@@ -94,12 +100,6 @@ public class AuthService {
 	private User findActiveUserByEmail(String email) {
 		return userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
-	}
-
-	private void validatePasswordMatch(String rawPassword, String encodedPassword) {
-		if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-			throw new BizException(AuthErrorCode.INVALID_CREDENTIALS);
-		}
 	}
 
 	private void validateEmailIsAvailable(String email) {

@@ -9,11 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
+import project.flipnote.auth.service.AuthService;
+import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.ChangePasswordRequest;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -30,6 +33,8 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenVersionRedisRepository tokenVersionRedisRepository;
 	private final EmailVerificationRedisRepository emailVerificationRedisRepository;
+	private final AuthService authService;
+	private final TokenVersionService tokenVersionService;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -91,6 +96,17 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		return UserInfoResponse.from(user);
+	}
+
+	@Transactional
+	public void changePassword(Long userId, ChangePasswordRequest req) {
+		User user = findActiveUserById(userId);
+
+		authService.validatePasswordMatch(req.currentPassword(), user.getPassword());
+
+		user.changePassword(passwordEncoder.encode(req.newPassword()));
+
+		tokenVersionService.incrementTokenVersion(userId);
 	}
 
 	private User findActiveUserById(Long userId) {

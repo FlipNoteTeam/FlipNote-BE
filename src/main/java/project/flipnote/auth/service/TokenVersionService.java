@@ -25,4 +25,9 @@ public class TokenVersionService {
 				return dbTokenVersion;
 			});
 	}
+
+	public void incrementTokenVersion(long userId) {
+		userRepository.incrementTokenVersion(userId);
+		tokenVersionRedisRepository.deleteTokenVersion(userId);
+	}
 }
