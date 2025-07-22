@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
-import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.auth.service.AuthService;
+import project.flipnote.auth.service.EmailVerificationService;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
@@ -31,10 +31,9 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final TokenVersionRedisRepository tokenVersionRedisRepository;
-	private final EmailVerificationRedisRepository emailVerificationRedisRepository;
 	private final AuthService authService;
 	private final TokenVersionService tokenVersionService;
+	private final EmailVerificationService emailVerificationService;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -43,10 +42,7 @@ public class UserService {
 
 		validateEmailDuplicate(email);
 		validatePhoneDuplicate(phone);
-
-		if (!emailVerificationRedisRepository.isVerified(email)) {
-			throw new BizException(UserErrorCode.UNVERIFIED_EMAIL);
-		}
+		emailVerificationService.validateVerified(email);
 
 		User user = User.builder()
 			.email(email)
@@ -59,8 +55,6 @@ public class UserService {
 			.build();
 		User savedUser = userRepository.save(user);
 
-		emailVerificationRedisRepository.deleteVerified(email);
-
 		return UserRegisterResponse.from(savedUser.getId());
 	}
 
@@ -69,7 +63,7 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		user.unregister();
-		
+
 		tokenVersionService.incrementTokenVersion(userId);
 	}
 
