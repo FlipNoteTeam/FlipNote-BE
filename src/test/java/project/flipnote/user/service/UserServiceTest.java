@@ -19,6 +19,7 @@ import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.auth.service.AuthService;
+import project.flipnote.auth.service.EmailVerificationService;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
@@ -53,12 +54,14 @@ class UserServiceTest {
 	@Mock
 	EmailVerificationRedisRepository emailVerificationRedisRepository;
 
-	// UserService의 새로운 의존성 Mock 객체 추가
 	@Mock
 	AuthService authService;
 
 	@Mock
 	TokenVersionService tokenVersionService;
+
+	@Mock
+	EmailVerificationService emailVerificationService;
 
 	@DisplayName("회원가입 테스트")
 	@Nested
@@ -74,7 +77,6 @@ class UserServiceTest {
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(userRepository.existsByPhone(any(String.class))).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
@@ -92,7 +94,6 @@ class UserServiceTest {
 			);
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
@@ -142,10 +143,12 @@ class UserServiceTest {
 
 			given(userRepository.existsByEmail(anyString())).willReturn(false);
 			given(userRepository.existsByPhone(anyString())).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(false);
+			doThrow(new BizException(AuthErrorCode.UNVERIFIED_EMAIL))
+				.when(emailVerificationService)
+				.validateVerified(anyString());
 
 			BizException exception = assertThrows(BizException.class, () -> userService.register(req));
-			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.UNVERIFIED_EMAIL);
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.UNVERIFIED_EMAIL);
 
 			verify(userRepository, never()).save(any(User.class));
 		}
@@ -164,9 +167,8 @@ class UserServiceTest {
 
 			userService.unregister(user.getId());
 
-			// user.unregister()가 호출되었는지 spy 객체를 통해 검증
 			verify(user, times(1)).unregister();
-			verify(tokenVersionRedisRepository, times(1)).deleteTokenVersion(anyLong());
+			verify(tokenVersionService, times(1)).incrementTokenVersion(user.getId());
 		}
 
 		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
