@@ -64,4 +64,8 @@ public class GroupApplication extends BaseEntity {
 		this.status = status;
 		this.joinIntro = joinIntro;
 	}
+
+	public void updateStatus(GroupApplicationStatus status) {
+		this.status = status;
+	}
 }
