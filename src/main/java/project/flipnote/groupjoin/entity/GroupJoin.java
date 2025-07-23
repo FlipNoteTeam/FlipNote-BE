@@ -1,9 +1,4 @@
-package project.flipnote.groupapplication.entity;
-
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+package project.flipnote.groupjoin.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,9 +21,9 @@ import project.flipnote.user.entity.User;
 
 @Getter
 @Entity
-@Table(name = "group_applications")
+@Table(name = "group_joins")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GroupApplication extends BaseEntity {
+public class GroupJoin extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,16 +39,16 @@ public class GroupApplication extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "PENDING")
-	private GroupApplicationStatus status;
+	private GroupJoinStatus status;
 
 	private String joinIntro;
 
 	@Builder
-	public GroupApplication
+	public GroupJoin
 		(
 			User user,
 			Group group,
-			GroupApplicationStatus status,
+			GroupJoinStatus status,
 			String joinIntro
 		)
 
@@ -65,7 +59,7 @@ public class GroupApplication extends BaseEntity {
 		this.joinIntro = joinIntro;
 	}
 
-	public void updateStatus(GroupApplicationStatus status) {
+	public void updateStatus(GroupJoinStatus status) {
 		this.status = status;
 	}
 }

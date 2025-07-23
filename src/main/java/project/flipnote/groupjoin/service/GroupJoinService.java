@@ -1,4 +1,4 @@
-package project.flipnote.groupapplication.service;
+package project.flipnote.groupjoin.service;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +14,11 @@ import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
-import project.flipnote.groupapplication.entity.GroupApplication;
-import project.flipnote.groupapplication.entity.GroupApplicationStatus;
-import project.flipnote.groupapplication.exception.GroupApplicationErrorCode;
-import project.flipnote.groupapplication.model.*;
-import project.flipnote.groupapplication.repository.GroupApplicationRepository;
+import project.flipnote.groupjoin.entity.GroupJoin;
+import project.flipnote.groupjoin.entity.GroupJoinStatus;
+import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
+import project.flipnote.groupjoin.model.*;
+import project.flipnote.groupjoin.repository.GroupJoinRepository;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -30,10 +30,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class GroupApplicationService {
+public class GroupJoinService {
 	private final GroupRepository groupRepository;
 	private final UserRepository userRepository;
-	private final GroupApplicationRepository groupApplicationRepository;
+	private final GroupJoinRepository groupJoinRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final GroupPermissionRepository groupPermissionRepository;
@@ -55,47 +55,46 @@ public class GroupApplicationService {
 	//그룹 내 권한 정보 조회
 	private Boolean hasPermission(Group group, User user) {
 		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
-				() -> new BizException(GroupApplicationErrorCode.USER_NOT_IN_GROUP)
+				() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
 		);
-
 
 		GroupPermission groupPermission = groupPermissionRepository.findByName(GroupPermissionStatus.JOIN_REQUEST_MANAGE);
 
         return groupRolePermissionRepository.existByGroupAndRoleAndGroupPermission(group, groupMember.getRole(), groupPermission);
 	}
 	
-	private List<GroupApplication> findGroupApplications(Group group) {
-        return groupApplicationRepository.findAllByGroup(group);
+	private List<GroupJoin> findGroupJoins(Group group) {
+        return groupJoinRepository.findAllByGroup(group);
 	}
 
-	private GroupApplication findGroupApplication(Long joinId) {
-		return groupApplicationRepository.findById(joinId).orElseThrow(
-				() ->  new BizException(GroupApplicationErrorCode.NOT_EXIST_JOIN)
+	private GroupJoin findGroupApplication(Long joinId) {
+		return groupJoinRepository.findById(joinId).orElseThrow(
+				() ->  new BizException(GroupJoinErrorCode.NOT_EXIST_JOIN)
 		);
 	}
 	
 	//가입 신청 요청
 	@Transactional
-	public GroupApplicationJoinResponse joinRequest(UserAuth userAuth, Long groupId, GroupApplicationJoinRequest req) {
+	public GroupJoinResponse joinRequest(UserAuth userAuth, Long groupId, GroupJoinRequest req) {
 		//유저 조회
 		User user = findUser(userAuth);
 		//그룹 조회
 		Group group = findGroup(groupId);
 
-		GroupApplication groupApplication = GroupApplication.builder()
+		GroupJoin groupJoin = GroupJoin.builder()
 				.group(group)
 				.user(user)
 				.joinIntro(req.joinIntro())
-				.status(GroupApplicationStatus.PENDING)
+				.status(GroupJoinStatus.PENDING)
 				.build();
 
-		GroupApplication saveGroupApplication = groupApplicationRepository.save(groupApplication);
+		GroupJoin saveGroupJoin = groupJoinRepository.save(groupJoin);
 
-		return GroupApplicationJoinResponse.from(saveGroupApplication.getId());
+		return GroupJoinResponse.from(saveGroupJoin.getId());
 	}
 
 	//그룹 가입 신청 리스트 조회
-	public GroupApplicationListResponse findGroupJoinList(UserAuth userAuth, Long groupId) {
+	public GroupJoinListResponse findGroupJoinList(UserAuth userAuth, Long groupId) {
 		//유저 조회
 		User user = findUser(userAuth);
 
@@ -107,18 +106,18 @@ public class GroupApplicationService {
 		
 		//권한 존재하지 않으면 에러
 		if (!isExistPermission) {
-			throw new BizException(GroupApplicationErrorCode.USER_NOT_PERMISSION);
+			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
 		}
 
 		//그룹 내 가입 신청 리스트 조회
-		List<GroupApplication> groupApplications = findGroupApplications(group);
+		List<GroupJoin> groupJoins = findGroupJoins(group);
 		
 		//반환
-		return GroupApplicationListResponse.from(groupApplications);
+		return GroupJoinListResponse.from(groupJoins);
 	}
 
 	//가입 신청 응답
-	public GroupApplicationRespondResponse respondToJoinRequest(UserAuth userAuth, Long groupId, Long joinId, @Valid GroupApplicationRespondRequest req) {
+	public GroupJoinRespondResponse respondToJoinRequest(UserAuth userAuth, Long groupId, Long joinId, @Valid GroupJoinRespondRequest req) {
 		//유저 조회
 		User user = findUser(userAuth);
 
@@ -130,16 +129,16 @@ public class GroupApplicationService {
 
 		//권한 존재하지 않으면 에러
 		if (!isExistPermission) {
-			throw new BizException(GroupApplicationErrorCode.USER_NOT_PERMISSION);
+			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
 		}
 
 		//그룹 가입 신청 조회
-		GroupApplication groupApplication = findGroupApplication(joinId);
+		GroupJoin groupJoin = findGroupApplication(joinId);
 		
-		groupApplication.updateStatus(req.status());
+		groupJoin.updateStatus(req.status());
 
-		groupApplicationRepository.save(groupApplication);
+		groupJoinRepository.save(groupJoin);
 
-		return GroupApplicationRespondResponse.from(groupApplication.getId());
+		return GroupJoinRespondResponse.from(groupJoin.getId());
 	}
 }
