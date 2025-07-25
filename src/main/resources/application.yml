@@ -11,7 +11,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
 
     properties:
       hibernate:
@@ -54,3 +54,7 @@ app:
 
   encryption:
     key: ${APP_ENCRYPTION_KEY}
+
+  client:
+    url: ${APP_CLIENT_URL:https://flipnote.site}
+    password-reset-path: ${APP_CLIENT_PASSWORD_RESET_PATH:/password-reset}

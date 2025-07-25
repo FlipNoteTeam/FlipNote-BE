@@ -9,15 +9,15 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import project.flipnote.auth.constants.VerificationConstants;
-import project.flipnote.auth.event.EmailVerificationSendEvent;
+import project.flipnote.auth.constants.PasswordResetConstants;
+import project.flipnote.auth.event.PasswordResetCreateEvent;
 import project.flipnote.common.exception.EmailSendException;
 import project.flipnote.infra.email.EmailService;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class EmailVerificationEventListener {
+public class PasswordResetCreateEventListener {
 
 	private final EmailService emailService;
 
@@ -28,12 +28,12 @@ public class EmailVerificationEventListener {
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
 	@EventListener
-	public void handleEmailVerificationSendEvent(EmailVerificationSendEvent event) {
-		emailService.sendEmailVerificationCode(event.to(), event.code(), VerificationConstants.CODE_TTL_MINUTES);
+	public void handlePasswordResetCreateEvent(PasswordResetCreateEvent event) {
+		emailService.sendPasswordResetLink(event.to(), event.link(), PasswordResetConstants.TOKEN_TTL_MINUTES);
 	}
 
 	@Recover
-	public void recover(EmailSendException ex, EmailVerificationSendEvent event) {
-		log.error("이메일 인증번호 전송 실패: to={}", event.to(), ex);
+	public void recover(EmailSendException ex, PasswordResetCreateEvent event) {
+		log.error("비밀번호 재설정 링크 전송 실패: to={}", event.to(), ex);
 	}
 }
