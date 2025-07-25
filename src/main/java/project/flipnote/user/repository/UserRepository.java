@@ -24,8 +24,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Optional<Long> findTokenVersionById(@Param("userId") Long userId);
 
 	@Modifying
-	@Query("UPDATE User u SET u.tokenVersion = u.tokenVersion + 1 WHERE u.id = :id")
-	void incrementTokenVersion(@Param("id") Long userId);
+	@Query("UPDATE User u SET u.tokenVersion = u.tokenVersion + 1 WHERE u.id = :userId")
+	void incrementTokenVersion(@Param("userId") Long userId);
 
 	boolean existsByEmailAndStatus(String email, UserStatus status);
+
+	@Modifying
+	@Query("UPDATE User u SET u.password = :password WHERE u.email = :email")
+	void updatePassword(@Param("email") String email, @Param("password") String password);
 }

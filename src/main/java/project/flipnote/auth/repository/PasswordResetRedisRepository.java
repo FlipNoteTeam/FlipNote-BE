@@ -47,11 +47,20 @@ public class PasswordResetRedisRepository {
 	}
 
 	public void deleteToken(String email, String token) {
-		String tokenKey = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
-		stringRedisTemplate.delete(tokenKey);
+		stringRedisTemplate.execute(new SessionCallback<List<Object>>() {
+			@Override
+			public List<Object> execute(RedisOperations operations) throws DataAccessException {
+				operations.multi();
 
-		String emailKey = AuthRedisKey.PASSWORD_RESET_EMAIL.key(email);
-		stringRedisTemplate.delete(emailKey);
+				String tokenKey = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
+				stringRedisTemplate.delete(tokenKey);
+
+				String emailKey = AuthRedisKey.PASSWORD_RESET_EMAIL.key(email);
+				stringRedisTemplate.delete(emailKey);
+
+				return operations.exec();
+			}
+		});
 	}
 
 	public boolean hasActiveToken(String email) {

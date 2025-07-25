@@ -22,6 +22,7 @@ import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
+import project.flipnote.auth.model.PasswordResetRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
@@ -368,6 +369,42 @@ class AuthServiceTest {
 
 			verify(passwordResetRedisRepository, never()).saveToken(anyString(), anyString());
 			verify(eventPublisher, never()).publishEvent(any(PasswordResetCreateEvent.class));
+		}
+	}
+
+	@DisplayName("비밀번호 재설정 테스트")
+	@Nested
+	class ResetPassword {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			String email = "test@test.com";
+			String encodedPass = "encodedPass";
+			String token = "token";
+			PasswordResetRequest req = new PasswordResetRequest(token, "testPass");
+
+			given(passwordResetRedisRepository.findEmailByToken(anyString())).willReturn(Optional.of(email));
+			given(passwordEncoder.encode(anyString())).willReturn(encodedPass);
+
+			authService.resetPassword(req);
+
+			verify(userRepository, times(1)).updatePassword(eq(email), eq(encodedPass));
+			verify(passwordResetRedisRepository, times(1)).deleteToken(eq(email), eq(token));
+		}
+
+		@DisplayName("토큰이 존재하지 않거나 만료되었을 때 예외 발생")
+		@Test
+		void fail_invalidPasswordResetToken() {
+			PasswordResetRequest req = new PasswordResetRequest("token", "testPass");
+
+			given(passwordResetRedisRepository.findEmailByToken(anyString())).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class, () -> authService.resetPassword(req));
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN);
+
+			verify(userRepository, never()).updatePassword(anyString(), anyString());
+			verify(passwordResetRedisRepository, never()).deleteToken(anyString(), anyString());
 		}
 	}
 }
