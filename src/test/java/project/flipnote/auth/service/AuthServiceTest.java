@@ -338,7 +338,6 @@ class AuthServiceTest {
 
 			authService.requestPasswordReset(req);
 
-			verify(passwordResetRedisRepository, times(1)).saveEmail(eq(email));
 			verify(passwordResetRedisRepository, times(1)).saveToken(eq(email), eq(token));
 			verify(eventPublisher, times(1)).publishEvent(any(PasswordResetCreateEvent.class));
 		}
@@ -353,7 +352,6 @@ class AuthServiceTest {
 			BizException exception = assertThrows(BizException.class, () -> authService.requestPasswordReset(req));
 			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.ALREADY_SENT_PASSWORD_RESET_LINK);
 
-			verify(passwordResetRedisRepository, never()).saveEmail(anyString());
 			verify(passwordResetRedisRepository, never()).saveToken(anyString(), anyString());
 			verify(eventPublisher, never()).publishEvent(any(PasswordResetCreateEvent.class));
 		}
@@ -368,7 +366,6 @@ class AuthServiceTest {
 
 			authService.requestPasswordReset(req);
 
-			verify(passwordResetRedisRepository, never()).saveEmail(anyString());
 			verify(passwordResetRedisRepository, never()).saveToken(anyString(), anyString());
 			verify(eventPublisher, never()).publishEvent(any(PasswordResetCreateEvent.class));
 		}
