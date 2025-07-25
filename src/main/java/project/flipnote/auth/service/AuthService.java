@@ -100,8 +100,6 @@ public class AuthService {
 		boolean existUser = userRepository.existsByEmailAndStatus(email, UserStatus.ACTIVE);
 		if (existUser) {
 			String token = passwordResetTokenGenerator.generateToken();
-
-			passwordResetRedisRepository.saveEmail(email);
 			passwordResetRedisRepository.saveToken(email, token);
 
 			String link = clientProperties.buildPasswordResetUrl(token);

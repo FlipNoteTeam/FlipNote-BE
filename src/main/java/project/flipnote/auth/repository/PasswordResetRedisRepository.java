@@ -1,8 +1,12 @@
 package project.flipnote.auth.repository;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -16,13 +20,25 @@ public class PasswordResetRedisRepository {
 	private final StringRedisTemplate stringRedisTemplate;
 
 	public void saveToken(String email, String token) {
-		String key = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
-		Duration ttl = AuthRedisKey.PASSWORD_RESET_TOKEN.getTtl();
+		stringRedisTemplate.execute(new SessionCallback<List<Object>>() {
+			@Override
+			public List<Object> execute(RedisOperations operations) throws DataAccessException {
+				operations.multi();
 
-		stringRedisTemplate.opsForValue().set(key, email, ttl);
+				String tokenKey = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
+				Duration tokenTtl = AuthRedisKey.PASSWORD_RESET_TOKEN.getTtl();
+				operations.opsForValue().set(tokenKey, email, tokenTtl);
+
+				String emailKey = AuthRedisKey.PASSWORD_RESET_EMAIL.key(email);
+				Duration emailTtl = AuthRedisKey.PASSWORD_RESET_EMAIL.getTtl();
+				operations.opsForValue().set(emailKey, "1", emailTtl);
+
+				return operations.exec();
+			}
+		});
 	}
 
-	public Optional<String> findEmail(String token) {
+	public Optional<String> findEmailByToken(String token) {
 		String key = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
 
 		String email = stringRedisTemplate.opsForValue().get(key);
@@ -30,17 +46,12 @@ public class PasswordResetRedisRepository {
 		return Optional.ofNullable(email);
 	}
 
-	public void deleteToken(String token) {
-		String key = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
+	public void deleteToken(String email, String token) {
+		String tokenKey = AuthRedisKey.PASSWORD_RESET_TOKEN.key(token);
+		stringRedisTemplate.delete(tokenKey);
 
-		stringRedisTemplate.delete(key);
-	}
-
-	public void saveEmail(String email) {
-		String key = AuthRedisKey.PASSWORD_RESET_EMAIL.key(email);
-		Duration ttl = AuthRedisKey.PASSWORD_RESET_EMAIL.getTtl();
-
-		stringRedisTemplate.opsForValue().set(key, "1", ttl);
+		String emailKey = AuthRedisKey.PASSWORD_RESET_EMAIL.key(email);
+		stringRedisTemplate.delete(emailKey);
 	}
 
 	public boolean hasActiveToken(String email) {
