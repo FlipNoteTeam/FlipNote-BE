@@ -25,6 +25,7 @@ import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
+import project.flipnote.auth.util.VerificationCodeGenerator;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.common.security.exception.CustomSecurityException;
@@ -61,7 +62,7 @@ class AuthServiceTest {
 	TokenBlacklistRedisRepository tokenBlacklistRedisRepository;
 
 	@Mock
-	TokenVersionService tokenVersionService;
+	VerificationCodeGenerator verificationCodeGenerator;
 
 	@DisplayName("이메일 인증번호 전송 테스트")
 	@Nested
@@ -70,21 +71,18 @@ class AuthServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			EmailVerificationRequest req = new EmailVerificationRequest("test@test.com");
+			String email = "test@test.com";
+			String testCode = "123456";
+			EmailVerificationRequest req = new EmailVerificationRequest(email);
 
-			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
-			given(emailVerificationRedisRepository.existCode(any(String.class))).willReturn(false);
+			given(userRepository.existsByEmail(anyString())).willReturn(false);
+			given(emailVerificationRedisRepository.existCode(anyString())).willReturn(false);
+			given(verificationCodeGenerator.generateVerificationCode(anyInt())).willReturn(testCode);
 
 			authService.sendEmailVerificationCode(req);
 
-			verify(emailVerificationRedisRepository, times(1)).saveCode(any(String.class), any(String.class));
+			verify(emailVerificationRedisRepository).saveCode(eq("test@test.com"), eq(testCode));
 			verify(eventPublisher, times(1)).publishEvent(any(EmailVerificationSendEvent.class));
-
-			int codeLength = VerificationConstants.CODE_LENGTH;
-			verify(emailVerificationRedisRepository).saveCode(
-				eq(req.email()),
-				argThat(code -> code.length() == codeLength && code.matches("\\d{%s}".formatted(codeLength)))
-			);
 		}
 
 		@DisplayName("가입된 이메일인 경우 예외 발생")
