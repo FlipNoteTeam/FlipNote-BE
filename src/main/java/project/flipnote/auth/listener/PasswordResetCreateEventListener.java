@@ -28,7 +28,7 @@ public class PasswordResetCreateEventListener {
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
 	@EventListener
-	public void handleEmailVerificationSendEvent(PasswordResetCreateEvent event) {
+	public void handlePasswordResetCreateEvent(PasswordResetCreateEvent event) {
 		emailService.sendPasswordResetLink(event.to(), event.link(), PasswordResetConstants.TOKEN_TTL_MINUTES);
 	}
 
