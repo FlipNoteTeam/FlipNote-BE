@@ -16,16 +16,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
+import project.flipnote.auth.event.PasswordResetCreateEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
+import project.flipnote.auth.model.PasswordResetCreateRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
+import project.flipnote.auth.repository.PasswordResetRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
+import project.flipnote.auth.util.PasswordResetTokenGenerator;
 import project.flipnote.auth.util.VerificationCodeGenerator;
+import project.flipnote.common.config.ClientProperties;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.common.security.exception.CustomSecurityException;
@@ -64,6 +68,15 @@ class AuthServiceTest {
 	@Mock
 	VerificationCodeGenerator verificationCodeGenerator;
 
+	@Mock
+	PasswordResetRedisRepository passwordResetRedisRepository;
+
+	@Mock
+	PasswordResetTokenGenerator passwordResetTokenGenerator;
+
+	@Mock
+	ClientProperties clientProperties;
+
 	@DisplayName("이메일 인증번호 전송 테스트")
 	@Nested
 	class SendEmailVerificationCode {
@@ -72,16 +85,16 @@ class AuthServiceTest {
 		@Test
 		void success() {
 			String email = "test@test.com";
-			String testCode = "123456";
+			String code = "123456";
 			EmailVerificationRequest req = new EmailVerificationRequest(email);
 
 			given(userRepository.existsByEmail(anyString())).willReturn(false);
 			given(emailVerificationRedisRepository.existCode(anyString())).willReturn(false);
-			given(verificationCodeGenerator.generateVerificationCode(anyInt())).willReturn(testCode);
+			given(verificationCodeGenerator.generateVerificationCode(anyInt())).willReturn(code);
 
 			authService.sendEmailVerificationCode(req);
 
-			verify(emailVerificationRedisRepository).saveCode(eq("test@test.com"), eq(testCode));
+			verify(emailVerificationRedisRepository).saveCode(eq("test@test.com"), eq(code));
 			verify(eventPublisher, times(1)).publishEvent(any(EmailVerificationSendEvent.class));
 		}
 
@@ -305,6 +318,59 @@ class AuthServiceTest {
 
 			verify(tokenBlacklistRedisRepository, times(1)).save(invalidToken, expirationMillis);
 			verify(jwtComponent, never()).generateTokenPair(any(UserAuth.class));
+		}
+	}
+
+	@DisplayName("비밀번호 재설정 링크 전송 테스트")
+	@Nested
+	class RequestPasswordReset {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			String email = "test@test.com";
+			String token = "test-token";
+			PasswordResetCreateRequest req = new PasswordResetCreateRequest(email);
+
+			given(passwordResetRedisRepository.hasActiveToken(anyString())).willReturn(false);
+			given(userRepository.existsByEmailAndStatus(anyString(), any())).willReturn(true);
+			given(passwordResetTokenGenerator.generateToken()).willReturn(token);
+
+			authService.requestPasswordReset(req);
+
+			verify(passwordResetRedisRepository, times(1)).saveEmail(eq(email));
+			verify(passwordResetRedisRepository, times(1)).saveToken(eq(email), eq(token));
+			verify(eventPublisher, times(1)).publishEvent(any(PasswordResetCreateEvent.class));
+		}
+
+		@DisplayName("비밀번호 재설정 링크가 존재하는 경우 예외 발생")
+		@Test
+		void fail_alreadySentPasswordResetLink() {
+			PasswordResetCreateRequest req = new PasswordResetCreateRequest("test@test.com");
+
+			given(passwordResetRedisRepository.hasActiveToken(anyString())).willReturn(true);
+
+			BizException exception = assertThrows(BizException.class, () -> authService.requestPasswordReset(req));
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.ALREADY_SENT_PASSWORD_RESET_LINK);
+
+			verify(passwordResetRedisRepository, never()).saveEmail(anyString());
+			verify(passwordResetRedisRepository, never()).saveToken(anyString(), anyString());
+			verify(eventPublisher, never()).publishEvent(any(PasswordResetCreateEvent.class));
+		}
+
+		@DisplayName("존재하지 않는 이메일의 경우 동작 안함 (예외는 발생 안함)")
+		@Test
+		void fail_notExistEmail() {
+			PasswordResetCreateRequest req = new PasswordResetCreateRequest("test@test.com");
+
+			given(passwordResetRedisRepository.hasActiveToken(anyString())).willReturn(false);
+			given(userRepository.existsByEmailAndStatus(anyString(), any())).willReturn(false);
+
+			authService.requestPasswordReset(req);
+
+			verify(passwordResetRedisRepository, never()).saveEmail(anyString());
+			verify(passwordResetRedisRepository, never()).saveToken(anyString(), anyString());
+			verify(eventPublisher, never()).publishEvent(any(PasswordResetCreateEvent.class));
 		}
 	}
 }
