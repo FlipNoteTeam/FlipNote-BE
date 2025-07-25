@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
+import project.flipnote.auth.model.PasswordResetCreateRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.model.UserLoginResponse;
@@ -88,5 +89,14 @@ public class AuthController {
 		return ResponseEntity.ok()
 			.header(HttpHeaders.SET_COOKIE, cookie.toString())
 			.body(UserLoginResponse.from(tokenPair.accessToken()));
+	}
+
+	@PostMapping("/password-resets")
+	public ResponseEntity<Void> requestPasswordReset(
+		@Valid @RequestBody PasswordResetCreateRequest req
+	) {
+		authService.requestPasswordReset(req);
+
+		return ResponseEntity.noContent().build();
 	}
 }

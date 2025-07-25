@@ -16,7 +16,8 @@ public enum AuthErrorCode implements ErrorCode {
 	INVALID_VERIFICATION_CODE(HttpStatus.FORBIDDEN, "AUTH_004", "잘못된 인증번호입니다. 입력한 인증번호를 확인해 주세요."),
 	EXISTING_EMAIL(HttpStatus.CONFLICT, "AUTH_005", "이미 가입된 이메일입니다. 다른 이메일을 사용해 주세요."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "인증 정보가 유효하지 않습니다."),
-	UNVERIFIED_EMAIL(HttpStatus.FORBIDDEN, "AUTH_007", "인증되지 않은 이메일입니다. 이메일 인증을 완료해 주세요.");
+	UNVERIFIED_EMAIL(HttpStatus.FORBIDDEN, "AUTH_007", "인증되지 않은 이메일입니다. 이메일 인증을 완료해 주세요."),
+	ALREADY_SENT_PASSWORD_RESET_LINK(HttpStatus.CONFLICT, "AUTH_008", "이미 유효한 비밀번호 재설정 링크가 존재합니다. 이메일을 확인해주세요.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

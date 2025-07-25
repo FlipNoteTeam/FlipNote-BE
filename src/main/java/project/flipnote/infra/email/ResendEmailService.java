@@ -44,4 +44,27 @@ public class ResendEmailService implements EmailService {
 			throw new EmailSendException(e);
 		}
 	}
+
+	@Override
+	public void sendPasswordResetLink(String to, String link, int ttl) {
+		Context context = new Context();
+		context.setVariable("link", link);
+		context.setVariable("validMinutes", ttl);
+
+		String html = templateEngine.process("email/password-reset", context);
+
+		CreateEmailOptions params = CreateEmailOptions.builder()
+			.from(resendProperties.getFromEmail())
+			.to(to)
+			.subject("비밀번호 재설정 안내")
+			.html(html)
+			.build();
+
+		try {
+			resend.emails().send(params);
+		} catch (ResendException e) {
+			log.error("비밀번호 재설정 링크 발송 실패: to={}, ttl={}분", to, ttl, e);
+			throw new EmailSendException(e);
+		}
+	}
 }

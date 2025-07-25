@@ -54,3 +54,7 @@ app:
 
   encryption:
     key: ${APP_ENCRYPTION_KEY}
+
+  client:
+    url: "https://flipnote.site"
+    password-reset-path: "/password-reset"
