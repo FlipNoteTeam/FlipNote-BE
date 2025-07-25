@@ -8,12 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
-import project.flipnote.auth.repository.TokenVersionRedisRepository;
+import project.flipnote.auth.service.AuthService;
+import project.flipnote.auth.service.EmailVerificationService;
+import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.ChangePasswordRequest;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -28,8 +31,9 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final TokenVersionRedisRepository tokenVersionRedisRepository;
-	private final EmailVerificationRedisRepository emailVerificationRedisRepository;
+	private final AuthService authService;
+	private final TokenVersionService tokenVersionService;
+	private final EmailVerificationService emailVerificationService;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -38,10 +42,7 @@ public class UserService {
 
 		validateEmailDuplicate(email);
 		validatePhoneDuplicate(phone);
-
-		if (!emailVerificationRedisRepository.isVerified(email)) {
-			throw new BizException(UserErrorCode.UNVERIFIED_EMAIL);
-		}
+		emailVerificationService.validateVerified(email);
 
 		User user = User.builder()
 			.email(email)
@@ -54,8 +55,6 @@ public class UserService {
 			.build();
 		User savedUser = userRepository.save(user);
 
-		emailVerificationRedisRepository.deleteVerified(email);
-
 		return UserRegisterResponse.from(savedUser.getId());
 	}
 
@@ -64,7 +63,8 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		user.unregister();
-		tokenVersionRedisRepository.deleteTokenVersion(userId);
+
+		tokenVersionService.incrementTokenVersion(userId);
 	}
 
 	@Transactional
@@ -91,6 +91,17 @@ public class UserService {
 		User user = findActiveUserById(userId);
 
 		return UserInfoResponse.from(user);
+	}
+
+	@Transactional
+	public void changePassword(Long userId, ChangePasswordRequest req) {
+		User user = findActiveUserById(userId);
+
+		authService.validatePasswordMatch(req.currentPassword(), user.getPassword());
+
+		user.changePassword(passwordEncoder.encode(req.newPassword()));
+
+		tokenVersionService.incrementTokenVersion(userId);
 	}
 
 	private User findActiveUserById(Long userId) {

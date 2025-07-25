@@ -98,4 +98,8 @@ public class User extends SoftDeletableEntity {
 		this.smsAgree = smsAgree;
 		this.profileImageUrl = profileImageUrl;
 	}
+
+	public void changePassword(String password) {
+		this.password = password;
+	}
 }

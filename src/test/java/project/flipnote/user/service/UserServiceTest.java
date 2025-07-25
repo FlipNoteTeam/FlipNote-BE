@@ -15,16 +15,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
+import project.flipnote.auth.service.AuthService;
+import project.flipnote.auth.service.EmailVerificationService;
+import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.UserRegisterRequest;
-import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.ChangePasswordRequest;
+import project.flipnote.user.model.UserInfoResponse;
+import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
@@ -49,6 +54,15 @@ class UserServiceTest {
 	@Mock
 	EmailVerificationRedisRepository emailVerificationRedisRepository;
 
+	@Mock
+	AuthService authService;
+
+	@Mock
+	TokenVersionService tokenVersionService;
+
+	@Mock
+	EmailVerificationService emailVerificationService;
+
 	@DisplayName("회원가입 테스트")
 	@Nested
 	class Register {
@@ -63,10 +77,8 @@ class UserServiceTest {
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(userRepository.existsByPhone(any(String.class))).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
-
 
 			UserRegisterResponse res = userService.register(req);
 
@@ -82,7 +94,6 @@ class UserServiceTest {
 			);
 
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
@@ -132,10 +143,12 @@ class UserServiceTest {
 
 			given(userRepository.existsByEmail(anyString())).willReturn(false);
 			given(userRepository.existsByPhone(anyString())).willReturn(false);
-			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(false);
+			doThrow(new BizException(AuthErrorCode.UNVERIFIED_EMAIL))
+				.when(emailVerificationService)
+				.validateVerified(anyString());
 
 			BizException exception = assertThrows(BizException.class, () -> userService.register(req));
-			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.UNVERIFIED_EMAIL);
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.UNVERIFIED_EMAIL);
 
 			verify(userRepository, never()).save(any(User.class));
 		}
@@ -154,11 +167,8 @@ class UserServiceTest {
 
 			userService.unregister(user.getId());
 
-			assertThat(user.getStatus()).isEqualTo(UserStatus.INACTIVE);
-			assertThat(user.getDeletedAt()).isNotNull();
-
-			verify(user, times(1)).softDelete();
-			verify(tokenVersionRedisRepository, times(1)).deleteTokenVersion(anyLong());
+			verify(user, times(1)).unregister();
+			verify(tokenVersionService, times(1)).incrementTokenVersion(user.getId());
 		}
 
 		@DisplayName("회원 id가 존재하지 않는 경우 예외 발생")
@@ -315,6 +325,65 @@ class UserServiceTest {
 			BizException exception = assertThrows(BizException.class, () -> userService.getUserInfo(99L));
 
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+		}
+	}
+
+	@DisplayName("비밀번호 변경 테스트")
+	@Nested
+	class ChangePassword {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			User user = spy(UserFixture.createActiveUser());
+			ChangePasswordRequest req = new ChangePasswordRequest("currentPassword123!", "newPassword123!");
+			String encodedNewPassword = "encodedNewPassword";
+
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(passwordEncoder.encode(req.newPassword())).willReturn(encodedNewPassword);
+
+			userService.changePassword(user.getId(), req);
+
+			verify(user, times(1)).changePassword(encodedNewPassword);
+			verify(tokenVersionService, times(1)).incrementTokenVersion(user.getId());
+		}
+
+		@DisplayName("존재하지 않는 회원의 비밀번호 변경 시 예외 발생")
+		@Test
+		void fail_userNotFound() {
+			ChangePasswordRequest req = new ChangePasswordRequest("currentPassword123!", "newPassword123!");
+			Long nonExistentUserId = 99L;
+
+			given(userRepository.findByIdAndStatus(nonExistentUserId, UserStatus.ACTIVE)).willReturn(Optional.empty());
+
+			BizException exception = assertThrows(BizException.class,
+				() -> userService.changePassword(nonExistentUserId, req));
+
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
+
+			verify(passwordEncoder, never()).matches(anyString(), anyString());
+			verify(passwordEncoder, never()).encode(anyString());
+			verify(tokenVersionRedisRepository, never()).deleteTokenVersion(anyLong());
+		}
+
+		@DisplayName("현재 비밀번호가 일치하지 않을 경우 예외 발생")
+		@Test
+		void fail_incorrectCurrentPassword() {
+			User user = UserFixture.createActiveUser();
+			ChangePasswordRequest req = new ChangePasswordRequest("wrongPassword", "newPassword123!");
+
+			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			doThrow(new BizException(AuthErrorCode.INVALID_CREDENTIALS))
+				.when(authService)
+				.validatePasswordMatch(req.currentPassword(), user.getPassword());
+
+			BizException exception = assertThrows(BizException.class,
+				() -> userService.changePassword(user.getId(), req));
+
+			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
+			verify(authService, times(1)).validatePasswordMatch(req.currentPassword(), user.getPassword());
+			verify(passwordEncoder, never()).encode(anyString());
+			verify(tokenVersionRedisRepository, never()).deleteTokenVersion(anyLong());
 		}
 	}
 }
