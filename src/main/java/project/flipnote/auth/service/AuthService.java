@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
+import project.flipnote.auth.model.PasswordResetRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
@@ -105,6 +107,19 @@ public class AuthService {
 			String link = clientProperties.buildPasswordResetUrl(token);
 			eventPublisher.publishEvent(new PasswordResetCreateEvent(email, link));
 		}
+	}
+
+	@Transactional
+	public void resetPassword(PasswordResetRequest req) {
+		String token = req.token();
+
+		String email = passwordResetRedisRepository.findEmailByToken(token)
+			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN));
+
+		String encodedPassword = passwordEncoder.encode(req.password());
+		userRepository.updatePassword(email, encodedPassword);
+
+		passwordResetRedisRepository.deleteToken(email, token);
 	}
 
 	public void validatePasswordMatch(String rawPassword, String encodedPassword) {

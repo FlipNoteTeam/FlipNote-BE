@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
+import project.flipnote.auth.model.PasswordResetRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.model.UserLoginResponse;
@@ -96,6 +98,15 @@ public class AuthController {
 		@Valid @RequestBody PasswordResetCreateRequest req
 	) {
 		authService.requestPasswordReset(req);
+
+		return ResponseEntity.noContent().build();
+	}
+
+	@PatchMapping("/password-resets")
+	public ResponseEntity<Void> resetPassword(
+		@Valid @RequestBody PasswordResetRequest req
+	) {
+		authService.resetPassword(req);
 
 		return ResponseEntity.noContent().build();
 	}
