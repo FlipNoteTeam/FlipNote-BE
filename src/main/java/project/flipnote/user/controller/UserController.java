@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.ChangePasswordRequest;
+import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
@@ -76,5 +77,14 @@ public class UserController {
 	) {
 		userService.changePassword(userAuth.userId(), req);
 		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/me/social-links")
+	public ResponseEntity<SocialLinksResponse> getSocialLinks(
+		@AuthenticationPrincipal UserAuth userAuth
+	) {
+		SocialLinksResponse res = userService.getSocialLinks(userAuth.userId());
+
+		return ResponseEntity.ok(res);
 	}
 }
