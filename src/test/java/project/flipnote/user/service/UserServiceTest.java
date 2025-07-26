@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import project.flipnote.auth.exception.AuthErrorCode;
-import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.auth.service.EmailVerificationService;
@@ -24,15 +24,18 @@ import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserOAuthLink;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.ChangePasswordRequest;
+import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
+import project.flipnote.user.repository.UserOAuthLinkRepository;
 import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("회원 서비스 단위 테스트")
@@ -52,9 +55,6 @@ class UserServiceTest {
 	TokenVersionRedisRepository tokenVersionRedisRepository;
 
 	@Mock
-	EmailVerificationRedisRepository emailVerificationRedisRepository;
-
-	@Mock
 	AuthService authService;
 
 	@Mock
@@ -62,6 +62,9 @@ class UserServiceTest {
 
 	@Mock
 	EmailVerificationService emailVerificationService;
+
+	@Mock
+	UserOAuthLinkRepository userOAuthLinkRepository;
 
 	@DisplayName("회원가입 테스트")
 	@Nested
@@ -384,6 +387,26 @@ class UserServiceTest {
 			verify(authService, times(1)).validatePasswordMatch(req.currentPassword(), user.getPassword());
 			verify(passwordEncoder, never()).encode(anyString());
 			verify(tokenVersionRedisRepository, never()).deleteTokenVersion(anyLong());
+		}
+	}
+
+	@DisplayName("내 소셜 계정 목록 조회 테스트")
+	@Nested
+	class GetSocialLinks {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			long userId = 1L;
+
+			List<UserOAuthLink> links = List.of(new UserOAuthLink("google", "providerId1", null));
+
+			given(userOAuthLinkRepository.findByUser_Id(userId)).willReturn(links);
+
+			SocialLinksResponse res = userService.getSocialLinks(userId);
+
+			assertThat(res.socialLinks()).isNotNull();
+			assertThat(res.socialLinks().size()).isEqualTo(links.size());
 		}
 	}
 }
