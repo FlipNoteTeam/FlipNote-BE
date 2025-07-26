@@ -104,7 +104,7 @@ public class AuthService {
 			String token = passwordResetTokenGenerator.generateToken();
 			passwordResetRedisRepository.saveToken(email, token);
 
-			String link = clientProperties.buildPasswordResetUrl(token);
+			String link = clientProperties.buildUrl(ClientProperties.PathKey.PASSWORD_RESET, token);
 			eventPublisher.publishEvent(new PasswordResetCreateEvent(email, link));
 		}
 	}

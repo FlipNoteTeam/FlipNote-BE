@@ -1,14 +1,12 @@
 package project.flipnote.common.util;
 
 import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Component
 public class CookieUtil {
 
-	public static ResponseCookie createCookie(
+	public ResponseCookie createCookie(
 		String name,
 		String value,
 		int maxAge,
@@ -22,11 +20,11 @@ public class CookieUtil {
 			.build();
 	}
 
-	public static ResponseCookie createCookie(String name, String value, int maxAge) {
+	public ResponseCookie createCookie(String name, String value, int maxAge) {
 		return createCookie(name, value, maxAge, true, "/");
 	}
 
-	public static ResponseCookie createExpiredCookie(String name) {
+	public ResponseCookie createExpiredCookie(String name) {
 		return createCookie(name, "", 0, true, "/");
 	}
 }
