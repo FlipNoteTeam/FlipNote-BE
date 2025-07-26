@@ -33,5 +33,7 @@ public class SocialLinkTokenRedisRepository {
 
 	public void deleteToken(String token) {
 		String key = AuthRedisKey.SOCIAL_LINK_TOKEN.key(token);
+
+		stringRedisTemplate.delete(key);
 	}
 }

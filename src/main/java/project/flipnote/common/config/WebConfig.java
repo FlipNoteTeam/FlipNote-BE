@@ -5,7 +5,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.auth.intecepter.OAuthCookieCleanupInterceptor;
+import project.flipnote.auth.interceptor.OAuthCookieCleanupInterceptor;
 
 @RequiredArgsConstructor
 @Configuration

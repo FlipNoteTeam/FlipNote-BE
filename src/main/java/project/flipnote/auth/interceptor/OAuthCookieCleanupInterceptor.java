@@ -1,4 +1,4 @@
-package project.flipnote.auth.intecepter;
+package project.flipnote.auth.interceptor;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;

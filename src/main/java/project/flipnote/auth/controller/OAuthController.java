@@ -16,11 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.OAuthConstants;
-import project.flipnote.auth.exception.OAuthConflictException;
-import project.flipnote.auth.exception.OAuthFailException;
+import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.AuthorizationRedirect;
 import project.flipnote.auth.service.OAuthService;
 import project.flipnote.common.config.ClientProperties;
+import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
 
 @Slf4j
@@ -56,13 +56,20 @@ public class OAuthController {
 		String redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_SUCCESS);
 		try {
 			oAuthService.linkSocialAccount(provider, code, state, codeVerifier, request);
-		} catch (OAuthConflictException e) {
-			redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_CONFLICT);
-		} catch (OAuthFailException e) {
+		} catch (BizException exception) {
+			if (exception.getErrorCode() == AuthErrorCode.ALREADY_LINKED_SOCIAL_ACCOUNT) {
+				redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_CONFLICT);
+			} else {
+				redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_FAILURE);
+			}
+			log.warn("BizException handled: code={}, status={}, message={}",
+				exception.getErrorCode().getCode(),
+				exception.getErrorCode().getStatus(),
+				exception.getErrorCode().getMessage()
+			);
+		} catch (Exception exception) {
 			redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_FAILURE);
-		} catch (Exception e) {
-			redirectUri = clientProperties.buildUrl(ClientProperties.PathKey.SOCIAL_LINK_FAILURE);
-			log.error("소셜 계정 연동 콜백 처리 중 예상치 못한 오류 발생. provider: {}, state: {}", provider, state, e);
+			log.error("소셜 계정 연동 콜백 처리 중 예상치 못한 오류 발생. provider: {}, state: {}", provider, state, exception);
 		}
 
 		return ResponseEntity.status(HttpStatus.FOUND)

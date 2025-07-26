@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(BizException.class)
 	public ResponseEntity<ApiResponse<Void>> handleBizError(BizException exception) {
-		log.error("BizException handled: code={}, status={}, message={}",
+		log.warn("BizException handled: code={}, status={}, message={}",
 			exception.getErrorCode().getCode(),
 			exception.getErrorCode().getStatus(),
 			exception.getErrorCode().getMessage()
@@ -54,5 +54,4 @@ public class GlobalExceptionHandler {
 		String message = String.format("필수 파라미터 '%s'가 없습니다.", missingParam);
 		return ResponseEntity.badRequest().body(message);
 	}
-
 }

@@ -11,10 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.OAuthConstants;
-import project.flipnote.auth.exception.OAuthConflictException;
-import project.flipnote.auth.exception.OAuthFailException;
+import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.AuthorizationRedirect;
 import project.flipnote.auth.repository.SocialLinkTokenRedisRepository;
+import project.flipnote.common.exception.BizException;
 import project.flipnote.infra.oauth.model.OAuth2UserInfo;
 import project.flipnote.common.config.OAuthProperties;
 import project.flipnote.common.util.CookieUtil;
@@ -51,7 +51,7 @@ public class OAuthService {
 		ResponseCookie cookie = cookieUtil.createCookie(
 			OAuthConstants.VERIFIER_COOKIE_NAME,
 			codeVerifier,
-			OAuthConstants.VERIFIER__COOKIE_MAX_AGE
+			OAuthConstants.VERIFIER_COOKIE_MAX_AGE
 		);
 
 		return new AuthorizationRedirect(authorizeUrl, cookie);
@@ -65,8 +65,8 @@ public class OAuthService {
 		String codeVerifier,
 		HttpServletRequest request
 	) {
-		long userId = socialLinkTokenRedisRepository
-			.findUserIdByToken(state).orElseThrow(OAuthFailException::new);
+		long userId = socialLinkTokenRedisRepository.findUserIdByToken(state)
+			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_SOCIAL_LINK_TOKEN));
 		socialLinkTokenRedisRepository.deleteToken(state);
 
 		OAuthProperties.Provider provider = getProvider(providerName);
@@ -75,7 +75,7 @@ public class OAuthService {
 		OAuth2UserInfo userInfo = oAuthApiClient.createUserInfo(providerName, userInfoAttributes);
 
 		if (userOAuthLinkRepository.existsByUser_IdAndProviderId(userId, userInfo.getProviderId())) {
-			throw new OAuthConflictException();
+			throw new BizException(AuthErrorCode.ALREADY_LINKED_SOCIAL_ACCOUNT);
 		}
 
 		UserOAuthLink userOAuthLink = new UserOAuthLink(
