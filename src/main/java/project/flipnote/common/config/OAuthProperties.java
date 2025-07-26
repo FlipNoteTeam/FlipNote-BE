@@ -21,10 +21,8 @@ public class OAuthProperties {
 	@Valid
 	private final Map<String, Provider> providers = new HashMap<>();
 
-
 	@Getter
 	@Setter
-	@Valid
 	public static class Provider {
 
 		@NotBlank
