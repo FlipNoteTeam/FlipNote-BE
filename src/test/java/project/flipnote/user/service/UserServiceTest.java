@@ -397,16 +397,17 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			long userId = 1L;
+			User user = UserFixture.createActiveUser();
 
-			List<UserOAuthLink> links = List.of(new UserOAuthLink("google", "providerId1", null));
+			List<UserOAuthLink> links = List.of(new UserOAuthLink("google", "providerId1", user));
 
-			given(userOAuthLinkRepository.findByUser_Id(userId)).willReturn(links);
+			given(userOAuthLinkRepository.findByUser_Id(user.getId())).willReturn(links);
 
-			SocialLinksResponse res = userService.getSocialLinks(userId);
+			SocialLinksResponse res = userService.getSocialLinks(user.getId());
 
 			assertThat(res.socialLinks()).isNotNull();
-			assertThat(res.socialLinks().size()).isEqualTo(links.size());
+			assertThat(res.socialLinks().size()).isEqualTo(1);
+			assertThat(res.socialLinks().get(0).provider()).isEqualTo("google");
 		}
 	}
 }
