@@ -1,5 +1,6 @@
 package project.flipnote.user.service;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -7,21 +8,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.auth.service.EmailVerificationService;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserOAuthLink;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.ChangePasswordRequest;
+import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
+import project.flipnote.user.repository.UserOAuthLinkRepository;
 import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class UserService {
 	private final AuthService authService;
 	private final TokenVersionService tokenVersionService;
 	private final EmailVerificationService emailVerificationService;
+	private final UserOAuthLinkRepository userOAuthLinkRepository;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
@@ -102,6 +106,12 @@ public class UserService {
 		user.changePassword(passwordEncoder.encode(req.newPassword()));
 
 		tokenVersionService.incrementTokenVersion(userId);
+	}
+
+	public SocialLinksResponse getSocialLinks(Long userId) {
+		List<UserOAuthLink> links = userOAuthLinkRepository.findByUser_Id(userId);
+
+		return SocialLinksResponse.from(links);
 	}
 
 	private User findActiveUserById(Long userId) {

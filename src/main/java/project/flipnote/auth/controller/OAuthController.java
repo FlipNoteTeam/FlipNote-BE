@@ -37,7 +37,7 @@ public class OAuthController {
 		HttpServletRequest request,
 		@AuthenticationPrincipal UserAuth userAuth
 	) {
-		AuthorizationRedirect authRedirect = oAuthService.getAuthorizationUri(provider, request, userAuth.userId());
+		AuthorizationRedirect authRedirect = oAuthService.getAuthorizationUri(provider, request, 1L);
 
 		return ResponseEntity.status(HttpStatus.FOUND)
 			.header(HttpHeaders.SET_COOKIE, authRedirect.cookie().toString())
