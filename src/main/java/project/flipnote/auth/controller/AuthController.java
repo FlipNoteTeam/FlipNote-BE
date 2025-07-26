@@ -31,6 +31,7 @@ public class AuthController {
 
 	private final AuthService authService;
 	private final JwtProperties jwtProperties;
+	private final CookieUtil cookieUtil;
 
 	@PostMapping("/login")
 	public ResponseEntity<UserLoginResponse> login(
@@ -39,7 +40,7 @@ public class AuthController {
 		TokenPair tokenPair = authService.login(req);
 
 		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
-		ResponseCookie cookie = CookieUtil.createCookie(
+		ResponseCookie cookie = cookieUtil.createCookie(
 			JwtConstants.REFRESH_TOKEN,
 			tokenPair.refreshToken(),
 			Math.toIntExact(expirationSeconds)
@@ -52,7 +53,7 @@ public class AuthController {
 
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout() {
-		ResponseCookie expiredCookie = CookieUtil.createExpiredCookie(JwtConstants.REFRESH_TOKEN);
+		ResponseCookie expiredCookie = cookieUtil.createExpiredCookie(JwtConstants.REFRESH_TOKEN);
 
 		return ResponseEntity.ok()
 			.header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
@@ -82,7 +83,7 @@ public class AuthController {
 		TokenPair tokenPair = authService.refreshToken(refreshToken);
 
 		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
-		ResponseCookie cookie = CookieUtil.createCookie(
+		ResponseCookie cookie = cookieUtil.createCookie(
 			JwtConstants.REFRESH_TOKEN,
 			tokenPair.refreshToken(),
 			Math.toIntExact(expirationSeconds)

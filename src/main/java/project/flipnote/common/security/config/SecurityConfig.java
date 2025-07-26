@@ -66,6 +66,9 @@ public class SecurityConfig {
 					"/*/auth/login", "/*/auth/email", "/*/auth/email/confirm"
 				).permitAll()
 				.requestMatchers(
+					HttpMethod.GET, "/oauth2/callback/{provider}"
+				).permitAll()
+				.requestMatchers(
 					"/v3/api-docs/**",
 					"/v3/api-docs",
 					"/swagger-ui/**",

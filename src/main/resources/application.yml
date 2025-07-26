@@ -57,4 +57,21 @@ app:
 
   client:
     url: ${APP_CLIENT_URL:https://flipnote.site}
-    password-reset-path: ${APP_CLIENT_PASSWORD_RESET_PATH:/password-reset}
+    paths:
+      password-reset: /password-reset
+      social-link-success: /social-link/success
+      social-link-failure: /social-link/failure
+      social-link-conflict: /social-link/conflict
+
+  oauth2:
+    providers:
+      google:
+        client-id: ${GOOGLE_CLIENT_ID}
+        client-secret: ${GOOGLE_CLIENT_SECRET}
+        redirect-uri: "/oauth2/callback/google"
+        authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+        token-uri: https://oauth2.googleapis.com/token
+        user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+        scope:
+          - email
+          - profile
