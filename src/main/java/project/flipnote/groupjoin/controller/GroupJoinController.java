@@ -53,7 +53,7 @@ public class GroupJoinController {
 	
 	//가입 신청 삭제
 	@DeleteMapping("/groups/{groupId}/joins/{joinId}")
-	public ResponseEntity<GroupJoinDeleteResponse> groupJoinDelete(
+	public ResponseEntity<Void> groupJoinDelete(
 		UserAuth userAuth,
 		@PathVariable("groupId") Long groupId,
 		@PathVariable("joinId") Long joinId
@@ -63,4 +63,13 @@ public class GroupJoinController {
 		return ResponseEntity.noContent().build();
 	}
 
+	//내가 신청한 가입신청 리스트 조회
+	@GetMapping("/groups/joins/me")
+	public ResponseEntity<FIndGroupJoinListMeResponse> findGroupJoinMe(
+		UserAuth userAuth
+	) {
+		FIndGroupJoinListMeResponse res = groupJoinService.findGroupJoinListMe(userAuth);
+
+		return ResponseEntity.ok(res);
+	}
 }

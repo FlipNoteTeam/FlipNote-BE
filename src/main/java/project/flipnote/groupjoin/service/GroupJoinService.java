@@ -171,4 +171,14 @@ public class GroupJoinService {
 		//삭제
 		groupJoinRepository.deleteById(joinId);
 	}
+
+	public FIndGroupJoinListMeResponse findGroupJoinListMe(UserAuth userAuth) {
+		//유저 조회
+		User user = findUser(userAuth);
+
+		//유저별 그룹 신청 리스트 조회
+		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(user);
+
+		return FIndGroupJoinListMeResponse.from(groupJoins);
+	}
 }
