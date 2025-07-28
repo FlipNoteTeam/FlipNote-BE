@@ -8,6 +8,8 @@ import project.flipnote.user.entity.UserOAuthLink;
 
 public record SocialLinkResponse(
 
+	Long socialLinkId,
+
 	String provider,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -16,6 +18,7 @@ public record SocialLinkResponse(
 
 	public static SocialLinkResponse from(UserOAuthLink link) {
 		return new SocialLinkResponse(
+			link.getId(),
 			link.getProvider(),
 			link.getLinkedAt()
 		);
