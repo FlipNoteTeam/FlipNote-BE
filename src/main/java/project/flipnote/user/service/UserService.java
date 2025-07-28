@@ -114,6 +114,15 @@ public class UserService {
 		return SocialLinksResponse.from(links);
 	}
 
+	@Transactional
+	public void deleteSocialLink(Long userId, Long socialLinkId) {
+		if (!userOAuthLinkRepository.existsByIdAndUser_Id(socialLinkId, userId)) {
+			throw new BizException(UserErrorCode.SOCIAL_LINK_NOT_FOUND);
+		}
+
+		userOAuthLinkRepository.deleteById(socialLinkId);
+	}
+
 	private User findActiveUserById(Long userId) {
 		return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
