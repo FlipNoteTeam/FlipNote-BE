@@ -16,12 +16,12 @@ import project.flipnote.auth.entity.OAuthLink;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.AuthorizationRedirect;
 import project.flipnote.auth.model.TokenPair;
-import project.flipnote.auth.repository.AuthAccountRepository;
 import project.flipnote.auth.repository.OAuthLinkRepository;
 import project.flipnote.auth.repository.SocialLinkTokenRedisRepository;
+import project.flipnote.auth.repository.UserAuthRepository;
 import project.flipnote.common.config.OAuthProperties;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.AccountAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.common.util.CookieUtil;
 import project.flipnote.common.util.PkceUtil;
@@ -41,19 +41,19 @@ public class OAuthService {
 	private final SocialLinkTokenRedisRepository socialLinkTokenRedisRepository;
 	private final OAuthLinkRepository userOAuthLinkRepository;
 	private final JwtComponent jwtComponent;
-	private final AuthAccountRepository authAccountRepository;
+	private final UserAuthRepository userAuthRepository;
 
 	public AuthorizationRedirect getAuthorizationUri(
 		String providerName,
 		HttpServletRequest request,
-		AccountAuth accountAuth
+		AuthPrinciple userAuth
 	) {
 		OAuthProperties.Provider provider = getProvider(providerName);
 
 		String codeVerifier = pkceUtil.generateCodeVerifier();
 		String codeChallenge = pkceUtil.generateCodeChallenge(codeVerifier);
 
-		String state = generateStateForSocialLink(accountAuth);
+		String state = generateStateForSocialLink(userAuth);
 		String authorizeUrl = oAuthApiClient.buildAuthorizeUri(request, provider, codeChallenge, state);
 		ResponseCookie cookie = cookieUtil.createCookie(
 			OAuthConstants.VERIFIER_COOKIE_NAME,
@@ -72,20 +72,20 @@ public class OAuthService {
 		String codeVerifier,
 		HttpServletRequest request
 	) {
-		long accountId = socialLinkTokenRedisRepository.findAccountIdByToken(state)
+		long authId = socialLinkTokenRedisRepository.findAuthIdByToken(state)
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_SOCIAL_LINK_TOKEN));
 		socialLinkTokenRedisRepository.deleteToken(state);
 
 		OAuth2UserInfo userInfo = getOAuth2UserInfo(providerName, code, codeVerifier, request);
 
-		if (userOAuthLinkRepository.existsByAccount_IdAndProviderId(accountId, userInfo.getProviderId())) {
+		if (userOAuthLinkRepository.existsByUserAuth_IdAndProviderId(authId, userInfo.getProviderId())) {
 			throw new BizException(AuthErrorCode.ALREADY_LINKED_SOCIAL_ACCOUNT);
 		}
 
 		OAuthLink userOAuthLink = new OAuthLink(
 			userInfo.getProvider(),
 			userInfo.getProviderId(),
-			authAccountRepository.getReferenceById(accountId)
+			userAuthRepository.getReferenceById(authId)
 		);
 		userOAuthLinkRepository.save(userOAuthLink);
 	}
@@ -93,11 +93,11 @@ public class OAuthService {
 	public TokenPair socialLogin(String providerName, String code, String codeVerifier, HttpServletRequest request) {
 		OAuth2UserInfo userInfo = getOAuth2UserInfo(providerName, code, codeVerifier, request);
 
-		OAuthLink userOAuthLink = userOAuthLinkRepository.findByProviderAndProviderIdWithAccount(
+		OAuthLink userOAuthLink = userOAuthLinkRepository.findByProviderAndProviderIdWithUserAuth(
 			providerName, userInfo.getProviderId()
 		).orElseThrow(() -> new BizException(AuthErrorCode.NOT_REGISTERED_SOCIAL_ACCOUNT));
 
-		return jwtComponent.generateTokenPair(userOAuthLink.getAccount());
+		return jwtComponent.generateTokenPair(userOAuthLink.getUserAuth());
 	}
 
 	private OAuth2UserInfo getOAuth2UserInfo(String providerName, String code, String codeVerifier,
@@ -116,12 +116,12 @@ public class OAuthService {
 			});
 	}
 
-	private String generateStateForSocialLink(AccountAuth accountAuth) {
-		if (accountAuth == null) {
+	private String generateStateForSocialLink(AuthPrinciple userAuth) {
+		if (userAuth == null) {
 			return null;
 		}
 		String state = UUID.randomUUID().toString();
-		socialLinkTokenRedisRepository.saveToken(accountAuth.accountId(), state);
+		socialLinkTokenRedisRepository.saveToken(userAuth.authId(), state);
 		return state;
 	}
 }

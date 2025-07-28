@@ -17,10 +17,9 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Table(name = "auth_account")
+@Table(name = "user_auth")
 @Entity
-public class AuthAccount extends SoftDeletableEntity {
+public class UserAuth extends SoftDeletableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +29,9 @@ public class AuthAccount extends SoftDeletableEntity {
 	private String email;
 
 	private String password;
+
+	@Column(unique = true, nullable = false)
+	private Long userId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -43,21 +45,23 @@ public class AuthAccount extends SoftDeletableEntity {
 	private long tokenVersion;
 
 	@Builder
-	public AuthAccount(
+	public UserAuth(
 		String email,
-		String password
+		String password,
+		Long userId
 	) {
 		this.email = email;
 		this.password = password;
+		this.userId = userId;
 		this.status = AccountStatus.ACTIVE;
 		this.role = AccountRole.USER;
 		this.tokenVersion = 0L;
 	}
 
-	public void unregister() {
+	public void withdraw() {
 		super.softDelete();
 
-		this.status = AccountStatus.INACTIVE;
+		this.status = AccountStatus.WITHDRAWN;
 
 		increaseTokenVersion();
 	}

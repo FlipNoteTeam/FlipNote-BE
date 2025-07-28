@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.VerificationConstants;
 import project.flipnote.auth.entity.AccountStatus;
-import project.flipnote.auth.entity.AuthAccount;
 import project.flipnote.auth.entity.OAuthLink;
+import project.flipnote.auth.entity.UserAuth;
 import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.event.PasswordResetCreateEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
@@ -26,17 +26,17 @@ import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.model.UserRegisterRequest;
 import project.flipnote.auth.model.UserRegisterResponse;
-import project.flipnote.auth.repository.AuthAccountRepository;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.OAuthLinkRepository;
 import project.flipnote.auth.repository.PasswordResetRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
+import project.flipnote.auth.repository.UserAuthRepository;
 import project.flipnote.auth.util.PasswordResetTokenGenerator;
 import project.flipnote.auth.util.VerificationCodeGenerator;
 import project.flipnote.common.config.ClientProperties;
 import project.flipnote.common.dto.UserCreateCommand;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.AccountAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.service.UserService;
@@ -56,37 +56,36 @@ public class AuthService {
 	private final PasswordResetRedisRepository passwordResetRedisRepository;
 	private final ClientProperties clientProperties;
 	private final UserService userService;
-	private final AuthAccountRepository authAccountRepository;
+	private final UserAuthRepository userAuthRepository;
 	private final TokenVersionService tokenVersionService;
 	private final OAuthLinkRepository oAuthLinkRepository;
 
 	@Transactional
 	public UserRegisterResponse register(UserRegisterRequest req) {
 		String email = req.email();
-		String phone = req.getNormalizedPhone();
 
 		validateEmailDuplicate(email);
-		userService.validatePhoneDuplicate(phone);
-		validateEmailVerified(email);
+		// validateEmailVerified(email);
 
-		AuthAccount authAccount = AuthAccount.builder()
+		UserCreateCommand command = req.toCommand();
+		Long userId = userService.createUser(command);
+
+		UserAuth userAuth = UserAuth.builder()
 			.email(email)
 			.password(passwordEncoder.encode(req.password()))
+			.userId(userId)
 			.build();
-		authAccountRepository.save(authAccount);
+		userAuthRepository.save(userAuth);
 
-		UserCreateCommand command = req.toCommand(authAccount.getId());
-		userService.createUser(command);
-
-		return UserRegisterResponse.from(authAccount.getId());
+		return UserRegisterResponse.from(userId);
 	}
 
 	public TokenPair login(UserLoginRequest req) {
-		AuthAccount authAccount = findActiveAuthAccountByEmail(req.email());
+		UserAuth userAuth = findActiveAuthAccountByEmail(req.email());
 
-		validatePasswordMatch(req.password(), authAccount.getPassword());
+		validatePasswordMatch(req.password(), userAuth.getPassword());
 
-		return jwtComponent.generateTokenPair(authAccount);
+		return jwtComponent.generateTokenPair(userAuth);
 	}
 
 	public void sendEmailVerificationCode(EmailVerificationRequest req) {
@@ -121,9 +120,9 @@ public class AuthService {
 		long expirationMillis = jwtComponent.getExpirationMillis(refreshToken);
 		tokenBlacklistRedisRepository.save(refreshToken, expirationMillis);
 
-		AccountAuth accountAuth = jwtComponent.extractUserAuthFromToken(refreshToken);
+		AuthPrinciple userAuth = jwtComponent.extractUserAuthFromToken(refreshToken);
 
-		return jwtComponent.generateTokenPair(accountAuth);
+		return jwtComponent.generateTokenPair(userAuth);
 	}
 
 	public void requestPasswordReset(PasswordResetCreateRequest req) {
@@ -132,7 +131,7 @@ public class AuthService {
 			throw new BizException(AuthErrorCode.ALREADY_SENT_PASSWORD_RESET_LINK);
 		}
 
-		boolean existUser = authAccountRepository.existsByEmailAndStatus(email, AccountStatus.ACTIVE);
+		boolean existUser = userAuthRepository.existsByEmailAndStatus(email, AccountStatus.ACTIVE);
 		if (existUser) {
 			String token = passwordResetTokenGenerator.generateToken();
 			passwordResetRedisRepository.saveToken(email, token);
@@ -150,31 +149,31 @@ public class AuthService {
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN));
 
 		String encodedPassword = passwordEncoder.encode(req.password());
-		authAccountRepository.updatePassword(email, encodedPassword);
+		userAuthRepository.updatePassword(email, encodedPassword);
 
 		passwordResetRedisRepository.deleteToken(email, token);
 	}
 
 	@Transactional
-	public void changePassword(Long accountId, ChangePasswordRequest req) {
-		AuthAccount authAccount = findActiveAuthAccount(accountId);
+	public void changePassword(Long authId, ChangePasswordRequest req) {
+		UserAuth userAuth = findActiveAuthAccount(authId);
 
-		validatePasswordMatch(req.currentPassword(), authAccount.getPassword());
+		validatePasswordMatch(req.currentPassword(), userAuth.getPassword());
 
-		authAccount.changePassword(passwordEncoder.encode(req.newPassword()));
+		userAuth.changePassword(passwordEncoder.encode(req.newPassword()));
 
-		tokenVersionService.incrementTokenVersion(accountId);
+		tokenVersionService.incrementTokenVersion(authId);
 	}
 
-	public SocialLinksResponse getSocialLinks(Long accountId) {
-		List<OAuthLink> links = oAuthLinkRepository.findByAccountId(accountId);
+	public SocialLinksResponse getSocialLinks(Long authId) {
+		List<OAuthLink> links = oAuthLinkRepository.findByUserAuth_Id(authId);
 
 		return SocialLinksResponse.from(links);
 	}
 
 	@Transactional
-	public void deleteSocialLink(Long accountId, Long socialLinkId) {
-		if (!oAuthLinkRepository.existsByIdAndAccount_Id(socialLinkId, accountId)) {
+	public void deleteSocialLink(Long authId, Long socialLinkId) {
+		if (!oAuthLinkRepository.existsByIdAndUserAuth_Id(socialLinkId, authId)) {
 			throw new BizException(AuthErrorCode.SOCIAL_LINK_NOT_FOUND);
 		}
 
@@ -193,18 +192,18 @@ public class AuthService {
 		}
 	}
 
-	private AuthAccount findActiveAuthAccountByEmail(String email) {
-		return authAccountRepository.findByEmailAndStatus(email, AccountStatus.ACTIVE)
+	private UserAuth findActiveAuthAccountByEmail(String email) {
+		return userAuthRepository.findByEmailAndStatus(email, AccountStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
 	}
 
-	private AuthAccount findActiveAuthAccount(Long accountId) {
-		return authAccountRepository.findByIdAndStatus(accountId, AccountStatus.ACTIVE)
+	private UserAuth findActiveAuthAccount(Long authId) {
+		return userAuthRepository.findByIdAndStatus(authId, AccountStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
 	}
 
 	private void validateEmailDuplicate(String email) {
-		if (authAccountRepository.existsByEmail(email)) {
+		if (userAuthRepository.existsByEmail(email)) {
 			throw new BizException(AuthErrorCode.EXISTING_EMAIL);
 		}
 	}

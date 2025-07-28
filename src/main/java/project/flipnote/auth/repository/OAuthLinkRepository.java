@@ -11,20 +11,20 @@ import project.flipnote.auth.entity.OAuthLink;
 
 public interface OAuthLinkRepository extends JpaRepository<OAuthLink, Long> {
 
-	boolean existsByAccount_IdAndProviderId(Long accountId, String providerId);
+	boolean existsByUserAuth_IdAndProviderId(Long authId, String providerId);
 
-	List<OAuthLink> findByAccountId(Long accountId);
+	List<OAuthLink> findByUserAuth_Id(Long authId);
 
-	boolean existsByIdAndAccount_Id(Long id, Long accountId);
+	boolean existsByIdAndUserAuth_Id(Long id, Long authId);
 
 	@Query("""
 		SELECT uol
 		FROM OAuthLink uol
-		JOIN FETCH uol.account
+		JOIN FETCH uol.userAuth
 		WHERE uol.provider = :provider
 		AND uol.providerId = :providerId
 		""")
-	Optional<OAuthLink> findByProviderAndProviderIdWithAccount(
+	Optional<OAuthLink> findByProviderAndProviderIdWithUserAuth(
 		@Param("provider") String provider,
 		@Param("providerId") String providerId
 	);

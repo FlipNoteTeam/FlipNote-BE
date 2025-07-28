@@ -15,19 +15,19 @@ public class SocialLinkTokenRedisRepository {
 
 	private final StringRedisTemplate stringRedisTemplate;
 
-	public void saveToken(long accountId, String token) {
+	public void saveToken(long authId, String token) {
 		String key = AuthRedisKey.SOCIAL_LINK_TOKEN.key(token);
 		Duration ttl = AuthRedisKey.SOCIAL_LINK_TOKEN.getTtl();
 
-		stringRedisTemplate.opsForValue().set(key, String.valueOf(accountId), ttl);
+		stringRedisTemplate.opsForValue().set(key, String.valueOf(authId), ttl);
 	}
 
-	public Optional<Long> findAccountIdByToken(String token) {
+	public Optional<Long> findAuthIdByToken(String token) {
 		String key = AuthRedisKey.SOCIAL_LINK_TOKEN.key(token);
 
-		String accountId = stringRedisTemplate.opsForValue().get(key);
+		String authId = stringRedisTemplate.opsForValue().get(key);
 
-		return Optional.ofNullable(accountId)
+		return Optional.ofNullable(authId)
 			.map(Long::parseLong);
 	}
 

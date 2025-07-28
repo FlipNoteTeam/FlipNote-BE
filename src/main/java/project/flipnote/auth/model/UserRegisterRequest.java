@@ -34,7 +34,7 @@ public record UserRegisterRequest(
 		return PhoneUtil.normalize(phone);
 	}
 
-	public UserCreateCommand toCommand(Long accountId) {
-		return new UserCreateCommand(accountId, email, name, nickname, smsAgree, getNormalizedPhone(), profileImageUrl);
+	public UserCreateCommand toCommand() {
+		return new UserCreateCommand(email, name, nickname, smsAgree, getNormalizedPhone(), profileImageUrl);
 	}
 }

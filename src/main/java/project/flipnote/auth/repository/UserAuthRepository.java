@@ -8,26 +8,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import project.flipnote.auth.entity.AccountStatus;
-import project.flipnote.auth.entity.AuthAccount;
+import project.flipnote.auth.entity.UserAuth;
 
-public interface AuthAccountRepository extends JpaRepository<AuthAccount, Long> {
+public interface UserAuthRepository extends JpaRepository<UserAuth, Long> {
 
 	boolean existsByEmail(String email);
 
-	Optional<AuthAccount> findByEmailAndStatus(String email, AccountStatus status);
+	Optional<UserAuth> findByEmailAndStatus(String email, AccountStatus status);
 
 	boolean existsByEmailAndStatus(String email, AccountStatus status);
 
 	@Modifying
-	@Query("UPDATE AuthAccount aa SET aa.password = :password WHERE aa.email = :email")
+	@Query("UPDATE UserAuth aa SET aa.password = :password WHERE aa.email = :email")
 	void updatePassword(@Param("email") String email, @Param("password") String password);
 
-	Optional<AuthAccount> findByIdAndStatus(Long accountId, AccountStatus status);
+	Optional<UserAuth> findByIdAndStatus(Long authId, AccountStatus status);
 
-	@Query("SELECT aa.tokenVersion FROM AuthAccount aa WHERE aa.id = :accountId")
-	Optional<Long> findTokenVersionById(@Param("accountId") Long accountId);
+	@Query("SELECT aa.tokenVersion FROM UserAuth aa WHERE aa.userId = :userId")
+	Optional<Long> findTokenVersionById(@Param("userId") Long userId);
 
 	@Modifying
-	@Query("UPDATE AuthAccount aa SET aa.tokenVersion = aa.tokenVersion + 1 WHERE aa.id = :userId")
+	@Query("UPDATE UserAuth aa SET aa.tokenVersion = aa.tokenVersion + 1 WHERE aa.userId = :userId")
 	void incrementTokenVersion(@Param("userId") Long userId);
 }

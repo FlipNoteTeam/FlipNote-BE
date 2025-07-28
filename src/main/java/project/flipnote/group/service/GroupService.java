@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.AccountAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
@@ -24,9 +24,8 @@ import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.user.entity.UserProfile;
-import project.flipnote.auth.entity.AccountStatus;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
 
 @Slf4j
 @Service
@@ -38,21 +37,21 @@ public class GroupService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupPermissionRepository groupPermissionRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
-	private final UserRepository userRepository;
+	private final UserProfileRepository userProfileRepository;
 
 	//유저 정보 조회
-	public UserProfile findUser(AccountAuth accountAuth) {
-		return userRepository.findById(accountAuth.accountId()).orElseThrow(
+	public UserProfile findUser(AuthPrinciple userAuth) {
+		return userProfileRepository.findById(userAuth.userId()).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateResponse create(AccountAuth accountAuth, GroupCreateRequest req) {
+	public GroupCreateResponse create(AuthPrinciple userAuth, GroupCreateRequest req) {
 
 		//1. 유저 조회
-		UserProfile user = findUser(accountAuth);
+		UserProfile user = findUser(userAuth);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());

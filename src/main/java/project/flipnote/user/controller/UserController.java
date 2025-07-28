@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.security.dto.AccountAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserUpdateRequest;
@@ -27,25 +27,25 @@ public class UserController {
 	private final UserService userService;
 
 	@DeleteMapping
-	public ResponseEntity<Void> unregister(@AuthenticationPrincipal AccountAuth accountAuth) {
-		userService.unregister(accountAuth.accountId());
+	public ResponseEntity<Void> withdraw(@AuthenticationPrincipal AuthPrinciple userAuth) {
+		userService.withdraw(userAuth.userId());
 		return ResponseEntity.noContent().build();
 	}
 
 	@PutMapping
 	public ResponseEntity<UserUpdateResponse> update(
-		@AuthenticationPrincipal AccountAuth accountAuth,
+		@AuthenticationPrincipal AuthPrinciple userAuth,
 		@Valid @RequestBody UserUpdateRequest req
 	) {
-		UserUpdateResponse res = userService.update(accountAuth.accountId(), req);
+		UserUpdateResponse res = userService.update(userAuth.userId(), req);
 		return ResponseEntity.ok(res);
 	}
 
 	@GetMapping("/me")
 	public ResponseEntity<MyInfoResponse> getMyInfo(
-		@AuthenticationPrincipal AccountAuth accountAuth
+		@AuthenticationPrincipal AuthPrinciple userAuth
 	) {
-		MyInfoResponse res = userService.getMyInfo(accountAuth.accountId());
+		MyInfoResponse res = userService.getMyInfo(userAuth.userId());
 		return ResponseEntity.ok(res);
 	}
 

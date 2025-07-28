@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.entity.AccountStatus;
-import project.flipnote.auth.entity.AuthAccount;
-import project.flipnote.auth.repository.AuthAccountRepository;
+import project.flipnote.auth.entity.UserAuth;
+import project.flipnote.auth.repository.UserAuthRepository;
 import project.flipnote.common.event.UserWithdrawnEvent;
 
 @Slf4j
@@ -19,7 +19,7 @@ import project.flipnote.common.event.UserWithdrawnEvent;
 @Component
 public class UserWithdrawnEventListener {
 
-	private final AuthAccountRepository authAccountRepository;
+	private final UserAuthRepository userAuthRepository;
 
 	@Async
 	@Retryable(
@@ -28,12 +28,12 @@ public class UserWithdrawnEventListener {
 	)
 	@EventListener
 	public void handleUserWithdrawnEvent(UserWithdrawnEvent event) {
-		authAccountRepository.findByIdAndStatus(event.userId(), AccountStatus.ACTIVE)
-			.ifPresent(AuthAccount::unregister);
+		userAuthRepository.findByIdAndStatus(event.userId(), AccountStatus.ACTIVE)
+			.ifPresent(UserAuth::withdraw);
 	}
 
 	@Recover
 	public void recover(Exception ex, UserWithdrawnEvent event) {
-		log.error("회원 탈퇴 상태 변경 실패: accountId={}", event.userId(), ex);
+		log.error("회원 탈퇴 상태 변경 실패: userId={}", event.userId(), ex);
 	}
 }

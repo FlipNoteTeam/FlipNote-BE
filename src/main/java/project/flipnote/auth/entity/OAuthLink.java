@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.flipnote.auth.repository.AuthAccountRepository;
 import project.flipnote.user.entity.UserProfile;
 
 @Getter
@@ -48,17 +47,17 @@ public class OAuthLink {
 	private String providerId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "account_id", nullable = false)
-	private AuthAccount account;
+	@JoinColumn(name = "auth_id", nullable = false)
+	private UserAuth userAuth;
 
 	@CreatedDate
 	@Column(updatable = false)
 	private LocalDateTime linkedAt;
 
 	@Builder
-	public OAuthLink(String provider, String providerId, AuthAccount account) {
+	public OAuthLink(String provider, String providerId, UserAuth userAuth) {
 		this.provider = provider;
 		this.providerId = providerId;
-		this.account = account;
+		this.userAuth = userAuth;
 	}
 }

@@ -28,7 +28,7 @@ import project.flipnote.auth.model.UserLoginResponse;
 import project.flipnote.auth.model.UserRegisterRequest;
 import project.flipnote.auth.model.UserRegisterResponse;
 import project.flipnote.auth.service.AuthService;
-import project.flipnote.common.security.dto.AccountAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.common.security.jwt.JwtProperties;
 import project.flipnote.common.util.CookieUtil;
@@ -130,28 +130,28 @@ public class AuthController {
 
 	@PatchMapping("/password")
 	public ResponseEntity<Void> updatePassword(
-		@AuthenticationPrincipal AccountAuth accountAuth,
+		@AuthenticationPrincipal AuthPrinciple userAuth,
 		@Valid @RequestBody ChangePasswordRequest req
 	) {
-		authService.changePassword(accountAuth.accountId(), req);
+		authService.changePassword(userAuth.authId(), req);
 		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/social-links")
 	public ResponseEntity<SocialLinksResponse> getSocialLinks(
-		@AuthenticationPrincipal AccountAuth accountAuth
+		@AuthenticationPrincipal AuthPrinciple userAuth
 	) {
-		SocialLinksResponse res = authService.getSocialLinks(accountAuth.accountId());
+		SocialLinksResponse res = authService.getSocialLinks(userAuth.authId());
 
 		return ResponseEntity.ok(res);
 	}
 
 	@DeleteMapping("/social-links/{socialLinkId}")
 	public ResponseEntity<Void> deleteSocialLink(
-		@AuthenticationPrincipal AccountAuth accountAuth,
+		@AuthenticationPrincipal AuthPrinciple userAuth,
 		@PathVariable("socialLinkId") Long socialLinkId
 	) {
-		authService.deleteSocialLink(accountAuth.accountId(), socialLinkId);
+		authService.deleteSocialLink(userAuth.authId(), socialLinkId);
 
 		return ResponseEntity.noContent().build();
 	}
