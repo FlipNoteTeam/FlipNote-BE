@@ -11,4 +11,6 @@ public interface UserOAuthLinkRepository extends JpaRepository<UserOAuthLink, Lo
 	boolean existsByUser_IdAndProviderId(Long userId, String providerId);
 
 	List<UserOAuthLink> findByUser_Id(Long userId);
+
+	boolean existsByIdAndUser_Id(Long id, Long userId);
 }

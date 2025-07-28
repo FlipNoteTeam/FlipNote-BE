@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
@@ -27,8 +28,8 @@ import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserOAuthLink;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.ChangePasswordRequest;
+import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
@@ -408,6 +409,40 @@ class UserServiceTest {
 			assertThat(res.socialLinks()).isNotNull();
 			assertThat(res.socialLinks().size()).isEqualTo(1);
 			assertThat(res.socialLinks().get(0).provider()).isEqualTo("google");
+		}
+	}
+
+	@DisplayName("소셜 연동 해제 테스트")
+	@Nested
+	class DeleteSocialLink {
+
+		@DisplayName("성공")
+		@Test
+		void success() {
+			User user = UserFixture.createActiveUser();
+			UserOAuthLink userOAuthLink = new UserOAuthLink("google", "providerId", user);
+			ReflectionTestUtils.setField(userOAuthLink, "id", 1L);
+
+			given(userOAuthLinkRepository.existsByIdAndUser_Id(userOAuthLink.getId(), user.getId())).willReturn(true);
+
+			userService.deleteSocialLink(user.getId(), userOAuthLink.getId());
+
+			verify(userOAuthLinkRepository, times(1)).deleteById(userOAuthLink.getId());
+		}
+
+		@DisplayName("회원이 연동한 소셜 계정이 아닌 경우 예외 발생")
+		@Test
+		void fail_socialLinkNotFound() {
+			Long userId = 1L;
+			Long socialLinkId = 1L;
+
+			given(userOAuthLinkRepository.existsByIdAndUser_Id(socialLinkId, userId)).willReturn(false);
+
+			BizException exception = assertThrows(BizException.class,
+				() -> userService.deleteSocialLink(userId, socialLinkId));
+			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.SOCIAL_LINK_NOT_FOUND);
+
+			verify(userOAuthLinkRepository, never()).deleteById(anyLong());
 		}
 	}
 }

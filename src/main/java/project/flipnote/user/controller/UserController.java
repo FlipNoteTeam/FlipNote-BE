@@ -87,4 +87,14 @@ public class UserController {
 
 		return ResponseEntity.ok(res);
 	}
+
+	@DeleteMapping("/me/social-links/{socialLinkId}")
+	public ResponseEntity<Void> deleteSocialLink(
+		@AuthenticationPrincipal UserAuth userAuth,
+		@PathVariable("socialLinkId") Long socialLinkId
+	) {
+		userService.deleteSocialLink(userAuth.userId(), socialLinkId);
+
+		return ResponseEntity.noContent().build();
+	}
 }
