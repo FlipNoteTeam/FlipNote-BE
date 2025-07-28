@@ -20,7 +20,9 @@ public enum AuthErrorCode implements ErrorCode {
 	ALREADY_SENT_PASSWORD_RESET_LINK(HttpStatus.CONFLICT, "AUTH_008", "이미 유효한 비밀번호 재설정 링크가 존재합니다. 이메일을 확인해주세요."),
 	INVALID_PASSWORD_RESET_TOKEN(HttpStatus.NOT_FOUND, "AUTH_009", "비밀번호 재설정 링크가 유효하지 않거나 만료되었습니다."),
 	INVALID_SOCIAL_LINK_TOKEN(HttpStatus.NOT_FOUND, "AUTH_010", "소셜 계정 연동 토큰이 유효하지 않거나 만료되었습니다."),
-	ALREADY_LINKED_SOCIAL_ACCOUNT(HttpStatus.NOT_FOUND, "AUTH_011", "이미 연동된 소셜 계정입니다.");
+	ALREADY_LINKED_SOCIAL_ACCOUNT(HttpStatus.NOT_FOUND, "AUTH_011", "이미 연동된 소셜 계정입니다."),
+	NOT_REGISTERED_SOCIAL_ACCOUNT(HttpStatus.NOT_FOUND, "AUTH_012", "가입되지 않은 소셜 계정입니다."),
+	INVALID_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_013", "지원하지 않는 소셜 제공자입니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

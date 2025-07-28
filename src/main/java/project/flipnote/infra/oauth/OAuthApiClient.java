@@ -78,15 +78,19 @@ public class OAuthApiClient {
 		String codeChallenge,
 		String state
 	) {
-		return UriComponentsBuilder.fromUriString(provider.getAuthorizationUri())
+		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(provider.getAuthorizationUri())
 			.queryParam("client_id", provider.getClientId())
 			.queryParam("redirect_uri", buildRedirectUri(request, provider.getRedirectUri()))
 			.queryParam("response_type", "code")
 			.queryParam("scope", String.join(" ", provider.getScope()))
 			.queryParam("code_challenge", codeChallenge)
-			.queryParam("code_challenge_method", "S256")
-			.queryParam("state", state)
-			.toUriString();
+			.queryParam("code_challenge_method", "S256");
+
+		if (state != null) {
+			builder.queryParam("state", state);
+		}
+
+		return builder.toUriString();
 	}
 
 	private String buildRedirectUri(HttpServletRequest request, String path) {

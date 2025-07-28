@@ -62,6 +62,8 @@ app:
       social-link-success: /social-link/success
       social-link-failure: /social-link/failure
       social-link-conflict: /social-link/conflict
+      social-login-success: /social-login/success
+      social-login-failure: /social-login/failure
 
   oauth2:
     providers:
