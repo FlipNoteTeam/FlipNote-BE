@@ -22,7 +22,8 @@ public enum AuthErrorCode implements ErrorCode {
 	INVALID_SOCIAL_LINK_TOKEN(HttpStatus.NOT_FOUND, "AUTH_010", "소셜 계정 연동 토큰이 유효하지 않거나 만료되었습니다."),
 	ALREADY_LINKED_SOCIAL_ACCOUNT(HttpStatus.CONFLICT, "AUTH_011", "이미 연동된 소셜 계정입니다."),
 	NOT_REGISTERED_SOCIAL_ACCOUNT(HttpStatus.NOT_FOUND, "AUTH_012", "가입되지 않은 소셜 계정입니다."),
-	INVALID_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_013", "지원하지 않는 소셜 제공자입니다.");
+	INVALID_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_013", "지원하지 않는 소셜 제공자입니다."),
+	SOCIAL_LINK_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_014", "소셜 연동 계정이 존재하지 않습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

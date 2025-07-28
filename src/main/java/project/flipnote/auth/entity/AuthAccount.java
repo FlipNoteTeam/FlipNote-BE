@@ -1,7 +1,6 @@
-package project.flipnote.user.entity;
+package project.flipnote.auth.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,15 +13,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.flipnote.common.crypto.AesCryptoConverter;
 import project.flipnote.common.entity.SoftDeletableEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "users")
+@Table(name = "auth_account")
 @Entity
-public class User extends SoftDeletableEntity {
+public class AuthAccount extends SoftDeletableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,70 +31,39 @@ public class User extends SoftDeletableEntity {
 
 	private String password;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private String name;
-
-	@Column(nullable = false)
-	private String nickname;
-
-	private String profileImageUrl;
-
-	@Convert(converter = AesCryptoConverter.class)
-	@Column(unique = true, length = 1024)
-	private String phone;
-
-	private boolean smsAgree;
+	private AccountStatus status;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private UserStatus status;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private UserRole role;
+	private AccountRole role;
 
 	@Column(nullable = false)
 	private long tokenVersion;
 
 	@Builder
-	public User(
+	public AuthAccount(
 		String email,
-		String password,
-		String name,
-		String nickname,
-		String profileImageUrl,
-		String phone,
-		boolean smsAgree
+		String password
 	) {
 		this.email = email;
 		this.password = password;
-		this.name = name;
-		this.nickname = nickname;
-		this.profileImageUrl = profileImageUrl;
-		this.phone = phone;
-		this.smsAgree = smsAgree;
-		this.status = UserStatus.ACTIVE;
-		this.role = UserRole.USER;
+		this.status = AccountStatus.ACTIVE;
+		this.role = AccountRole.USER;
 		this.tokenVersion = 0L;
 	}
 
 	public void unregister() {
 		super.softDelete();
 
-		this.status = UserStatus.INACTIVE;
+		this.status = AccountStatus.INACTIVE;
 
 		increaseTokenVersion();
 	}
 
 	public void increaseTokenVersion() {
 		this.tokenVersion++;
-	}
-
-	public void update(String nickname, String phone, boolean smsAgree, String profileImageUrl) {
-		this.nickname = nickname;
-		this.phone = phone;
-		this.smsAgree = smsAgree;
-		this.profileImageUrl = profileImageUrl;
 	}
 
 	public void changePassword(String password) {

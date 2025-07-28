@@ -27,7 +27,12 @@ public class OAuthApiClient {
 	private final RestClient restClient;
 	private final ObjectMapper objectMapper;
 
-	public String requestAccessToken(OAuthProperties.Provider provider, String code, String codeVerifier, HttpServletRequest request) {
+	public String requestAccessToken(
+		OAuthProperties.Provider provider,
+		String code,
+		String codeVerifier,
+		HttpServletRequest request
+	) {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("grant_type", "authorization_code");
 		params.add("client_id", provider.getClientId());
@@ -44,8 +49,9 @@ public class OAuthApiClient {
 				.retrieve()
 				.body(String.class);
 
-			Map<String, Object> responseMap = objectMapper.readValue(responseBody, new TypeReference<>() {});
-			return (String) responseMap.get("access_token");
+			Map<String, Object> responseMap = objectMapper.readValue(responseBody, new TypeReference<>() {
+			});
+			return (String)responseMap.get("access_token");
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to get Access Token", e);
 		}
@@ -59,7 +65,8 @@ public class OAuthApiClient {
 				.retrieve()
 				.body(String.class);
 
-			return objectMapper.readValue(responseBody, new TypeReference<>() {});
+			return objectMapper.readValue(responseBody, new TypeReference<>() {
+			});
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to get User Info", e);
 		}

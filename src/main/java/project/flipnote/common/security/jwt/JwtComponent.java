@@ -12,12 +12,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.entity.AuthAccount;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.TokenVersionService;
-import project.flipnote.common.security.dto.UserAuth;
-import project.flipnote.common.security.exception.SecurityErrorCode;
+import project.flipnote.common.security.dto.AccountAuth;
 import project.flipnote.common.security.exception.CustomSecurityException;
-import project.flipnote.user.entity.User;
+import project.flipnote.common.security.exception.SecurityErrorCode;
 
 @RequiredArgsConstructor
 @Component
@@ -32,52 +32,52 @@ public class JwtComponent {
 		this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
 	}
 
-	public TokenPair generateTokenPair(User user) {
-		UserAuth userAuth = UserAuth.from(user);
+	public TokenPair generateTokenPair(AuthAccount authAccount) {
+		AccountAuth accountAuth = AccountAuth.from(authAccount);
 
-		return generateTokenPair(userAuth);
+		return generateTokenPair(accountAuth);
 	}
 
-	public TokenPair generateTokenPair(UserAuth userAuth) {
-		String accessToken = generateAccessToken(userAuth);
-		String refreshToken = generateRefreshToken(userAuth);
+	public TokenPair generateTokenPair(AccountAuth accountAuth) {
+		String accessToken = generateAccessToken(accountAuth);
+		String refreshToken = generateRefreshToken(accountAuth);
 		return TokenPair.from(accessToken, refreshToken);
 	}
 
-	private String generateAccessToken(UserAuth userAuth) {
+	private String generateAccessToken(AccountAuth accountAuth) {
 		return generateToken(
-			userAuth,
+			accountAuth,
 			jwtProperties.getAccessTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateRefreshToken(UserAuth userAuth) {
+	private String generateRefreshToken(AccountAuth accountAuth) {
 		return generateToken(
-			userAuth,
+			accountAuth,
 			jwtProperties.getRefreshTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateToken(UserAuth userAuth, Date expiration) {
+	private String generateToken(AccountAuth accountAuth, Date expiration) {
 		Date now = new Date();
 
 		return Jwts.builder()
-			.subject(userAuth.email())
-			.id(String.valueOf(userAuth.userId()))
-			.claim(JwtConstants.ROLE, userAuth.userRole().name())
-			.claim(JwtConstants.TOKEN_VERSION, userAuth.tokenVersion())
+			.subject(accountAuth.email())
+			.id(String.valueOf(accountAuth.accountId()))
+			.claim(JwtConstants.ROLE, accountAuth.userRole().name())
+			.claim(JwtConstants.TOKEN_VERSION, accountAuth.tokenVersion())
 			.issuedAt(now)
 			.expiration(expiration)
 			.signWith(secretKey, Jwts.SIG.HS256)
 			.compact();
 	}
 
-	public UserAuth extractUserAuthFromToken(String token) {
+	public AccountAuth extractUserAuthFromToken(String token) {
 		Claims claims = parseClaims(token);
-		UserAuth userAuth = UserAuth.from(claims);
-		validateToken(userAuth);
+		AccountAuth accountAuth = AccountAuth.from(claims);
+		validateToken(accountAuth);
 
-		return userAuth;
+		return accountAuth;
 	}
 
 	public long getExpirationMillis(String token) {
@@ -105,11 +105,11 @@ public class JwtComponent {
 		}
 	}
 
-	private void validateToken(UserAuth userAuth) {
-		long currentTokenVersion = tokenVersionService.findTokenVersion(userAuth.userId())
+	private void validateToken(AccountAuth accountAuth) {
+		long currentTokenVersion = tokenVersionService.findTokenVersion(accountAuth.accountId())
 			.orElseThrow(() -> new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
 
-		if (userAuth.tokenVersion() != currentTokenVersion) {
+		if (accountAuth.tokenVersion() != currentTokenVersion) {
 			throw new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 		}
 	}

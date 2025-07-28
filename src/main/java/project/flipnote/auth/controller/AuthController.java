@@ -1,10 +1,15 @@
 package project.flipnote.auth.controller;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.model.ChangePasswordRequest;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
@@ -19,10 +25,14 @@ import project.flipnote.auth.model.PasswordResetRequest;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.model.UserLoginResponse;
+import project.flipnote.auth.model.UserRegisterRequest;
+import project.flipnote.auth.model.UserRegisterResponse;
 import project.flipnote.auth.service.AuthService;
+import project.flipnote.common.security.dto.AccountAuth;
 import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.common.security.jwt.JwtProperties;
 import project.flipnote.common.util.CookieUtil;
+import project.flipnote.user.model.SocialLinksResponse;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,6 +42,12 @@ public class AuthController {
 	private final AuthService authService;
 	private final JwtProperties jwtProperties;
 	private final CookieUtil cookieUtil;
+
+	@PostMapping("/register")
+	public ResponseEntity<UserRegisterResponse> register(@Valid @RequestBody UserRegisterRequest req) {
+		UserRegisterResponse res = authService.register(req);
+		return ResponseEntity.status(HttpStatus.CREATED).body(res);
+	}
 
 	@PostMapping("/login")
 	public ResponseEntity<UserLoginResponse> login(
@@ -108,6 +124,34 @@ public class AuthController {
 		@Valid @RequestBody PasswordResetRequest req
 	) {
 		authService.resetPassword(req);
+
+		return ResponseEntity.noContent().build();
+	}
+
+	@PatchMapping("/password")
+	public ResponseEntity<Void> updatePassword(
+		@AuthenticationPrincipal AccountAuth accountAuth,
+		@Valid @RequestBody ChangePasswordRequest req
+	) {
+		authService.changePassword(accountAuth.accountId(), req);
+		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/social-links")
+	public ResponseEntity<SocialLinksResponse> getSocialLinks(
+		@AuthenticationPrincipal AccountAuth accountAuth
+	) {
+		SocialLinksResponse res = authService.getSocialLinks(accountAuth.accountId());
+
+		return ResponseEntity.ok(res);
+	}
+
+	@DeleteMapping("/social-links/{socialLinkId}")
+	public ResponseEntity<Void> deleteSocialLink(
+		@AuthenticationPrincipal AccountAuth accountAuth,
+		@PathVariable("socialLinkId") Long socialLinkId
+	) {
+		authService.deleteSocialLink(accountAuth.accountId(), socialLinkId);
 
 		return ResponseEntity.noContent().build();
 	}

@@ -1,4 +1,4 @@
-package project.flipnote.user.entity;
+package project.flipnote.auth.entity;
 
 import java.time.LocalDateTime;
 
@@ -21,19 +21,21 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.flipnote.auth.repository.AuthAccountRepository;
+import project.flipnote.user.entity.UserProfile;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(
-	name = "user_oauth_link",
+	name = "oauth_link",
 	indexes = {
 		@Index(name = "idx_provider_provider_id", columnList = "provider, providerId")
 	}
 )
 @Entity
-public class UserOAuthLink {
+public class OAuthLink {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,17 +48,17 @@ public class UserOAuthLink {
 	private String providerId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
+	@JoinColumn(name = "account_id", nullable = false)
+	private AuthAccount account;
 
 	@CreatedDate
 	@Column(updatable = false)
 	private LocalDateTime linkedAt;
 
 	@Builder
-	public UserOAuthLink(String provider, String providerId, User user) {
+	public OAuthLink(String provider, String providerId, AuthAccount account) {
 		this.provider = provider;
 		this.providerId = providerId;
-		this.user = user;
+		this.account = account;
 	}
 }

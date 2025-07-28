@@ -25,7 +25,7 @@ import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.OAuthService;
 import project.flipnote.common.config.ClientProperties;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AccountAuth;
 import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.common.security.jwt.JwtProperties;
 import project.flipnote.common.util.CookieUtil;
@@ -44,9 +44,9 @@ public class OAuthController {
 	public ResponseEntity<Void> redirectToProviderAuthorization(
 		@PathVariable("provider") String provider,
 		HttpServletRequest request,
-		@AuthenticationPrincipal UserAuth userAuth
+		@AuthenticationPrincipal AccountAuth accountAuth
 	) {
-		AuthorizationRedirect authRedirect = oAuthService.getAuthorizationUri(provider, request, userAuth);
+		AuthorizationRedirect authRedirect = oAuthService.getAuthorizationUri(provider, request, accountAuth);
 
 		return ResponseEntity.status(HttpStatus.FOUND)
 			.header(HttpHeaders.SET_COOKIE, authRedirect.cookie().toString())

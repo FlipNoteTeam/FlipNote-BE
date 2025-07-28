@@ -5,29 +5,29 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.repository.AuthAccountRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
-import project.flipnote.user.repository.UserRepository;
 
 @RequiredArgsConstructor
 @Service
 public class TokenVersionService {
 
 	private final TokenVersionRedisRepository tokenVersionRedisRepository;
-	private final UserRepository userRepository;
+	private final AuthAccountRepository authAccountRepository;
 
-	public Optional<Long> findTokenVersion(long userId) {
-		return tokenVersionRedisRepository.getTokenVersion(userId)
+	public Optional<Long> findTokenVersion(long accountId) {
+		return tokenVersionRedisRepository.getTokenVersion(accountId)
 			.or(() -> {
-				Optional<Long> dbTokenVersion = userRepository.findTokenVersionById(userId);
+				Optional<Long> dbTokenVersion = authAccountRepository.findTokenVersionById(accountId);
 				dbTokenVersion.ifPresent(
-					tokenVersion -> tokenVersionRedisRepository.saveTokenVersion(userId, tokenVersion)
+					tokenVersion -> tokenVersionRedisRepository.saveTokenVersion(accountId, tokenVersion)
 				);
 				return dbTokenVersion;
 			});
 	}
 
-	public void incrementTokenVersion(long userId) {
-		userRepository.incrementTokenVersion(userId);
-		tokenVersionRedisRepository.deleteTokenVersion(userId);
+	public void incrementTokenVersion(long accountId) {
+		authAccountRepository.incrementTokenVersion(accountId);
+		tokenVersionRedisRepository.deleteTokenVersion(accountId);
 	}
 }

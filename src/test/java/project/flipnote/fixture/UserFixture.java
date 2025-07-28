@@ -2,17 +2,16 @@ package project.flipnote.fixture;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 public class UserFixture {
 
 	public static final String ENCODED_PASSWORD = "encodedPass";
 	public static final String USER_EMAIL = "test@test.com";
 
-	public static User createActiveUser() {
-		User user = User.builder()
+	public static UserProfile createActiveUser() {
+		UserProfile user = UserProfile.builder()
 			.email(USER_EMAIL)
-			.password(ENCODED_PASSWORD)
 			.nickname("테스트닉네임")
 			.name("테스트이름")
 			.phone("+821012345678")

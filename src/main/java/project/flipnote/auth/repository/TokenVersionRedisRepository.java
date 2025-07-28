@@ -15,22 +15,22 @@ public class TokenVersionRedisRepository {
 
 	private final RedisTemplate<String, Long> tokenVersionRedisTemplate;
 
-	public void saveTokenVersion(long userId, long tokenVersion) {
-		String key = AuthRedisKey.TOKEN_VERSION.key(userId);
+	public void saveTokenVersion(long accountId, long tokenVersion) {
+		String key = AuthRedisKey.TOKEN_VERSION.key(accountId);
 		Duration ttl = AuthRedisKey.TOKEN_VERSION.getTtl();
 
 		tokenVersionRedisTemplate.opsForValue().set(key, tokenVersion, ttl);
 	}
 
-	public Optional<Long> getTokenVersion(long userId) {
-		String key = AuthRedisKey.TOKEN_VERSION.key(userId);
+	public Optional<Long> getTokenVersion(long accountId) {
+		String key = AuthRedisKey.TOKEN_VERSION.key(accountId);
 		Long value = tokenVersionRedisTemplate.opsForValue().get(key);
 
 		return Optional.ofNullable(value);
 	}
 
-	public void deleteTokenVersion(long userId) {
-		String key = AuthRedisKey.TOKEN_VERSION.key(userId);
+	public void deleteTokenVersion(long accountId) {
+		String key = AuthRedisKey.TOKEN_VERSION.key(accountId);
 
 		tokenVersionRedisTemplate.delete(key);
 	}

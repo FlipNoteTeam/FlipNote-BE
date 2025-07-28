@@ -7,14 +7,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import io.jsonwebtoken.Claims;
+import project.flipnote.auth.entity.AccountRole;
+import project.flipnote.auth.entity.AuthAccount;
 import project.flipnote.common.security.jwt.JwtConstants;
-import project.flipnote.user.entity.User;
-import project.flipnote.user.entity.UserRole;
 
-public record UserAuth(
-	Long userId,
+public record AccountAuth(
+	Long accountId,
 	String email,
-	UserRole userRole,
+	AccountRole userRole,
 	long tokenVersion
 ) {
 
@@ -22,18 +22,18 @@ public record UserAuth(
 		return List.of(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
 	}
 
-	public static UserAuth from(User user) {
-		return new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+	public static AccountAuth from(AuthAccount account) {
+		return new AccountAuth(account.getId(), account.getEmail(), account.getRole(), account.getTokenVersion());
 	}
 
-	public static UserAuth from(Claims claims) {
+	public static AccountAuth from(Claims claims) {
 		long userId = Long.parseLong(claims.getId());
-		UserRole userRole = UserRole.from(
+		AccountRole userRole = AccountRole.from(
 			claims.get(JwtConstants.ROLE, String.class)
 		);
 		String email = claims.getSubject();
 		long tokenVersion = claims.get(JwtConstants.TOKEN_VERSION, Long.class);
 
-		return new UserAuth(userId, email, userRole, tokenVersion);
+		return new AccountAuth(userId, email, userRole, tokenVersion);
 	}
 }
