@@ -18,7 +18,7 @@ public class GroupJoinController {
 	private final GroupJoinService groupJoinService;
 
 	//가입 신청 요청
-	@PostMapping("/group/{groupId}/joins")
+	@PostMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinResponse> joinRequest(
 			UserAuth userAuth,
 			@PathVariable("groupId") Long groupId,
@@ -29,7 +29,7 @@ public class GroupJoinController {
 	}
 
 	//그룹 내 가입 신청한 리스트 조회
-	@GetMapping("/group/{groupId}/joins")
+	@GetMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinListResponse> findGroupJoinList(
 			UserAuth userAuth,
 			@PathVariable("groupId") Long groupId) {
@@ -39,7 +39,7 @@ public class GroupJoinController {
 	}
 
 	//가입 신청 응답
-	@PatchMapping("/group/{groupId}/joins/{joinId}")
+	@PatchMapping("/groups/{groupId}/joins/{joinId}")
 	public ResponseEntity<GroupJoinRespondResponse> respondToJoinRequest(
 			UserAuth userAuth,
 			@PathVariable("groupId") Long groupId,
@@ -49,6 +49,18 @@ public class GroupJoinController {
 		GroupJoinRespondResponse res = groupJoinService.respondToJoinRequest(userAuth, groupId, joinId, req);
 
 		return ResponseEntity.ok(res);
+	}
+	
+	//가입 신청 삭제
+	@DeleteMapping("/groups/{groupId}/joins/{joinId}")
+	public ResponseEntity<GroupJoinDeleteResponse> groupJoinDelete(
+		UserAuth userAuth,
+		@PathVariable("groupId") Long groupId,
+		@PathVariable("joinId") Long joinId
+	) {
+		groupJoinService.groupJoinDelete(userAuth, groupId, joinId);
+
+		return ResponseEntity.noContent().build();
 	}
 
 }

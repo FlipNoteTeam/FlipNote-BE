@@ -1,9 +1,10 @@
 package project.flipnote.groupjoin.service;
 
+
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import project.flipnote.common.exception.BizException;
@@ -53,14 +54,18 @@ public class GroupJoinService {
 	}
 	
 	//그룹 내 권한 정보 조회
-	private Boolean hasPermission(Group group, User user) {
+	@SuppressWarnings("checkstyle:RegexpSinglelineJava")
+    private Boolean hasPermission(Group group, User user) {
 		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
 				() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
 		);
 
 		GroupPermission groupPermission = groupPermissionRepository.findByName(GroupPermissionStatus.JOIN_REQUEST_MANAGE);
 
-        return groupRolePermissionRepository.existByGroupAndRoleAndGroupPermission(group, groupMember.getRole(), groupPermission);
+        return groupRolePermissionRepository.existByGroupAndRoleAndGroupPermission(
+				group,
+				groupMember.getRole(),
+				groupPermission);
 	}
 	
 	private List<GroupJoin> findGroupJoins(Group group) {
@@ -117,6 +122,7 @@ public class GroupJoinService {
 	}
 
 	//가입 신청 응답
+	@Transactional
 	public GroupJoinRespondResponse respondToJoinRequest(UserAuth userAuth, Long groupId, Long joinId, @Valid GroupJoinRespondRequest req) {
 		//유저 조회
 		User user = findUser(userAuth);
@@ -140,5 +146,29 @@ public class GroupJoinService {
 		groupJoinRepository.save(groupJoin);
 
 		return GroupJoinRespondResponse.from(groupJoin.getId());
+	}
+
+	@Transactional
+	public void groupJoinDelete(UserAuth userAuth, Long groupId, Long joinId) {
+		//유저 조회
+		User user = findUser(userAuth);
+
+		//신청 조회
+		GroupJoin groupJoin = groupJoinRepository.findById(joinId).orElseThrow(
+			() -> new BizException(GroupJoinErrorCode.NOT_EXIST_JOIN)
+		);
+
+		//그룹이 일치하지 않으면 에러
+		if (!groupJoin.getGroup().getId().equals(groupId)) {
+			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
+		}
+
+		//자신이 유저가 아니면 에러
+		if (!groupJoin.getUser().getId().equals(user.getId())) {
+			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
+		}
+
+		//삭제
+		groupJoinRepository.deleteById(joinId);
 	}
 }
