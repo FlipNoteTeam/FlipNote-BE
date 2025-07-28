@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import project.flipnote.user.entity.UserOAuthLink;
 
 public interface UserOAuthLinkRepository extends JpaRepository<UserOAuthLink, Long> {
@@ -18,12 +18,12 @@ public interface UserOAuthLinkRepository extends JpaRepository<UserOAuthLink, Lo
 	boolean existsByIdAndUser_Id(Long id, Long userId);
 
 	@Query("""
-    SELECT uol
-    FROM UserOAuthLink uol
-    JOIN FETCH uol.user
-    WHERE uol.provider = :provider
-      AND uol.providerId = :providerId
-    """)
+		SELECT uol
+		FROM UserOAuthLink uol
+		JOIN FETCH uol.user
+		WHERE uol.provider = :provider
+		  AND uol.providerId = :providerId
+		""")
 	Optional<UserOAuthLink> findByProviderAndProviderIdWithUser(
 		@Param("provider") String provider,
 		@Param("providerId") String providerId
