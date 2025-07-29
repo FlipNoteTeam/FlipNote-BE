@@ -54,7 +54,6 @@ public class GroupJoinService {
 	}
 	
 	//그룹 내 권한 정보 조회
-	@SuppressWarnings("checkstyle:RegexpSinglelineJava")
     private Boolean hasPermission(Group group, User user) {
 		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
 				() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
@@ -93,9 +92,9 @@ public class GroupJoinService {
 				.status(GroupJoinStatus.PENDING)
 				.build();
 
-		GroupJoin saveGroupJoin = groupJoinRepository.save(groupJoin);
+		groupJoinRepository.save(groupJoin);
 
-		return GroupJoinResponse.from(saveGroupJoin.getId());
+		return GroupJoinResponse.from(groupJoin.getId());
 	}
 
 	//그룹 가입 신청 리스트 조회
