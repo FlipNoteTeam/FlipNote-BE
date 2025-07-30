@@ -18,7 +18,7 @@ import project.flipnote.auth.event.EmailVerificationSendEvent;
 import project.flipnote.auth.event.PasswordResetCreateEvent;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.ChangePasswordRequest;
-import project.flipnote.auth.model.EmailVerificationConfirmRequest;
+import project.flipnote.auth.model.EmailVerifyRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
 import project.flipnote.auth.model.PasswordResetRequest;
@@ -101,7 +101,7 @@ public class AuthService {
 		eventPublisher.publishEvent(new EmailVerificationSendEvent(email, code));
 	}
 
-	public void confirmEmailVerificationCode(EmailVerificationConfirmRequest req) {
+	public void verifyEmail(EmailVerifyRequest req) {
 		String email = req.email();
 
 		String code = findVerificationCodeOrThrow(email);

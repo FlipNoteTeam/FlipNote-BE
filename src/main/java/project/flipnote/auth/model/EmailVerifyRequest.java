@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import project.flipnote.auth.constants.VerificationConstants;
 
-public record EmailVerificationConfirmRequest(
+public record EmailVerifyRequest(
 
 	@Email @NotBlank
 	String email,
