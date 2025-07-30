@@ -65,7 +65,7 @@ public class AuthService {
 		String email = req.email();
 
 		validateEmailDuplicate(email);
-		// validateEmailVerified(email);
+		validateEmailVerified(email);
 
 		UserCreateCommand command = req.toCommand();
 		Long userId = userService.createUser(command);

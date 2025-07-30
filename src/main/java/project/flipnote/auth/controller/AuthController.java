@@ -134,6 +134,7 @@ public class AuthController {
 		@Valid @RequestBody ChangePasswordRequest req
 	) {
 		authService.changePassword(userAuth.authId(), req);
+
 		return ResponseEntity.noContent().build();
 	}
 
