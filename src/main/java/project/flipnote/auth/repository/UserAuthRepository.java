@@ -24,6 +24,8 @@ public interface UserAuthRepository extends JpaRepository<UserAuth, Long> {
 
 	Optional<UserAuth> findByIdAndStatus(Long authId, AccountStatus status);
 
+	Optional<UserAuth> findByUserIdAndStatus(Long userId, AccountStatus status);
+
 	@Query("SELECT aa.tokenVersion FROM UserAuth aa WHERE aa.userId = :userId")
 	Optional<Long> findTokenVersionById(@Param("userId") Long userId);
 

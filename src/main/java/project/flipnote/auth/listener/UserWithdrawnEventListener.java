@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.entity.AccountStatus;
-import project.flipnote.auth.entity.UserAuth;
 import project.flipnote.auth.repository.UserAuthRepository;
 import project.flipnote.common.event.UserWithdrawnEvent;
 
@@ -28,8 +27,11 @@ public class UserWithdrawnEventListener {
 	)
 	@EventListener
 	public void handleUserWithdrawnEvent(UserWithdrawnEvent event) {
-		userAuthRepository.findByIdAndStatus(event.userId(), AccountStatus.ACTIVE)
-			.ifPresent(UserAuth::withdraw);
+		userAuthRepository.findByUserIdAndStatus(event.userId(), AccountStatus.ACTIVE)
+			.ifPresent(userAuth -> {
+				userAuth.withdraw();
+				userAuthRepository.save(userAuth);
+			});
 	}
 
 	@Recover
