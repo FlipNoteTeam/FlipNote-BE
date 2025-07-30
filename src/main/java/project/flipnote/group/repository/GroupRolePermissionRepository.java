@@ -10,5 +10,5 @@ import project.flipnote.group.entity.GroupRolePermission;
 
 @Repository
 public interface GroupRolePermissionRepository extends JpaRepository<GroupRolePermission, Long> {
-    boolean existByGroupAndRoleAndGroupPermission(Group group, GroupMemberRole role, GroupPermission groupPermission);
+    boolean existsByGroupAndRoleAndGroupPermission(Group group, GroupMemberRole role, GroupPermission groupPermission);
 }

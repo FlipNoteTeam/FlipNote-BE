@@ -61,7 +61,7 @@ public class GroupJoinService {
 
 		GroupPermission groupPermission = groupPermissionRepository.findByName(GroupPermissionStatus.JOIN_REQUEST_MANAGE);
 
-        return groupRolePermissionRepository.existByGroupAndRoleAndGroupPermission(
+        return groupRolePermissionRepository.existsByGroupAndRoleAndGroupPermission(
 				group,
 				groupMember.getRole(),
 				groupPermission);
