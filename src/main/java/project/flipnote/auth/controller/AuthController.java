@@ -111,7 +111,7 @@ public class AuthController implements AuthControllerDocs {
 			.body(UserLoginResponse.from(tokenPair.accessToken()));
 	}
 
-	@PostMapping("/password-resets")
+	@PostMapping("/password-reset/request")
 	public ResponseEntity<Void> requestPasswordReset(
 		@Valid @RequestBody PasswordResetCreateRequest req
 	) {
@@ -120,7 +120,7 @@ public class AuthController implements AuthControllerDocs {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PatchMapping("/password-resets")
+	@PostMapping("/password-reset")
 	public ResponseEntity<Void> resetPassword(
 		@Valid @RequestBody PasswordResetRequest req
 	) {
