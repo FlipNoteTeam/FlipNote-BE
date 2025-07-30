@@ -3,31 +3,33 @@ package project.flipnote.auth.service;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.auth.repository.UserAuthRepository;
 
 @RequiredArgsConstructor
 @Service
 public class TokenVersionService {
 
 	private final TokenVersionRedisRepository tokenVersionRedisRepository;
-	private final UserRepository userRepository;
+	private final UserAuthRepository userAuthRepository;
 
-	public Optional<Long> findTokenVersion(long userId) {
-		return tokenVersionRedisRepository.getTokenVersion(userId)
+	public Optional<Long> findTokenVersion(long authId) {
+		return tokenVersionRedisRepository.getTokenVersion(authId)
 			.or(() -> {
-				Optional<Long> dbTokenVersion = userRepository.findTokenVersionById(userId);
+				Optional<Long> dbTokenVersion = userAuthRepository.findTokenVersionById(authId);
 				dbTokenVersion.ifPresent(
-					tokenVersion -> tokenVersionRedisRepository.saveTokenVersion(userId, tokenVersion)
+					tokenVersion -> tokenVersionRedisRepository.saveTokenVersion(authId, tokenVersion)
 				);
 				return dbTokenVersion;
 			});
 	}
 
-	public void incrementTokenVersion(long userId) {
-		userRepository.incrementTokenVersion(userId);
-		tokenVersionRedisRepository.deleteTokenVersion(userId);
+	@Transactional
+	public void incrementTokenVersion(long authId) {
+		userAuthRepository.incrementTokenVersion(authId);
+		tokenVersionRedisRepository.deleteTokenVersion(authId);
 	}
 }

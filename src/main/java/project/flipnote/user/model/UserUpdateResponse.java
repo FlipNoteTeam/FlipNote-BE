@@ -1,6 +1,6 @@
 package project.flipnote.user.model;
 
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 public record UserUpdateResponse(
 	Long userId,
@@ -10,7 +10,7 @@ public record UserUpdateResponse(
 	String profileImageUrl
 ) {
 
-	public static UserUpdateResponse from(User user) {
+	public static UserUpdateResponse from(UserProfile user) {
 		return new UserUpdateResponse(
 			user.getId(), user.getNickname(), user.getPhone(), user.isSmsAgree(), user.getProfileImageUrl()
 		);

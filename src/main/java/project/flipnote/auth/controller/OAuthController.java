@@ -19,13 +19,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.OAuthConstants;
+import project.flipnote.auth.controller.docs.OAuthControllerDocs;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.AuthorizationRedirect;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.OAuthService;
 import project.flipnote.common.config.ClientProperties;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.common.security.jwt.JwtProperties;
 import project.flipnote.common.util.CookieUtil;
@@ -33,7 +34,7 @@ import project.flipnote.common.util.CookieUtil;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-public class OAuthController {
+public class OAuthController implements OAuthControllerDocs {
 
 	private final OAuthService oAuthService;
 	private final ClientProperties clientProperties;
@@ -44,7 +45,7 @@ public class OAuthController {
 	public ResponseEntity<Void> redirectToProviderAuthorization(
 		@PathVariable("provider") String provider,
 		HttpServletRequest request,
-		@AuthenticationPrincipal UserAuth userAuth
+		@AuthenticationPrincipal AuthPrinciple userAuth
 	) {
 		AuthorizationRedirect authRedirect = oAuthService.getAuthorizationUri(provider, request, userAuth);
 

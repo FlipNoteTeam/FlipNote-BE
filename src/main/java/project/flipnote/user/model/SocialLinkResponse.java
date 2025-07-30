@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import project.flipnote.user.entity.UserOAuthLink;
+import project.flipnote.auth.entity.OAuthLink;
 
 public record SocialLinkResponse(
 
@@ -16,7 +16,7 @@ public record SocialLinkResponse(
 	LocalDateTime linkedAt
 ) {
 
-	public static SocialLinkResponse from(UserOAuthLink link) {
+	public static SocialLinkResponse from(OAuthLink link) {
 		return new SocialLinkResponse(
 			link.getId(),
 			link.getProvider(),

@@ -1,79 +1,61 @@
 package project.flipnote.user.service;
 
-import java.util.List;
 import java.util.Objects;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.auth.service.AuthService;
-import project.flipnote.auth.service.EmailVerificationService;
-import project.flipnote.auth.service.TokenVersionService;
+import project.flipnote.common.dto.UserCreateCommand;
+import project.flipnote.common.event.UserWithdrawnEvent;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.user.entity.User;
-import project.flipnote.user.entity.UserOAuthLink;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
-import project.flipnote.user.model.ChangePasswordRequest;
-import project.flipnote.user.model.SocialLinksResponse;
 import project.flipnote.user.model.UserInfoResponse;
-import project.flipnote.user.model.UserRegisterRequest;
-import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
-import project.flipnote.user.repository.UserOAuthLinkRepository;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
 public class UserService {
 
-	private final UserRepository userRepository;
-	private final PasswordEncoder passwordEncoder;
-	private final AuthService authService;
-	private final TokenVersionService tokenVersionService;
-	private final EmailVerificationService emailVerificationService;
-	private final UserOAuthLinkRepository userOAuthLinkRepository;
+	private final UserProfileRepository userProfileRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
-	public UserRegisterResponse register(UserRegisterRequest req) {
-		String email = req.email();
-		String phone = req.getNormalizedPhone();
+	public Long createUser(UserCreateCommand command) {
+		validateEmailDuplicate(command.email());
+		validatePhoneDuplicate(command.phone());
 
-		validateEmailDuplicate(email);
-		validatePhoneDuplicate(phone);
-		emailVerificationService.validateVerified(email);
-
-		User user = User.builder()
-			.email(email)
-			.password(passwordEncoder.encode(req.password()))
-			.name(req.name())
-			.nickname(req.nickname())
-			.smsAgree(req.smsAgree())
-			.phone(phone)
-			.profileImageUrl(req.profileImageUrl())
+		UserProfile user = UserProfile.builder()
+			.email(command.email())
+			.name(command.name())
+			.nickname(command.nickname())
+			.profileImageUrl(command.profileImageUrl())
+			.phone(command.phone())
+			.smsAgree(command.smsAgree())
 			.build();
-		User savedUser = userRepository.save(user);
 
-		return UserRegisterResponse.from(savedUser.getId());
+		UserProfile savedUser = userProfileRepository.save(user);
+		return savedUser.getId();
 	}
 
 	@Transactional
-	public void unregister(Long userId) {
-		User user = findActiveUserById(userId);
+	public void withdraw(Long userId) {
+		UserProfile user = findActiveUserById(userId);
+		user.withdraw();
 
-		user.unregister();
-
-		tokenVersionService.incrementTokenVersion(userId);
+		eventPublisher.publishEvent(new UserWithdrawnEvent(userId));
 	}
 
 	@Transactional
 	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
-		User user = findActiveUserById(userId);
+		UserProfile user = findActiveUserById(userId);
 
 		String phone = req.getNormalizedPhone();
 		if (!Objects.equals(user.getPhone(), phone)) {
@@ -86,60 +68,34 @@ public class UserService {
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
-		User user = findActiveUserById(userId);
+		UserProfile user = findActiveUserById(userId);
 
 		return MyInfoResponse.from(user);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
-		User user = findActiveUserById(userId);
+		UserProfile user = findActiveUserById(userId);
 
 		return UserInfoResponse.from(user);
 	}
 
-	@Transactional
-	public void changePassword(Long userId, ChangePasswordRequest req) {
-		User user = findActiveUserById(userId);
-
-		authService.validatePasswordMatch(req.currentPassword(), user.getPassword());
-
-		user.changePassword(passwordEncoder.encode(req.newPassword()));
-
-		tokenVersionService.incrementTokenVersion(userId);
-	}
-
-	public SocialLinksResponse getSocialLinks(Long userId) {
-		List<UserOAuthLink> links = userOAuthLinkRepository.findByUser_Id(userId);
-
-		return SocialLinksResponse.from(links);
-	}
-
-	@Transactional
-	public void deleteSocialLink(Long userId, Long socialLinkId) {
-		if (!userOAuthLinkRepository.existsByIdAndUser_Id(socialLinkId, userId)) {
-			throw new BizException(UserErrorCode.SOCIAL_LINK_NOT_FOUND);
-		}
-
-		userOAuthLinkRepository.deleteById(socialLinkId);
-	}
-
-	private User findActiveUserById(Long userId) {
-		return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+	private UserProfile findActiveUserById(Long userId) {
+		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
 	}
 
 	private void validateEmailDuplicate(String email) {
-		if (userRepository.existsByEmail(email)) {
+		if (userProfileRepository.existsByEmail(email)) {
 			throw new BizException(UserErrorCode.DUPLICATE_EMAIL);
 		}
 	}
 
-	private void validatePhoneDuplicate(String phone) {
+	public void validatePhoneDuplicate(String phone) {
 		if (Objects.isNull(phone)) {
 			return;
 		}
 
-		if (userRepository.existsByPhone(phone)) {
+		if (userProfileRepository.existsByPhone(phone)) {
 			throw new BizException(UserErrorCode.DUPLICATE_PHONE);
 		}
 	}
