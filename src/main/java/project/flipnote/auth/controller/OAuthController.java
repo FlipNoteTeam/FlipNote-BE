@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.OAuthConstants;
+import project.flipnote.auth.controller.docs.OAuthControllerDocs;
 import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.AuthorizationRedirect;
 import project.flipnote.auth.model.TokenPair;
@@ -33,7 +34,7 @@ import project.flipnote.common.util.CookieUtil;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-public class OAuthController {
+public class OAuthController implements OAuthControllerDocs {
 
 	private final OAuthService oAuthService;
 	private final ClientProperties clientProperties;

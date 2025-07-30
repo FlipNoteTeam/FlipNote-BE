@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.controller.docs.AuthControllerDocs;
 import project.flipnote.auth.model.ChangePasswordRequest;
 import project.flipnote.auth.model.EmailVerificationConfirmRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
@@ -37,7 +38,7 @@ import project.flipnote.user.model.SocialLinksResponse;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/auth")
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
 	private final AuthService authService;
 	private final JwtProperties jwtProperties;

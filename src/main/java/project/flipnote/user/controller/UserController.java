@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.user.controller.docs.UserControllerDocs;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserUpdateRequest;
@@ -22,7 +23,7 @@ import project.flipnote.user.service.UserService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/users")
-public class UserController {
+public class UserController implements UserControllerDocs {
 
 	private final UserService userService;
 
