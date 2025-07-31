@@ -13,18 +13,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.UserAuth;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
+import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.groupjoin.entity.GroupJoin;
 import project.flipnote.groupjoin.entity.GroupJoinStatus;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.groupjoin.model.GroupJoinRequest;
+import project.flipnote.groupjoin.model.GroupJoinRespondRequest;
+import project.flipnote.groupjoin.model.GroupJoinRespondResponse;
 import project.flipnote.groupjoin.model.GroupJoinResponse;
 import project.flipnote.groupjoin.repository.GroupJoinRepository;
 import project.flipnote.user.entity.User;
@@ -48,6 +53,9 @@ class GroupJoinServiceTest {
 
 	@Mock
 	GroupMemberRepository groupMemberRepository;
+
+	@Mock
+	GroupPermissionRepository groupPermissionRepository;
 
 	User user;
 	UserAuth userAuth;
@@ -196,6 +204,83 @@ class GroupJoinServiceTest {
 
 		// then
 		assertEquals(GroupJoinErrorCode.ALREADY_JOINED_GROUP, exception.getErrorCode());
+	}
+
+	@Test
+	void 가입신청_삭제_성공_본인_신청내역_취소() throws Exception {
+		// given
+		group = Group.builder().build();
+		Field idField = Group.class.getDeclaredField("id");
+		idField.setAccessible(true);
+		idField.set(group, 1L);
+
+		GroupJoin groupJoin = GroupJoin.builder()
+			.group(group)
+			.user(user)
+			.status(GroupJoinStatus.PENDING)
+			.build();
+
+		// 리플렉션으로 ID 강제 주입
+		idField = GroupJoin.class.getDeclaredField("id");
+		idField.setAccessible(true);
+		idField.set(groupJoin, 1L);
+
+		given(groupJoinRepository.findById(1L)).willReturn(Optional.of(groupJoin));
+
+		// when
+		assertDoesNotThrow(() -> groupJoinService.groupJoinDelete(userAuth, 1L, 1L));
+
+		// then
+		assertEquals(GroupJoinStatus.CANCEL, groupJoin.getStatus());
+		verify(groupJoinRepository).save(any());
+	}
+
+	@Test
+	void 가입신청_삭제_실패_본인_아님() throws Exception {
+		// given
+		// 그룹 생성
+		group = Group.builder().build();
+		Field groupIdField = Group.class.getDeclaredField("id");
+		groupIdField.setAccessible(true);
+		groupIdField.set(group, 1L);
+
+		// 가입 신청자의 유저 (user1)
+		User user1 = User.builder()
+			.email("USER_EMAIL")
+			.password("ENCODED_PASSWORD")
+			.nickname("테스트닉네임")
+			.name("테스트이름")
+			.phone("+821012345678")
+			.smsAgree(true)
+			.profileImageUrl("test_image_url")
+			.build();
+
+		ReflectionTestUtils.setField(user1, "id", 2L);
+
+		// 로그인한 사용자 (userAuth.user ≠ user1)
+		// user는 테스트 클래스의 필드에 이미 있음
+
+		GroupJoin groupJoin = GroupJoin.builder()
+			.group(group)
+			.user(user1) // 신청자는 user1
+			.status(GroupJoinStatus.PENDING)
+			.build();
+
+		// ID 주입
+		Field joinIdField = GroupJoin.class.getDeclaredField("id");
+		joinIdField.setAccessible(true);
+		joinIdField.set(groupJoin, 1L);
+
+		// when: userAuth (user)가 user1의 신청을 삭제 시도
+		given(groupJoinRepository.findById(1L)).willReturn(Optional.of(groupJoin));
+
+		// then
+		BizException exception = assertThrows(
+			BizException.class,
+			() -> groupJoinService.groupJoinDelete(userAuth, 1L, 1L)
+		);
+
+		assertEquals(GroupJoinErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
 	}
 
 }
