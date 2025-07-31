@@ -26,6 +26,7 @@ import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -53,6 +54,21 @@ public class GroupJoinService {
 		);
 	}
 	
+	//중복조회
+	private Boolean existGroupJoin(Group group, User user) {
+		return groupJoinRepository.existsByGroup_idAndUser_id(group.getId(), user.getId());
+	}
+
+	private void checkMaxMember(Group group) {
+
+		Optional<Group> lock = groupRepository.findByIdForUpdate(group.getId());
+
+		long currentMemberCount  = groupMemberRepository.countByGroup_Id(group.getId());
+		if (currentMemberCount  >= group.getMaxMember()) {
+			throw new BizException(GroupJoinErrorCode.GROUP_IS_ALREADY_MAX_MEMBER);
+		}
+	}
+	
 	//그룹 내 권한 정보 조회
     private Boolean hasPermission(Group group, User user) {
 		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
@@ -67,11 +83,13 @@ public class GroupJoinService {
 				groupPermission);
 	}
 	
+	//그룹 내 모든 가입신청 요청 조회
 	private List<GroupJoin> findGroupJoins(Group group) {
         return groupJoinRepository.findAllByGroup(group);
 	}
 
-	private GroupJoin findGroupApplication(Long joinId) {
+	//가입 신청 조회
+	private GroupJoin findGroupJoin(Long joinId) {
 		return groupJoinRepository.findById(joinId).orElseThrow(
 				() ->  new BizException(GroupJoinErrorCode.NOT_EXIST_JOIN)
 		);
@@ -85,16 +103,34 @@ public class GroupJoinService {
 		//그룹 조회
 		Group group = findGroup(groupId);
 
+		if (existGroupJoin(group, user)) {
+			throw new BizException(GroupJoinErrorCode.ALREADY_JOINED_GROUP);
+		}
+		
+		//비공개 그룹일 경우
+		if (!group.getPublicVisible()) {
+			throw new BizException(GroupJoinErrorCode.GROUP_IS_NOT_PUBLIC);
+		}
+		
+		//그룹이 최대인원인 경우
+		checkMaxMember(group);
+		
+		GroupJoinStatus status = GroupJoinStatus.ACCEPT;
+		//가입 신청이 필수이면 pending 아니면 바로 가입
+		if (group.getApplicationRequired()) {
+			status = GroupJoinStatus.PENDING;
+		}
+
 		GroupJoin groupJoin = GroupJoin.builder()
 				.group(group)
 				.user(user)
 				.joinIntro(req.joinIntro())
-				.status(GroupJoinStatus.PENDING)
+				.status(status)
 				.build();
 
 		groupJoinRepository.save(groupJoin);
 
-		return GroupJoinResponse.from(groupJoin.getId());
+		return GroupJoinResponse.from(groupJoin.getId(), groupJoin.getStatus());
 	}
 
 	//그룹 가입 신청 리스트 조회
@@ -138,8 +174,28 @@ public class GroupJoinService {
 		}
 
 		//그룹 가입 신청 조회
-		GroupJoin groupJoin = findGroupApplication(joinId);
+		GroupJoin groupJoin = findGroupJoin(joinId);
 		
+		//최대 인원 조회
+		if (req.status() == GroupJoinStatus.ACCEPT) {
+			checkMaxMember(group);
+			// 업데이트
+			groupJoin.updateStatus(req.status());
+
+			groupJoinRepository.save(groupJoin);
+			
+			//그룹 멤버 추가
+			GroupMember groupMember = GroupMember.builder()
+				.group(group)
+				.user(user)
+				.role(GroupMemberRole.MEMBER)
+				.build();
+
+			groupMemberRepository.save(groupMember);
+
+			return GroupJoinRespondResponse.from(groupJoin.getId());
+		}
+
 		groupJoin.updateStatus(req.status());
 
 		groupJoinRepository.save(groupJoin);
@@ -147,6 +203,7 @@ public class GroupJoinService {
 		return GroupJoinRespondResponse.from(groupJoin.getId());
 	}
 
+	//삭제
 	@Transactional
 	public void groupJoinDelete(UserAuth userAuth, Long groupId, Long joinId) {
 		//유저 조회
@@ -167,10 +224,13 @@ public class GroupJoinService {
 			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
 		}
 
+		groupJoin.updateStatus(GroupJoinStatus.CANCEL);
+
 		//삭제
-		groupJoinRepository.deleteById(joinId);
+		groupJoinRepository.save(groupJoin);
 	}
 
+	//내가 신청한 리스트 조회
 	public FIndGroupJoinListMeResponse findGroupJoinListMe(UserAuth userAuth) {
 		//유저 조회
 		User user = findUser(userAuth);
