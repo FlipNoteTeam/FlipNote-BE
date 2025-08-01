@@ -19,7 +19,7 @@ import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserStatus;
@@ -80,9 +80,9 @@ public class AuthService {
 		long expirationMillis = jwtComponent.getExpirationMillis(refreshToken);
 		tokenBlacklistRedisRepository.save(refreshToken, expirationMillis);
 
-		UserAuth userAuth = jwtComponent.extractUserAuthFromToken(refreshToken);
+		AuthPrinciple authPrinciple = jwtComponent.extractUserAuthFromToken(refreshToken);
 
-		return jwtComponent.generateTokenPair(userAuth);
+		return jwtComponent.generateTokenPair(authPrinciple);
 	}
 
 	private String generateVerificationCode(int length) {

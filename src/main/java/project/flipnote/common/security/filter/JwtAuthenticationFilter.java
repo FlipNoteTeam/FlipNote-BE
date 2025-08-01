@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.common.security.jwt.JwtConstants;
 
@@ -35,9 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String token = extractToken(request);
 
 		if (StringUtils.hasText(token)) {
-			UserAuth userAuth = jwtComponent.extractUserAuthFromToken(token);
-			if (userAuth != null) {
-				setAuthentication(userAuth, token, request);
+			AuthPrinciple authPrinciple = jwtComponent.extractUserAuthFromToken(token);
+			if (authPrinciple != null) {
+				setAuthentication(authPrinciple, token, request);
 			}
 		}
 
@@ -52,9 +52,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		return null;
 	}
 
-	private void setAuthentication(UserAuth userAuth, String token, HttpServletRequest request) {
+	private void setAuthentication(AuthPrinciple authPrinciple, String token, HttpServletRequest request) {
 		UsernamePasswordAuthenticationToken authentication =
-			new UsernamePasswordAuthenticationToken(userAuth, token, userAuth.getAuthorities());
+			new UsernamePasswordAuthenticationToken(authPrinciple, token, authPrinciple.getAuthorities());
 		authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}

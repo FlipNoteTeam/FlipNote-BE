@@ -11,7 +11,7 @@ import project.flipnote.common.security.jwt.JwtConstants;
 import project.flipnote.user.entity.User;
 import project.flipnote.user.entity.UserRole;
 
-public record UserAuth(
+public record AuthPrinciple(
 	Long userId,
 	String email,
 	UserRole userRole,
@@ -22,11 +22,11 @@ public record UserAuth(
 		return List.of(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
 	}
 
-	public static UserAuth from(User user) {
-		return new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+	public static AuthPrinciple from(User user) {
+		return new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 	}
 
-	public static UserAuth from(Claims claims) {
+	public static AuthPrinciple from(Claims claims) {
 		long userId = Long.parseLong(claims.getId());
 		UserRole userRole = UserRole.from(
 			claims.get(JwtConstants.ROLE, String.class)
@@ -34,6 +34,6 @@ public record UserAuth(
 		String email = claims.getSubject();
 		long tokenVersion = claims.get(JwtConstants.TOKEN_VERSION, Long.class);
 
-		return new UserAuth(userId, email, userRole, tokenVersion);
+		return new AuthPrinciple(userId, email, userRole, tokenVersion);
 	}
 }

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
@@ -40,18 +40,18 @@ public class GroupService {
 	private final UserRepository userRepository;
 
 	//유저 정보 조회
-	public User findUser(UserAuth userAuth) {
-		return userRepository.findByIdAndStatus(userAuth.userId(), UserStatus.ACTIVE).orElseThrow(
+	public User findUser(AuthPrinciple authPrinciple) {
+		return userRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateResponse create(UserAuth userAuth, GroupCreateRequest req) {
+	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
 
 		//1. 유저 조회
-		User user = findUser(userAuth);
+		User user = findUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());

@@ -26,7 +26,7 @@ import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.exception.CustomSecurityException;
 import project.flipnote.common.security.exception.SecurityErrorCode;
 import project.flipnote.common.security.jwt.JwtComponent;
@@ -254,13 +254,13 @@ class AuthServiceTest {
 		void success() {
 			String refreshToken = "valid-refresh-token";
 			long expirationMillis = System.currentTimeMillis() + 100000;
-			UserAuth userAuth = UserAuth.from(UserFixture.createActiveUser());
+			AuthPrinciple authPrinciple = AuthPrinciple.from(UserFixture.createActiveUser());
 			TokenPair expectedTokenPair = new TokenPair("new-access-token", "new-refresh-token");
 
 			given(tokenBlacklistRedisRepository.exist(refreshToken)).willReturn(false);
 			given(jwtComponent.getExpirationMillis(refreshToken)).willReturn(expirationMillis);
-			given(jwtComponent.extractUserAuthFromToken(refreshToken)).willReturn(userAuth);
-			given(jwtComponent.generateTokenPair(userAuth)).willReturn(expectedTokenPair);
+			given(jwtComponent.extractUserAuthFromToken(refreshToken)).willReturn(authPrinciple);
+			given(jwtComponent.generateTokenPair(authPrinciple)).willReturn(expectedTokenPair);
 
 			TokenPair resultTokenPair = authService.refreshToken(refreshToken);
 
@@ -272,7 +272,7 @@ class AuthServiceTest {
 			verify(jwtComponent, times(1)).getExpirationMillis(refreshToken);
 			verify(tokenBlacklistRedisRepository, times(1)).save(refreshToken, expirationMillis);
 			verify(jwtComponent, times(1)).extractUserAuthFromToken(refreshToken);
-			verify(jwtComponent, times(1)).generateTokenPair(userAuth);
+			verify(jwtComponent, times(1)).generateTokenPair(authPrinciple);
 		}
 
 		@DisplayName("이미 사용된 토큰(블랙리스트)인 경우 예외 발생")
@@ -306,7 +306,7 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 
 			verify(tokenBlacklistRedisRepository, times(1)).save(invalidToken, expirationMillis);
-			verify(jwtComponent, never()).generateTokenPair(any(UserAuth.class));
+			verify(jwtComponent, never()).generateTokenPair(any(AuthPrinciple.class));
 		}
 	}
 }

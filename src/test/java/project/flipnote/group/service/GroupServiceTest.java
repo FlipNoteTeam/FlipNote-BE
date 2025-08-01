@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
@@ -61,12 +59,12 @@ class GroupServiceTest {
 	GroupMemberRepository groupMemberRepository;
 
 	User user;
-	UserAuth userAuth;
+	AuthPrinciple authPrinciple;
 
 	@BeforeEach
 	void before() {
 		user = UserFixture.createActiveUser();
-		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 
 		// 사용자 검증 로직
 		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
@@ -90,7 +88,7 @@ class GroupServiceTest {
 		given(groupPermissionRepository.findAll()).willReturn(permissions);
 
 		// when
-		GroupCreateResponse response = groupService.create(userAuth, req);
+		GroupCreateResponse response = groupService.create(authPrinciple, req);
 
 		// then
 		assertThat(response.groupId()).isEqualTo(1L);
@@ -105,7 +103,7 @@ class GroupServiceTest {
 
 
 		// when & then
-		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
+		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
 	}
 
 	@Test
@@ -116,6 +114,6 @@ class GroupServiceTest {
 		ReflectionTestUtils.setField(group, "id", 1L);
 
 		// when & then
-		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
+		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
 	}
 }
