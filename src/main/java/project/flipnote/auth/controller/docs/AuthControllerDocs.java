@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import project.flipnote.auth.model.ChangePasswordRequest;
-import project.flipnote.auth.model.EmailVerificationConfirmRequest;
+import project.flipnote.auth.model.EmailVerifyRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
 import project.flipnote.auth.model.PasswordResetRequest;
@@ -31,7 +31,7 @@ public interface AuthControllerDocs {
 	ResponseEntity<Void> sendEmailVerificationCode(EmailVerificationRequest req);
 
 	@Operation(summary = "이메일 인증번호 확인")
-	ResponseEntity<Void> confirmEmailVerificationCode(EmailVerificationConfirmRequest req);
+	ResponseEntity<Void> verifyEmail(EmailVerifyRequest req);
 
 	@Operation(summary = "토큰 갱신")
 	ResponseEntity<UserLoginResponse> refreshToken(String refreshToken);

@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.controller.docs.AuthControllerDocs;
 import project.flipnote.auth.model.ChangePasswordRequest;
-import project.flipnote.auth.model.EmailVerificationConfirmRequest;
+import project.flipnote.auth.model.EmailVerifyRequest;
 import project.flipnote.auth.model.EmailVerificationRequest;
 import project.flipnote.auth.model.PasswordResetCreateRequest;
 import project.flipnote.auth.model.PasswordResetRequest;
@@ -77,18 +77,18 @@ public class AuthController implements AuthControllerDocs {
 			.build();
 	}
 
-	@PostMapping("/email")
+	@PostMapping("/email-verification/request")
 	public ResponseEntity<Void> sendEmailVerificationCode(@Valid @RequestBody EmailVerificationRequest req) {
 		authService.sendEmailVerificationCode(req);
 
 		return ResponseEntity.ok().build();
 	}
 
-	@PostMapping("/email/confirm")
-	public ResponseEntity<Void> confirmEmailVerificationCode(
-		@Valid @RequestBody EmailVerificationConfirmRequest req
+	@PostMapping("/email-verification")
+	public ResponseEntity<Void> verifyEmail(
+		@Valid @RequestBody EmailVerifyRequest req
 	) {
-		authService.confirmEmailVerificationCode(req);
+		authService.verifyEmail(req);
 
 		return ResponseEntity.ok().build();
 	}
@@ -111,7 +111,7 @@ public class AuthController implements AuthControllerDocs {
 			.body(UserLoginResponse.from(tokenPair.accessToken()));
 	}
 
-	@PostMapping("/password-resets")
+	@PostMapping("/password-reset/request")
 	public ResponseEntity<Void> requestPasswordReset(
 		@Valid @RequestBody PasswordResetCreateRequest req
 	) {
@@ -120,7 +120,7 @@ public class AuthController implements AuthControllerDocs {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PatchMapping("/password-resets")
+	@PostMapping("/password-reset")
 	public ResponseEntity<Void> resetPassword(
 		@Valid @RequestBody PasswordResetRequest req
 	) {
