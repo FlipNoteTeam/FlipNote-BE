@@ -14,15 +14,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.flipnote.auth.entity.AccountRole;
+import project.flipnote.auth.entity.AccountStatus;
 import project.flipnote.common.crypto.AesCryptoConverter;
 import project.flipnote.common.entity.SoftDeletableEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Table(name = "users")
+@Table(name = "user_profiles")
 @Entity
-public class User extends SoftDeletableEntity {
+public class UserProfile extends SoftDeletableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +31,6 @@ public class User extends SoftDeletableEntity {
 
 	@Column(unique = true, nullable = false)
 	private String email;
-
-	private String password;
 
 	@Column(nullable = false)
 	private String name;
@@ -51,17 +50,9 @@ public class User extends SoftDeletableEntity {
 	@Column(nullable = false)
 	private UserStatus status;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private UserRole role;
-
-	@Column(nullable = false)
-	private long tokenVersion;
-
 	@Builder
-	public User(
+	public UserProfile(
 		String email,
-		String password,
 		String name,
 		String nickname,
 		String profileImageUrl,
@@ -69,27 +60,12 @@ public class User extends SoftDeletableEntity {
 		boolean smsAgree
 	) {
 		this.email = email;
-		this.password = password;
 		this.name = name;
 		this.nickname = nickname;
 		this.profileImageUrl = profileImageUrl;
 		this.phone = phone;
 		this.smsAgree = smsAgree;
 		this.status = UserStatus.ACTIVE;
-		this.role = UserRole.USER;
-		this.tokenVersion = 0L;
-	}
-
-	public void unregister() {
-		super.softDelete();
-
-		this.status = UserStatus.INACTIVE;
-
-		increaseTokenVersion();
-	}
-
-	public void increaseTokenVersion() {
-		this.tokenVersion++;
 	}
 
 	public void update(String nickname, String phone, boolean smsAgree, String profileImageUrl) {
@@ -97,5 +73,11 @@ public class User extends SoftDeletableEntity {
 		this.phone = phone;
 		this.smsAgree = smsAgree;
 		this.profileImageUrl = profileImageUrl;
+	}
+
+	public void withdraw() {
+		softDelete();
+
+		this.status = UserStatus.WITHDRAWN;
 	}
 }

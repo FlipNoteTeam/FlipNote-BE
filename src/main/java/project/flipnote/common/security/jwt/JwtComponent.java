@@ -12,12 +12,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.auth.entity.UserAuth;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.common.security.exception.SecurityErrorCode;
 import project.flipnote.common.security.exception.CustomSecurityException;
-import project.flipnote.user.entity.User;
+import project.flipnote.common.security.exception.SecurityErrorCode;
 
 @RequiredArgsConstructor
 @Component
@@ -32,8 +32,8 @@ public class JwtComponent {
 		this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
 	}
 
-	public TokenPair generateTokenPair(User user) {
-		AuthPrinciple authPrinciple = AuthPrinciple.from(user);
+	public TokenPair generateTokenPair(UserAuth userAuth) {
+		AuthPrinciple authPrinciple = AuthPrinciple.from(userAuth);
 
 		return generateTokenPair(authPrinciple);
 	}
@@ -44,28 +44,29 @@ public class JwtComponent {
 		return TokenPair.from(accessToken, refreshToken);
 	}
 
-	private String generateAccessToken(AuthPrinciple authPrinciple) {
+	private String generateAccessToken(AuthPrinciple userAuth) {
 		return generateToken(
-			authPrinciple,
+			userAuth,
 			jwtProperties.getAccessTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateRefreshToken(AuthPrinciple authPrinciple) {
+	private String generateRefreshToken(AuthPrinciple userAuth) {
 		return generateToken(
-			authPrinciple,
+			userAuth,
 			jwtProperties.getRefreshTokenExpiredDate(new Date())
 		);
 	}
 
-	private String generateToken(AuthPrinciple authPrinciple, Date expiration) {
+	private String generateToken(AuthPrinciple userAuth, Date expiration) {
 		Date now = new Date();
 
 		return Jwts.builder()
-			.subject(authPrinciple.email())
-			.id(String.valueOf(authPrinciple.userId()))
-			.claim(JwtConstants.ROLE, authPrinciple.userRole().name())
-			.claim(JwtConstants.TOKEN_VERSION, authPrinciple.tokenVersion())
+			.subject(userAuth.email())
+			.id(String.valueOf(userAuth.authId()))
+			.claim(JwtConstants.USER_ID, userAuth.userId())
+			.claim(JwtConstants.ROLE, userAuth.role().name())
+			.claim(JwtConstants.TOKEN_VERSION, userAuth.tokenVersion())
 			.issuedAt(now)
 			.expiration(expiration)
 			.signWith(secretKey, Jwts.SIG.HS256)
@@ -74,10 +75,10 @@ public class JwtComponent {
 
 	public AuthPrinciple extractUserAuthFromToken(String token) {
 		Claims claims = parseClaims(token);
-		AuthPrinciple authPrinciple = AuthPrinciple.from(claims);
-		validateToken(authPrinciple);
+		AuthPrinciple userAuth = AuthPrinciple.from(claims);
+		validateToken(userAuth);
 
-		return authPrinciple;
+		return userAuth;
 	}
 
 	public long getExpirationMillis(String token) {
@@ -105,11 +106,11 @@ public class JwtComponent {
 		}
 	}
 
-	private void validateToken(AuthPrinciple authPrinciple) {
-		long currentTokenVersion = tokenVersionService.findTokenVersion(authPrinciple.userId())
+	private void validateToken(AuthPrinciple userAuth) {
+		long currentTokenVersion = tokenVersionService.findTokenVersion(userAuth.authId())
 			.orElseThrow(() -> new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN));
 
-		if (authPrinciple.tokenVersion() != currentTokenVersion) {
+		if (userAuth.tokenVersion() != currentTokenVersion) {
 			throw new CustomSecurityException(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 		}
 	}

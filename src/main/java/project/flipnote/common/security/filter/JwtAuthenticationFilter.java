@@ -35,9 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String token = extractToken(request);
 
 		if (StringUtils.hasText(token)) {
-			AuthPrinciple authPrinciple = jwtComponent.extractUserAuthFromToken(token);
-			if (authPrinciple != null) {
-				setAuthentication(authPrinciple, token, request);
+			AuthPrinciple userAuth = jwtComponent.extractUserAuthFromToken(token);
+			if (userAuth != null) {
+				setAuthentication(userAuth, token, request);
 			}
 		}
 
@@ -52,9 +52,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		return null;
 	}
 
-	private void setAuthentication(AuthPrinciple authPrinciple, String token, HttpServletRequest request) {
+	private void setAuthentication(AuthPrinciple userAuth, String token, HttpServletRequest request) {
 		UsernamePasswordAuthenticationToken authentication =
-			new UsernamePasswordAuthenticationToken(authPrinciple, token, authPrinciple.getAuthorities());
+			new UsernamePasswordAuthenticationToken(userAuth, token, userAuth.getAuthorities());
 		authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}

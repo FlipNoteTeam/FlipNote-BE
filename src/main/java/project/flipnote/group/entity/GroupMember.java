@@ -1,10 +1,5 @@
 package project.flipnote.group.entity;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,12 +11,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 @Getter
 @Entity
@@ -38,7 +32,7 @@ public class GroupMember extends BaseEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
+	private UserProfile user;
 
 	//기본 값은 MEMBER;
 	@Enumerated(EnumType.STRING)
@@ -46,7 +40,7 @@ public class GroupMember extends BaseEntity {
 	private GroupMemberRole role = GroupMemberRole.MEMBER;
 
 	@Builder
-	private GroupMember(Group group, User user, GroupMemberRole role) {
+	private GroupMember(Group group, UserProfile user, GroupMemberRole role) {
 		this.group = group;
 		this.user = user;
 		this.role = role != null ? role : GroupMemberRole.MEMBER;
