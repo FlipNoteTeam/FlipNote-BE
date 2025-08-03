@@ -17,10 +17,10 @@ import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.model.ImageUploadResponseDto;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +30,11 @@ public class ImageUploadService {
 	private String bucket;
 
 	private final AmazonS3 amazonS3;
-	private final UserRepository userRepository;
+	private final UserProfileRepository userRepository;
 
-	private User findUser(AuthPrinciple authPrinciple) {
-		return userRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
+	//유저 찾기
+	private void findUser(AuthPrinciple authPrinciple) {
+		userRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
@@ -57,6 +58,7 @@ public class ImageUploadService {
 		return ImageUploadResponseDto.from(url);
 	}
 
+	//url 생성
 	private GeneratePresignedUrlRequest getGeneratePresignedUrlRequest(String fileName) {
 		GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, fileName)
 			.withMethod(HttpMethod.PUT)
@@ -70,6 +72,7 @@ public class ImageUploadService {
 		return generatePresignedUrlRequest;
 	}
 
+	//url 만료 시간 5분으로 설정
 	private Date getPresignedUrlExpiration() {
 		Date expiration = new Date();
 		long expTimeMillis = expiration.getTime();
