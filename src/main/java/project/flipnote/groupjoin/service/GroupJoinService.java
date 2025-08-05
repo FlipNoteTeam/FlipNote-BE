@@ -26,7 +26,6 @@ import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.repository.UserProfileRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -61,10 +60,12 @@ public class GroupJoinService {
 
 	private void checkMaxMember(Group group) {
 
-		Optional<Group> lock = groupRepository.findByIdForUpdate(group.getId());
+		Group lockedGroup = groupRepository.findByIdForUpdate(group.getId()).orElseThrow(
+			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
+		);
 
-		long currentMemberCount  = groupMemberRepository.countByGroup_Id(group.getId());
-		if (currentMemberCount  >= group.getMaxMember()) {
+		long currentMemberCount = groupMemberRepository.countByGroup_Id(lockedGroup.getId());
+		if (currentMemberCount >= lockedGroup.getMaxMember()) {
 			throw new BizException(GroupJoinErrorCode.GROUP_IS_ALREADY_MAX_MEMBER);
 		}
 	}
@@ -231,13 +232,13 @@ public class GroupJoinService {
 	}
 
 	//내가 신청한 리스트 조회
-	public FIndGroupJoinListMeResponse findGroupJoinListMe(AuthPrinciple authPrinciple) {
+	public FindGroupJoinListMeResponse findGroupJoinListMe(AuthPrinciple authPrinciple) {
 		//유저 조회
 		UserProfile user = findUser(authPrinciple);
 
 		//유저별 그룹 신청 리스트 조회
 		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(user);
 
-		return FIndGroupJoinListMeResponse.from(groupJoins);
+		return FindGroupJoinListMeResponse.from(groupJoins);
 	}
 }
