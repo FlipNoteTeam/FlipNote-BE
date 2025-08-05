@@ -3,6 +3,7 @@ package project.flipnote.groupjoin.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class GroupJoinController {
 	//가입 신청 요청
 	@PostMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinResponse> joinRequest(
-			AuthPrinciple authPrinciple,
+			@AuthenticationPrincipal AuthPrinciple authPrinciple,
 			@PathVariable("groupId") Long groupId,
 			@Valid @RequestBody GroupJoinRequest req) {
 		GroupJoinResponse res = groupJoinService.joinRequest(authPrinciple, groupId, req);
@@ -31,7 +32,7 @@ public class GroupJoinController {
 	//그룹 내 가입 신청한 리스트 조회
 	@GetMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinListResponse> findGroupJoinList(
-			AuthPrinciple authPrinciple,
+			@AuthenticationPrincipal AuthPrinciple authPrinciple,
 			@PathVariable("groupId") Long groupId) {
 		GroupJoinListResponse res = groupJoinService.findGroupJoinList(authPrinciple, groupId);
 
@@ -41,7 +42,7 @@ public class GroupJoinController {
 	//가입 신청 응답
 	@PatchMapping("/groups/{groupId}/joins/{joinId}")
 	public ResponseEntity<GroupJoinRespondResponse> respondToJoinRequest(
-			AuthPrinciple authPrinciple,
+			@AuthenticationPrincipal AuthPrinciple authPrinciple,
 			@PathVariable("groupId") Long groupId,
 			@PathVariable("joinId") Long joinId,
 			@Valid @RequestBody GroupJoinRespondRequest req) {
@@ -54,7 +55,7 @@ public class GroupJoinController {
 	//가입 신청 삭제
 	@DeleteMapping("/groups/{groupId}/joins/{joinId}")
 	public ResponseEntity<Void> groupJoinDelete(
-		AuthPrinciple authPrinciple,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple,
 		@PathVariable("groupId") Long groupId,
 		@PathVariable("joinId") Long joinId
 	) {
@@ -65,10 +66,10 @@ public class GroupJoinController {
 
 	//내가 신청한 가입신청 리스트 조회
 	@GetMapping("/groups/joins/me")
-	public ResponseEntity<FIndGroupJoinListMeResponse> findGroupJoinMe(
-		AuthPrinciple authPrinciple
+	public ResponseEntity<FindGroupJoinListMeResponse> findGroupJoinMe(
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		FIndGroupJoinListMeResponse res = groupJoinService.findGroupJoinListMe(authPrinciple);
+		FindGroupJoinListMeResponse res = groupJoinService.findGroupJoinListMe(authPrinciple);
 
 		return ResponseEntity.ok(res);
 	}
