@@ -40,8 +40,8 @@ public class GroupService {
 	private final UserProfileRepository userProfileRepository;
 
 	//유저 정보 조회
-	public UserProfile findUser(AuthPrinciple userPrincipal) {
-		return userProfileRepository.findByIdAndStatus(userPrincipal.userId(), UserStatus.ACTIVE).orElseThrow(
+	public UserProfile findUser(AuthPrinciple authPrinciple) {
+		return userProfileRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
