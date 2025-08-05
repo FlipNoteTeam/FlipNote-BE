@@ -187,7 +187,7 @@ public class GroupJoinService {
 			//그룹 멤버 추가
 			GroupMember groupMember = GroupMember.builder()
 				.group(group)
-				.user(user)
+				.user(groupJoin.getUser())
 				.role(GroupMemberRole.MEMBER)
 				.build();
 
