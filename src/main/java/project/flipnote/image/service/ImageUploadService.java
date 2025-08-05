@@ -33,6 +33,7 @@ public class ImageUploadService {
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
 	private final UserProfileRepository userRepository;
+	private static final int EXPIRE_MINUTES = 5;
 
 	//유저 찾기
 	private void findUser(AuthPrinciple authPrinciple) {
@@ -75,7 +76,7 @@ public class ImageUploadService {
 
 		// Presign 요청 생성 (5분 유효)
 		PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-			.signatureDuration(Duration.ofMinutes(5))
+			.signatureDuration(Duration.ofMinutes(EXPIRE_MINUTES))
 			.putObjectRequest(putObjectRequest)
 			.build();
 
@@ -99,7 +100,7 @@ public class ImageUploadService {
 			if (e.statusCode() == 404) {
 				return false;
 			}
-			throw new BizException(ImageErrorCode.CONFLICT_IMAGE);
+			throw new BizException(ImageErrorCode.S3_SERVICE_ERROR);
 		}
 	}
 }
