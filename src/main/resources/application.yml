@@ -11,7 +11,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
 
     properties:
       hibernate:
@@ -54,3 +54,38 @@ app:
 
   encryption:
     key: ${APP_ENCRYPTION_KEY}
+
+cloud:
+  aws:
+    region: ${S3_BUCKET_REGION}
+    credentials:
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+    stack:
+      auto: false
+  s3:
+    bucket: ${S3_BUCKET_NAME}
+
+
+  client:
+    url: ${APP_CLIENT_URL:https://flipnote.site}
+    paths:
+      password-reset: /password-reset
+      social-link-success: /social-link/success
+      social-link-failure: /social-link/failure
+      social-link-conflict: /social-link/conflict
+      social-login-success: /social-login/success
+      social-login-failure: /social-login/failure
+
+  oauth2:
+    providers:
+      google:
+        client-id: ${GOOGLE_CLIENT_ID}
+        client-secret: ${GOOGLE_CLIENT_SECRET}
+        redirect-uri: "/oauth2/callback/google"
+        authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+        token-uri: https://oauth2.googleapis.com/token
+        user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+        scope:
+          - email
+          - profile

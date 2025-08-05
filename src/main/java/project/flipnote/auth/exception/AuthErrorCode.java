@@ -15,7 +15,15 @@ public enum AuthErrorCode implements ErrorCode {
 	NOT_ISSUED_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "AUTH_003", "발급된 인증번호가 없습니다. 인증번호를 먼저 요청해 주세요."),
 	INVALID_VERIFICATION_CODE(HttpStatus.FORBIDDEN, "AUTH_004", "잘못된 인증번호입니다. 입력한 인증번호를 확인해 주세요."),
 	EXISTING_EMAIL(HttpStatus.CONFLICT, "AUTH_005", "이미 가입된 이메일입니다. 다른 이메일을 사용해 주세요."),
-	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "인증 정보가 유효하지 않습니다.");
+	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "인증 정보가 유효하지 않습니다."),
+	UNVERIFIED_EMAIL(HttpStatus.FORBIDDEN, "AUTH_007", "인증되지 않은 이메일입니다. 이메일 인증을 완료해 주세요."),
+	ALREADY_SENT_PASSWORD_RESET_LINK(HttpStatus.CONFLICT, "AUTH_008", "이미 유효한 비밀번호 재설정 링크가 존재합니다. 이메일을 확인해주세요."),
+	INVALID_PASSWORD_RESET_TOKEN(HttpStatus.NOT_FOUND, "AUTH_009", "비밀번호 재설정 링크가 유효하지 않거나 만료되었습니다."),
+	INVALID_SOCIAL_LINK_TOKEN(HttpStatus.NOT_FOUND, "AUTH_010", "소셜 계정 연동 토큰이 유효하지 않거나 만료되었습니다."),
+	ALREADY_LINKED_SOCIAL_ACCOUNT(HttpStatus.CONFLICT, "AUTH_011", "이미 연동된 소셜 계정입니다."),
+	NOT_REGISTERED_SOCIAL_ACCOUNT(HttpStatus.NOT_FOUND, "AUTH_012", "가입되지 않은 소셜 계정입니다."),
+	INVALID_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_013", "지원하지 않는 소셜 제공자입니다."),
+	SOCIAL_LINK_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_014", "소셜 연동 계정이 존재하지 않습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

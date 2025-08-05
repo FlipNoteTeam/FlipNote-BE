@@ -1,4 +1,4 @@
-package project.flipnote.user.model;
+package project.flipnote.auth.model;
 
 public record UserRegisterResponse(
 	Long userId
