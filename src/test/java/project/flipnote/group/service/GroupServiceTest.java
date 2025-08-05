@@ -20,18 +20,19 @@ import org.springframework.test.util.ReflectionTestUtils;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
+import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
-import project.flipnote.user.entity.User;
+
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
@@ -50,7 +51,7 @@ class GroupServiceTest {
 	GroupRolePermissionRepository groupRolePermissionRepository;
 
 	@Mock
-	UserRepository userRepository;
+	UserProfileRepository userRepository;
 
 	@Mock
 	EmailVerificationRedisRepository emailVerificationRedisRepository;
@@ -58,13 +59,13 @@ class GroupServiceTest {
 	@Mock
 	GroupMemberRepository groupMemberRepository;
 
-	User user;
+	UserProfile user;
 	AuthPrinciple authPrinciple;
 
 	@BeforeEach
 	void before() {
-		user = UserFixture.createActiveUser();
-		authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		// user = UserFixture.createActiveUser();
+		// authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 
 		// 사용자 검증 로직
 		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));

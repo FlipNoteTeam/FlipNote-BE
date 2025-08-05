@@ -17,14 +17,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
+import project.flipnote.auth.entity.AccountRole;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.fixture.UserFixture;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.model.ImageUploadResponseDto;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
+
 
 @ExtendWith(MockitoExtension.class)
 class ImageUploadServiceTest {
@@ -32,12 +33,12 @@ class ImageUploadServiceTest {
 	ImageUploadService imageUploadService;
 	
 	@Mock
-	UserRepository userRepository;
+	UserProfileRepository userRepository;
 
 	@Mock
 	private AmazonS3 amazonS3;
 
-	User user;
+	UserProfile user;
 	AuthPrinciple authPrinciple;
 
 	private final String bucket = "your-bucket-name";
@@ -46,8 +47,8 @@ class ImageUploadServiceTest {
 	@BeforeEach
 	void before() {
 		ReflectionTestUtils.setField(imageUploadService, "bucket", bucket);
-		user = UserFixture.createActiveUser();
-		authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		// user = UserFixture.createActiveUser();
+		// authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
 
 		// 사용자 검증 로직
 		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
