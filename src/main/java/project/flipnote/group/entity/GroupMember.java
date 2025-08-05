@@ -32,7 +32,7 @@ public class GroupMember extends BaseEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
-	private UserProfile userProfile;
+	private UserProfile user;
 
 	//기본 값은 MEMBER;
 	@Enumerated(EnumType.STRING)
@@ -40,9 +40,9 @@ public class GroupMember extends BaseEntity {
 	private GroupMemberRole role = GroupMemberRole.MEMBER;
 
 	@Builder
-	private GroupMember(Group group, UserProfile userProfile, GroupMemberRole role) {
+	private GroupMember(Group group, UserProfile user, GroupMemberRole role) {
 		this.group = group;
-		this.userProfile = userProfile;
+		this.user = user;
 		this.role = role != null ? role : GroupMemberRole.MEMBER;
 	}
 }

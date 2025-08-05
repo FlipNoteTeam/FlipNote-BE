@@ -110,10 +110,10 @@ public class GroupService {
 	/*
 	그룹 생성시 오너 멤버 추가
 	 */
-	private void saveGroupOwner(Group group, UserProfile userProfile) {
+	private void saveGroupOwner(Group group, UserProfile user) {
 		GroupMember groupMember = GroupMember.builder()
 				.group(group)
-				.userProfile(userProfile)
+				.user(user)
 				.role(GroupMemberRole.OWNER)
 				.build();
 

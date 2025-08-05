@@ -31,14 +31,14 @@ public class GroupJoin extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
-	private UserProfile userProfile;
+	private UserProfile user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "group_id", nullable = false)
 	private Group group;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, columnDefinition = "PENDING")
+	@Column(nullable = false)
 	private GroupJoinStatus status;
 
 	private String joinIntro;
@@ -46,14 +46,14 @@ public class GroupJoin extends BaseEntity {
 	@Builder
 	public GroupJoin
 		(
-			UserProfile userProfile,
+			UserProfile user,
 			Group group,
 			GroupJoinStatus status,
 			String joinIntro
 		)
 
 	{
-		this.userProfile = userProfile;
+		this.user = user;
 		this.group = group;
 		this.status = status;
 		this.joinIntro = joinIntro;

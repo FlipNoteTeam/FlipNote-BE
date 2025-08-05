@@ -12,7 +12,6 @@ public class UserFixture {
 	public static UserProfile createActiveUser() {
 		UserProfile userProfile = UserProfile.builder()
 			.email(USER_EMAIL)
-			.password(ENCODED_PASSWORD)
 			.nickname("테스트닉네임")
 			.name("테스트이름")
 			.phone("+821012345678")

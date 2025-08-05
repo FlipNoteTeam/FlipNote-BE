@@ -99,11 +99,11 @@ public class GroupJoinService {
 	@Transactional
 	public GroupJoinResponse joinRequest(AuthPrinciple authPrinciple, Long groupId, GroupJoinRequest req) {
 		//유저 조회
-		UserProfile userProfile = findUser(authPrinciple);
+		UserProfile user = findUser(authPrinciple);
 		//그룹 조회
 		Group group = findGroup(groupId);
 
-		if (existGroupJoin(group, userProfile)) {
+		if (existGroupJoin(group, user)) {
 			throw new BizException(GroupJoinErrorCode.ALREADY_JOINED_GROUP);
 		}
 		
@@ -123,7 +123,7 @@ public class GroupJoinService {
 
 		GroupJoin groupJoin = GroupJoin.builder()
 				.group(group)
-				.userProfile(userProfile)
+				.user(user)
 				.joinIntro(req.joinIntro())
 				.status(status)
 				.build();
@@ -160,13 +160,13 @@ public class GroupJoinService {
 	@Transactional
 	public GroupJoinRespondResponse respondToJoinRequest(AuthPrinciple authPrinciple, Long groupId, Long joinId, @Valid GroupJoinRespondRequest req) {
 		//유저 조회
-		UserProfile userProfile = findUser(authPrinciple);
+		UserProfile user = findUser(authPrinciple);
 
 		//그룹 조회
 		Group group = findGroup(groupId);
 
 		//그룹 내 권한 조회
-		Boolean isExistPermission = hasPermission(group, userProfile);
+		Boolean isExistPermission = hasPermission(group, user);
 
 		//권한 존재하지 않으면 에러
 		if (!isExistPermission) {
@@ -187,7 +187,7 @@ public class GroupJoinService {
 			//그룹 멤버 추가
 			GroupMember groupMember = GroupMember.builder()
 				.group(group)
-				.userProfile(userProfile)
+				.user(user)
 				.role(GroupMemberRole.MEMBER)
 				.build();
 
@@ -207,7 +207,7 @@ public class GroupJoinService {
 	@Transactional
 	public void groupJoinDelete(AuthPrinciple authPrinciple, Long groupId, Long joinId) {
 		//유저 조회
-		UserProfile userProfile = findUser(authPrinciple);
+		UserProfile user = findUser(authPrinciple);
 
 		//신청 조회
 		GroupJoin groupJoin = groupJoinRepository.findById(joinId).orElseThrow(
@@ -220,7 +220,7 @@ public class GroupJoinService {
 		}
 
 		//자신이 유저가 아니면 에러
-		if (!groupJoin.getUserProfile().getId().equals(userProfile.getId())) {
+		if (!groupJoin.getUser().getId().equals(user.getId())) {
 			throw new BizException(GroupJoinErrorCode.USER_NOT_PERMISSION);
 		}
 
@@ -233,10 +233,10 @@ public class GroupJoinService {
 	//내가 신청한 리스트 조회
 	public FIndGroupJoinListMeResponse findGroupJoinListMe(AuthPrinciple authPrinciple) {
 		//유저 조회
-		UserProfile userProfile = findUser(authPrinciple);
+		UserProfile user = findUser(authPrinciple);
 
 		//유저별 그룹 신청 리스트 조회
-		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(userProfile);
+		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(user);
 
 		return FIndGroupJoinListMeResponse.from(groupJoins);
 	}
