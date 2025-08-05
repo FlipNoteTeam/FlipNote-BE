@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import project.flipnote.group.entity.Group;
 import project.flipnote.groupjoin.entity.GroupJoin;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
 public interface GroupJoinRepository extends JpaRepository<GroupJoin, Long> {
     List<GroupJoin> findAllByGroup(Group group);
 
-    List<GroupJoin> findAllByUser(User user);
+    List<GroupJoin> findAllByUser(UserProfile userProfile);
 
     Boolean existsByGroup_idAndUser_id(Long id, Long id1);
 }

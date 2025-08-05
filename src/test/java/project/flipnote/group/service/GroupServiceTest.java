@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
@@ -31,7 +31,7 @@ import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
@@ -60,16 +60,17 @@ class GroupServiceTest {
 	@Mock
 	GroupMemberRepository groupMemberRepository;
 
-	User user;
-	UserAuth userAuth;
+	UserProfile userProfile;
+	UserPrincipal userPrincipal;
 
 	@BeforeEach
 	void before() {
-		user = UserFixture.createActiveUser();
-		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		userProfile = UserFixture.createActiveUser();
+		userPrincipal = new UserPrincipal(userProfile.getId(), userProfile.getEmail(), userProfile.getRole(), userProfile.getTokenVersion());
 
 		// 사용자 검증 로직
-		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+		given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+			userProfile));
 	}
 
 	@Test
@@ -90,7 +91,7 @@ class GroupServiceTest {
 		given(groupPermissionRepository.findAll()).willReturn(permissions);
 
 		// when
-		GroupCreateResponse response = groupService.create(userAuth, req);
+		GroupCreateResponse response = groupService.create(userPrincipal, req);
 
 		// then
 		assertThat(response.groupId()).isEqualTo(1L);
@@ -105,7 +106,7 @@ class GroupServiceTest {
 
 
 		// when & then
-		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
+		assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
 	}
 
 	@Test
@@ -116,6 +117,6 @@ class GroupServiceTest {
 		ReflectionTestUtils.setField(group, "id", 1L);
 
 		// when & then
-		assertThrows(BizException.class, () -> groupService.create(userAuth, req));
+		assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
 	}
 }

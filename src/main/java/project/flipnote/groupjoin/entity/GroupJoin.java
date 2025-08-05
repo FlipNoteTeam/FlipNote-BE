@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
 import project.flipnote.group.entity.Group;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 @Getter
 @Entity
@@ -31,7 +31,7 @@ public class GroupJoin extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
+	private UserProfile userProfile;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "group_id", nullable = false)
@@ -46,14 +46,14 @@ public class GroupJoin extends BaseEntity {
 	@Builder
 	public GroupJoin
 		(
-			User user,
+			UserProfile userProfile,
 			Group group,
 			GroupJoinStatus status,
 			String joinIntro
 		)
 
 	{
-		this.user = user;
+		this.userProfile = userProfile;
 		this.group = group;
 		this.status = status;
 		this.joinIntro = joinIntro;

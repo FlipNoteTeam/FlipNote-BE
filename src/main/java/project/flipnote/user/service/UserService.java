@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
@@ -43,7 +43,7 @@ public class UserService {
 			throw new BizException(UserErrorCode.UNVERIFIED_EMAIL);
 		}
 
-		User user = User.builder()
+		UserProfile userProfile = UserProfile.builder()
 			.email(email)
 			.password(passwordEncoder.encode(req.password()))
 			.name(req.name())
@@ -52,48 +52,48 @@ public class UserService {
 			.phone(phone)
 			.profileImageUrl(req.profileImageUrl())
 			.build();
-		User savedUser = userRepository.save(user);
+		UserProfile savedUserProfile = userRepository.save(userProfile);
 
 		emailVerificationRedisRepository.deleteVerified(email);
 
-		return UserRegisterResponse.from(savedUser.getId());
+		return UserRegisterResponse.from(savedUserProfile.getId());
 	}
 
 	@Transactional
 	public void unregister(Long userId) {
-		User user = findActiveUserById(userId);
+		UserProfile userProfile = findActiveUserById(userId);
 
-		user.unregister();
+		userProfile.unregister();
 		tokenVersionRedisRepository.deleteTokenVersion(userId);
 	}
 
 	@Transactional
 	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
-		User user = findActiveUserById(userId);
+		UserProfile userProfile = findActiveUserById(userId);
 
 		String phone = req.getNormalizedPhone();
-		if (!Objects.equals(user.getPhone(), phone)) {
+		if (!Objects.equals(userProfile.getPhone(), phone)) {
 			validatePhoneDuplicate(phone);
 		}
 
-		user.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
+		userProfile.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
 
-		return UserUpdateResponse.from(user);
+		return UserUpdateResponse.from(userProfile);
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
-		User user = findActiveUserById(userId);
+		UserProfile userProfile = findActiveUserById(userId);
 
-		return MyInfoResponse.from(user);
+		return MyInfoResponse.from(userProfile);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
-		User user = findActiveUserById(userId);
+		UserProfile userProfile = findActiveUserById(userId);
 
-		return UserInfoResponse.from(user);
+		return UserInfoResponse.from(userProfile);
 	}
 
-	private User findActiveUserById(Long userId) {
+	private UserProfile findActiveUserById(Long userId) {
 		return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
 	}

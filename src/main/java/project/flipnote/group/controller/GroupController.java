@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.service.GroupService;
@@ -23,9 +23,9 @@ public class GroupController {
 
 	@PostMapping("")
 	public ResponseEntity<GroupCreateResponse> create(
-		@AuthenticationPrincipal UserAuth userAuth,
+		@AuthenticationPrincipal UserPrincipal userPrincipal,
 		@Valid @RequestBody GroupCreateRequest req) {
-		GroupCreateResponse res = groupService.create(userAuth, req);
+		GroupCreateResponse res = groupService.create(userPrincipal, req);
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
 }

@@ -2,20 +2,17 @@ package project.flipnote.group.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import jakarta.persistence.LockModeType;
 import project.flipnote.group.entity.Group;
 
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 import project.flipnote.group.entity.GroupMember;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
-    Optional<GroupMember> findByGroupAndUser(Group group, User user);
+    Optional<GroupMember> findByGroupAndUser(Group group, UserProfile userProfile);
 
 	long countByGroup_Id(Long groupId);
 

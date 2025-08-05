@@ -19,7 +19,7 @@ import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenVersionRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.fixture.UserFixture;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.UserRegisterRequest;
@@ -32,7 +32,7 @@ import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("회원 서비스 단위 테스트")
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserProfileServiceTest {
 
 	@InjectMocks
 	UserService userService;
@@ -56,7 +56,7 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, "010-1234-5678", ""
 			);
@@ -65,18 +65,18 @@ class UserServiceTest {
 			given(userRepository.existsByPhone(any(String.class))).willReturn(false);
 			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
-			given(userRepository.save(any(User.class))).willReturn(user);
+			given(userRepository.save(any(UserProfile.class))).willReturn(userProfile);
 
 
 			UserRegisterResponse res = userService.register(req);
 
-			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
 		}
 
 		@DisplayName("휴대전화 번호가 null일 때 성공")
 		@Test
 		void success_ifPhoneIsNull() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 			UserRegisterRequest req = new UserRegisterRequest(
 				"test@test.com", "testPass", "테스트", "테스트", false, null, null
 			);
@@ -84,11 +84,11 @@ class UserServiceTest {
 			given(userRepository.existsByEmail(any(String.class))).willReturn(false);
 			given(emailVerificationRedisRepository.isVerified(anyString())).willReturn(true);
 			given(passwordEncoder.encode(any(String.class))).willReturn("encodedPass");
-			given(userRepository.save(any(User.class))).willReturn(user);
+			given(userRepository.save(any(UserProfile.class))).willReturn(userProfile);
 
 			UserRegisterResponse res = userService.register(req);
 
-			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
 		}
 
 		@DisplayName("이메일 중복 시 예외 발생")
@@ -104,7 +104,7 @@ class UserServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.DUPLICATE_EMAIL);
 
 			verify(userRepository, never()).existsByPhone(any(String.class));
-			verify(userRepository, never()).save(any(User.class));
+			verify(userRepository, never()).save(any(UserProfile.class));
 		}
 
 		@DisplayName("전화번호 중복 시 예외 발생")
@@ -137,7 +137,7 @@ class UserServiceTest {
 			BizException exception = assertThrows(BizException.class, () -> userService.register(req));
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.UNVERIFIED_EMAIL);
 
-			verify(userRepository, never()).save(any(User.class));
+			verify(userRepository, never()).save(any(UserProfile.class));
 		}
 	}
 
@@ -148,16 +148,17 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = spy(UserFixture.createActiveUser());
+			UserProfile userProfile = spy(UserFixture.createActiveUser());
 
-			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.of(user));
+			given(userRepository.findByIdAndStatus(anyLong(), any(UserStatus.class))).willReturn(Optional.of(
+				userProfile));
 
-			userService.unregister(user.getId());
+			userService.unregister(userProfile.getId());
 
-			assertThat(user.getStatus()).isEqualTo(UserStatus.INACTIVE);
-			assertThat(user.getDeletedAt()).isNotNull();
+			assertThat(userProfile.getStatus()).isEqualTo(UserStatus.INACTIVE);
+			assertThat(userProfile.getDeletedAt()).isNotNull();
 
-			verify(user, times(1)).softDelete();
+			verify(userProfile, times(1)).softDelete();
 			verify(tokenVersionRedisRepository, times(1)).deleteTokenVersion(anyLong());
 		}
 
@@ -178,18 +179,19 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 			UserUpdateRequest req = new UserUpdateRequest(
 				"새로운닉네임", "010-9876-5432", true, "new/image.jpg"
 			);
 			String normalizedPhone = req.getNormalizedPhone();
 
-			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+				userProfile));
 			given(userRepository.existsByPhone(normalizedPhone)).willReturn(false);
 
-			UserUpdateResponse res = userService.update(user.getId(), req);
+			UserUpdateResponse res = userService.update(userProfile.getId(), req);
 
-			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
 			assertThat(res.nickname()).isEqualTo(req.nickname());
 			assertThat(res.phone()).isEqualTo(normalizedPhone);
 			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
@@ -202,17 +204,18 @@ class UserServiceTest {
 		@DisplayName("동일한 전화번호로 수정 시 성공")
 		@Test
 		void success_withSamePhone() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 			UserUpdateRequest req = new UserUpdateRequest(
-				"새로운닉네임", user.getPhone(), true, "new/image.jpg"
+				"새로운닉네임", userProfile.getPhone(), true, "new/image.jpg"
 			);
 			String normalizedPhone = req.getNormalizedPhone();
 
-			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+				userProfile));
 
-			UserUpdateResponse res = userService.update(user.getId(), req);
+			UserUpdateResponse res = userService.update(userProfile.getId(), req);
 
-			assertThat(res.userId()).isEqualTo(user.getId());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
 			assertThat(res.nickname()).isEqualTo(req.nickname());
 			assertThat(res.phone()).isEqualTo(normalizedPhone);
 			assertThat(res.smsAgree()).isEqualTo(req.smsAgree());
@@ -238,16 +241,17 @@ class UserServiceTest {
 		@DisplayName("중복된 전화번호로 수정 시 예외 발생")
 		@Test
 		void fail_duplicatePhone() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 			UserUpdateRequest req = new UserUpdateRequest(
 				"새로운닉네임", "010-9999-9999", true, "new/image.jpg"
 			);
 			String duplicatePhone = req.getNormalizedPhone();
 
-			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+				userProfile));
 			given(userRepository.existsByPhone(duplicatePhone)).willReturn(true);
 
-			BizException exception = assertThrows(BizException.class, () -> userService.update(user.getId(), req));
+			BizException exception = assertThrows(BizException.class, () -> userService.update(userProfile.getId(), req));
 
 			assertThat(exception.getErrorCode()).isEqualTo(UserErrorCode.DUPLICATE_PHONE);
 		}
@@ -260,21 +264,22 @@ class UserServiceTest {
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = UserFixture.createActiveUser();
+			UserProfile userProfile = UserFixture.createActiveUser();
 
-			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+				userProfile));
 
-			MyInfoResponse res = userService.getMyInfo(user.getId());
+			MyInfoResponse res = userService.getMyInfo(userProfile.getId());
 
-			assertThat(res.userId()).isEqualTo(user.getId());
-			assertThat(res.email()).isEqualTo(user.getEmail());
-			assertThat(res.name()).isEqualTo(user.getName());
-			assertThat(res.nickname()).isEqualTo(user.getNickname());
-			assertThat(res.phone()).isEqualTo(user.getPhone());
-			assertThat(res.profileImageUrl()).isEqualTo(user.getProfileImageUrl());
-			assertThat(res.smsAgree()).isEqualTo(user.isSmsAgree());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
+			assertThat(res.email()).isEqualTo(userProfile.getEmail());
+			assertThat(res.name()).isEqualTo(userProfile.getName());
+			assertThat(res.nickname()).isEqualTo(userProfile.getNickname());
+			assertThat(res.phone()).isEqualTo(userProfile.getPhone());
+			assertThat(res.profileImageUrl()).isEqualTo(userProfile.getProfileImageUrl());
+			assertThat(res.smsAgree()).isEqualTo(userProfile.isSmsAgree());
 
-			verify(userRepository, times(1)).findByIdAndStatus(user.getId(), UserStatus.ACTIVE);
+			verify(userRepository, times(1)).findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE);
 		}
 
 		@DisplayName("존재하지 않는 회원 조회 시 예외 발생")
@@ -290,21 +295,22 @@ class UserServiceTest {
 
 	@DisplayName("다른 회원 정보 조회 테스트")
 	@Nested
-	class GetUserInfo {
+	class GetUserProfileInfo {
 
 		@DisplayName("성공")
 		@Test
 		void success() {
-			User user = UserFixture.createActiveUser();
-			given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+			UserProfile userProfile = UserFixture.createActiveUser();
+			given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+				userProfile));
 
-			UserInfoResponse res = userService.getUserInfo(user.getId());
+			UserInfoResponse res = userService.getUserInfo(userProfile.getId());
 
-			assertThat(res.userId()).isEqualTo(user.getId());
-			assertThat(res.nickname()).isEqualTo(user.getNickname());
-			assertThat(res.profileImageUrl()).isEqualTo(user.getProfileImageUrl());
+			assertThat(res.userId()).isEqualTo(userProfile.getId());
+			assertThat(res.nickname()).isEqualTo(userProfile.getNickname());
+			assertThat(res.profileImageUrl()).isEqualTo(userProfile.getProfileImageUrl());
 
-			verify(userRepository, times(1)).findByIdAndStatus(user.getId(), UserStatus.ACTIVE);
+			verify(userRepository, times(1)).findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE);
 		}
 
 		@DisplayName("존재하지 않는 회원 조회 시 예외 발생")

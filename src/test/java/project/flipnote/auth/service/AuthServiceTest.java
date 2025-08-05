@@ -26,12 +26,12 @@ import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.common.security.exception.CustomSecurityException;
 import project.flipnote.common.security.exception.SecurityErrorCode;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.fixture.UserFixture;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
@@ -180,15 +180,15 @@ class AuthServiceTest {
 		void success() {
 			UserLoginRequest req = new UserLoginRequest("test@example.com", "testPass");
 
-			User foundUser = UserFixture.createActiveUser();
+			UserProfile foundUserProfile = UserFixture.createActiveUser();
 
 			TokenPair expectedTokenPair = new TokenPair("access-token", "refresh-token");
 
 			given(userRepository.findByEmailAndStatus(req.email(), UserStatus.ACTIVE))
-				.willReturn(Optional.of(foundUser));
-			given(passwordEncoder.matches(req.password(), foundUser.getPassword()))
+				.willReturn(Optional.of(foundUserProfile));
+			given(passwordEncoder.matches(req.password(), foundUserProfile.getPassword()))
 				.willReturn(true);
-			given(jwtComponent.generateTokenPair(foundUser)).willReturn(expectedTokenPair);
+			given(jwtComponent.generateTokenPair(foundUserProfile)).willReturn(expectedTokenPair);
 
 			TokenPair resultTokenPair = authService.login(req);
 
@@ -198,7 +198,7 @@ class AuthServiceTest {
 
 			verify(userRepository).findByEmailAndStatus(anyString(), any(UserStatus.class));
 			verify(passwordEncoder).matches(anyString(), anyString());
-			verify(jwtComponent).generateTokenPair(any(User.class));
+			verify(jwtComponent).generateTokenPair(any(UserProfile.class));
 		}
 
 		@Test
@@ -218,7 +218,7 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
 
 			verify(passwordEncoder, never()).matches(anyString(), anyString());
-			verify(jwtComponent, never()).generateTokenPair(any(User.class));
+			verify(jwtComponent, never()).generateTokenPair(any(UserProfile.class));
 		}
 
 		@Test
@@ -226,11 +226,11 @@ class AuthServiceTest {
 		void fail_invalidCredentials_wrongPassword() {
 			UserLoginRequest req = new UserLoginRequest("wrong@test.com", "wrongPass");
 
-			User foundUser = UserFixture.createActiveUser();
+			UserProfile foundUserProfile = UserFixture.createActiveUser();
 
 			given(userRepository.findByEmailAndStatus(req.email(), UserStatus.ACTIVE))
-				.willReturn(Optional.of(foundUser));
-			given(passwordEncoder.matches(req.password(), foundUser.getPassword()))
+				.willReturn(Optional.of(foundUserProfile));
+			given(passwordEncoder.matches(req.password(), foundUserProfile.getPassword()))
 				.willReturn(false);
 
 			BizException exception = assertThrows(
@@ -241,7 +241,7 @@ class AuthServiceTest {
 			assertThat(exception).isNotNull();
 			assertThat(exception.getErrorCode()).isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
 
-			verify(jwtComponent, never()).generateTokenPair(any(User.class));
+			verify(jwtComponent, never()).generateTokenPair(any(UserProfile.class));
 		}
 	}
 
@@ -254,13 +254,13 @@ class AuthServiceTest {
 		void success() {
 			String refreshToken = "valid-refresh-token";
 			long expirationMillis = System.currentTimeMillis() + 100000;
-			UserAuth userAuth = UserAuth.from(UserFixture.createActiveUser());
+			UserPrincipal userPrincipal = UserPrincipal.from(UserFixture.createActiveUser());
 			TokenPair expectedTokenPair = new TokenPair("new-access-token", "new-refresh-token");
 
 			given(tokenBlacklistRedisRepository.exist(refreshToken)).willReturn(false);
 			given(jwtComponent.getExpirationMillis(refreshToken)).willReturn(expirationMillis);
-			given(jwtComponent.extractUserAuthFromToken(refreshToken)).willReturn(userAuth);
-			given(jwtComponent.generateTokenPair(userAuth)).willReturn(expectedTokenPair);
+			given(jwtComponent.extractUserAuthFromToken(refreshToken)).willReturn(userPrincipal);
+			given(jwtComponent.generateTokenPair(userPrincipal)).willReturn(expectedTokenPair);
 
 			TokenPair resultTokenPair = authService.refreshToken(refreshToken);
 
@@ -272,7 +272,7 @@ class AuthServiceTest {
 			verify(jwtComponent, times(1)).getExpirationMillis(refreshToken);
 			verify(tokenBlacklistRedisRepository, times(1)).save(refreshToken, expirationMillis);
 			verify(jwtComponent, times(1)).extractUserAuthFromToken(refreshToken);
-			verify(jwtComponent, times(1)).generateTokenPair(userAuth);
+			verify(jwtComponent, times(1)).generateTokenPair(userPrincipal);
 		}
 
 		@DisplayName("이미 사용된 토큰(블랙리스트)인 경우 예외 발생")
@@ -306,7 +306,7 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(SecurityErrorCode.NOT_VALID_JWT_TOKEN);
 
 			verify(tokenBlacklistRedisRepository, times(1)).save(invalidToken, expirationMillis);
-			verify(jwtComponent, never()).generateTokenPair(any(UserAuth.class));
+			verify(jwtComponent, never()).generateTokenPair(any(UserPrincipal.class));
 		}
 	}
 }

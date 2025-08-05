@@ -1,6 +1,6 @@
 package project.flipnote.user.model;
 
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 public record UserInfoResponse(
 	Long userId,
@@ -8,7 +8,7 @@ public record UserInfoResponse(
 	String profileImageUrl
 ) {
 
-	public static UserInfoResponse from(User user) {
-		return new UserInfoResponse(user.getId(), user.getNickname(), user.getProfileImageUrl());
+	public static UserInfoResponse from(UserProfile userProfile) {
+		return new UserInfoResponse(userProfile.getId(), userProfile.getNickname(), userProfile.getProfileImageUrl());
 	}
 }

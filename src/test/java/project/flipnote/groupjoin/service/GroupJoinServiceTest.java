@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.*;
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Group;
-import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
@@ -28,11 +26,9 @@ import project.flipnote.groupjoin.entity.GroupJoin;
 import project.flipnote.groupjoin.entity.GroupJoinStatus;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.groupjoin.model.GroupJoinRequest;
-import project.flipnote.groupjoin.model.GroupJoinRespondRequest;
-import project.flipnote.groupjoin.model.GroupJoinRespondResponse;
 import project.flipnote.groupjoin.model.GroupJoinResponse;
 import project.flipnote.groupjoin.repository.GroupJoinRepository;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
@@ -57,17 +53,18 @@ class GroupJoinServiceTest {
 	@Mock
 	GroupPermissionRepository groupPermissionRepository;
 
-	User user;
-	UserAuth userAuth;
+	UserProfile userProfile;
+	UserPrincipal userPrincipal;
 	Group group;
 
 	@BeforeEach
 	void before() {
-		user = UserFixture.createActiveUser();
-		userAuth = new UserAuth(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		userProfile = UserFixture.createActiveUser();
+		userPrincipal = new UserPrincipal(userProfile.getId(), userProfile.getEmail(), userProfile.getRole(), userProfile.getTokenVersion());
 
 		// 사용자 검증 로직
-		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+		given(userRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+			userProfile));
 	}
 
 	@Test
@@ -88,7 +85,7 @@ class GroupJoinServiceTest {
 		});
 
 		//when
-		GroupJoinResponse res = groupJoinService.joinRequest(userAuth, 1L, groupJoinRequest);
+		GroupJoinResponse res = groupJoinService.joinRequest(userPrincipal, 1L, groupJoinRequest);
 
 		//then
 		assertEquals(1L, res.groupJoinId());
@@ -113,7 +110,7 @@ class GroupJoinServiceTest {
 		});
 
 		//when
-		GroupJoinResponse res = groupJoinService.joinRequest(userAuth, 1L, groupJoinRequest);
+		GroupJoinResponse res = groupJoinService.joinRequest(userPrincipal, 1L, groupJoinRequest);
 
 		//then
 		assertEquals(GroupJoinStatus.ACCEPT, res.status());
@@ -131,7 +128,7 @@ class GroupJoinServiceTest {
 		//then
 		BizException exception = assertThrows(
 			BizException.class,
-			() -> groupJoinService.joinRequest(userAuth, 2L, groupJoinRequest)
+			() -> groupJoinService.joinRequest(userPrincipal, 2L, groupJoinRequest)
 		);
 
 		assertEquals(GroupErrorCode.GROUP_NOT_FOUND, exception.getErrorCode());
@@ -149,7 +146,7 @@ class GroupJoinServiceTest {
 		// then
 		BizException exception = assertThrows(
 			BizException.class,
-			() -> groupJoinService.joinRequest(userAuth, 1L, groupJoinRequest)
+			() -> groupJoinService.joinRequest(userPrincipal, 1L, groupJoinRequest)
 		);
 
 		assertEquals(GroupJoinErrorCode.GROUP_IS_NOT_PUBLIC, exception.getErrorCode());
@@ -167,7 +164,7 @@ class GroupJoinServiceTest {
 		// then
 		BizException exception = assertThrows(
 			BizException.class,
-			() -> groupJoinService.joinRequest(userAuth, 1L, groupJoinRequest)
+			() -> groupJoinService.joinRequest(userPrincipal, 1L, groupJoinRequest)
 		);
 
 		assertEquals(GroupJoinErrorCode.GROUP_IS_ALREADY_MAX_MEMBER, exception.getErrorCode());
@@ -189,17 +186,17 @@ class GroupJoinServiceTest {
 
 		GroupJoin alreadyJoined = GroupJoin.builder()
 			.group(group)
-			.user(user)
+			.user(userProfile)
 			.joinIntro("이미 있음")
 			.status(GroupJoinStatus.PENDING)
 			.build();
 		// 이미 신청한 이력이 있다고 가정
-		given(groupJoinRepository.existsByGroup_idAndUser_id(group.getId(), user.getId())).willReturn(true);
+		given(groupJoinRepository.existsByGroup_idAndUser_id(group.getId(), userProfile.getId())).willReturn(true);
 
 		// when
 		BizException exception = assertThrows(
 			BizException.class,
-			() -> groupJoinService.joinRequest(userAuth, 1L, groupJoinRequest)
+			() -> groupJoinService.joinRequest(userPrincipal, 1L, groupJoinRequest)
 		);
 
 		// then
@@ -216,7 +213,7 @@ class GroupJoinServiceTest {
 
 		GroupJoin groupJoin = GroupJoin.builder()
 			.group(group)
-			.user(user)
+			.user(userProfile)
 			.status(GroupJoinStatus.PENDING)
 			.build();
 
@@ -228,7 +225,7 @@ class GroupJoinServiceTest {
 		given(groupJoinRepository.findById(1L)).willReturn(Optional.of(groupJoin));
 
 		// when
-		assertDoesNotThrow(() -> groupJoinService.groupJoinDelete(userAuth, 1L, 1L));
+		assertDoesNotThrow(() -> groupJoinService.groupJoinDelete(userPrincipal, 1L, 1L));
 
 		// then
 		assertEquals(GroupJoinStatus.CANCEL, groupJoin.getStatus());
@@ -245,7 +242,7 @@ class GroupJoinServiceTest {
 		groupIdField.set(group, 1L);
 
 		// 가입 신청자의 유저 (user1)
-		User user1 = User.builder()
+		UserProfile userProfile1 = UserProfile.builder()
 			.email("USER_EMAIL")
 			.password("ENCODED_PASSWORD")
 			.nickname("테스트닉네임")
@@ -255,14 +252,14 @@ class GroupJoinServiceTest {
 			.profileImageUrl("test_image_url")
 			.build();
 
-		ReflectionTestUtils.setField(user1, "id", 2L);
+		ReflectionTestUtils.setField(userProfile1, "id", 2L);
 
 		// 로그인한 사용자 (userAuth.user ≠ user1)
 		// user는 테스트 클래스의 필드에 이미 있음
 
 		GroupJoin groupJoin = GroupJoin.builder()
 			.group(group)
-			.user(user1) // 신청자는 user1
+			.user(userProfile1) // 신청자는 user1
 			.status(GroupJoinStatus.PENDING)
 			.build();
 
@@ -277,7 +274,7 @@ class GroupJoinServiceTest {
 		// then
 		BizException exception = assertThrows(
 			BizException.class,
-			() -> groupJoinService.groupJoinDelete(userAuth, 1L, 1L)
+			() -> groupJoinService.groupJoinDelete(userPrincipal, 1L, 1L)
 		);
 
 		assertEquals(GroupJoinErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());

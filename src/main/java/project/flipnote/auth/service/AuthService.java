@@ -19,9 +19,9 @@ import project.flipnote.auth.model.UserLoginRequest;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.auth.repository.TokenBlacklistRedisRepository;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.common.security.jwt.JwtComponent;
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserRepository;
 
@@ -41,11 +41,11 @@ public class AuthService {
 	private static final SecureRandom random = new SecureRandom();
 
 	public TokenPair login(UserLoginRequest req) {
-		User user = findActiveUserByEmail(req.email());
+		UserProfile userProfile = findActiveUserByEmail(req.email());
 
-		validatePasswordMatch(req.password(), user.getPassword());
+		validatePasswordMatch(req.password(), userProfile.getPassword());
 
-		return jwtComponent.generateTokenPair(user);
+		return jwtComponent.generateTokenPair(userProfile);
 	}
 
 	public void sendEmailVerificationCode(EmailVerificationRequest req) {
@@ -80,9 +80,9 @@ public class AuthService {
 		long expirationMillis = jwtComponent.getExpirationMillis(refreshToken);
 		tokenBlacklistRedisRepository.save(refreshToken, expirationMillis);
 
-		UserAuth userAuth = jwtComponent.extractUserAuthFromToken(refreshToken);
+		UserPrincipal userPrincipal = jwtComponent.extractUserAuthFromToken(refreshToken);
 
-		return jwtComponent.generateTokenPair(userAuth);
+		return jwtComponent.generateTokenPair(userPrincipal);
 	}
 
 	private String generateVerificationCode(int length) {
@@ -91,7 +91,7 @@ public class AuthService {
 		return String.valueOf(random.nextInt(origin, bound));
 	}
 
-	private User findActiveUserByEmail(String email) {
+	private UserProfile findActiveUserByEmail(String email) {
 		return userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(AuthErrorCode.INVALID_CREDENTIALS));
 	}

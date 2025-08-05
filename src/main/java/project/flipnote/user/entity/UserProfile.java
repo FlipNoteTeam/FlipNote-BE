@@ -22,7 +22,7 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @AllArgsConstructor
 @Table(name = "users")
 @Entity
-public class User extends SoftDeletableEntity {
+public class UserProfile extends SoftDeletableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,7 +59,7 @@ public class User extends SoftDeletableEntity {
 	private long tokenVersion;
 
 	@Builder
-	public User(
+	public UserProfile(
 		String email,
 		String password,
 		String name,

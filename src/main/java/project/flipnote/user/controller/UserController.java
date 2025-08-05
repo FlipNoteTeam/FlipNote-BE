@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserRegisterRequest;
@@ -37,25 +37,25 @@ public class UserController {
 	}
 
 	@DeleteMapping
-	public ResponseEntity<Void> unregister(@AuthenticationPrincipal UserAuth userAuth) {
-		userService.unregister(userAuth.userId());
+	public ResponseEntity<Void> unregister(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+		userService.unregister(userPrincipal.userId());
 		return ResponseEntity.noContent().build();
 	}
 
 	@PutMapping
 	public ResponseEntity<UserUpdateResponse> update(
-		@AuthenticationPrincipal UserAuth userAuth,
+		@AuthenticationPrincipal UserPrincipal userPrincipal,
 		@Valid @RequestBody UserUpdateRequest req
 	) {
-		UserUpdateResponse res = userService.update(userAuth.userId(), req);
+		UserUpdateResponse res = userService.update(userPrincipal.userId(), req);
 		return ResponseEntity.ok(res);
 	}
 
 	@GetMapping("/me")
 	public ResponseEntity<MyInfoResponse> getMyInfo(
-		@AuthenticationPrincipal UserAuth userAuth
+		@AuthenticationPrincipal UserPrincipal userPrincipal
 	) {
-		MyInfoResponse res = userService.getMyInfo(userAuth.userId());
+		MyInfoResponse res = userService.getMyInfo(userPrincipal.userId());
 		return ResponseEntity.ok(res);
 	}
 

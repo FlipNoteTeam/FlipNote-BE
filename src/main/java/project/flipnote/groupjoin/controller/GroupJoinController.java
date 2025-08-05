@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.security.dto.UserAuth;
+import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.groupjoin.model.*;
 import project.flipnote.groupjoin.service.GroupJoinService;
 
@@ -20,10 +20,10 @@ public class GroupJoinController {
 	//가입 신청 요청
 	@PostMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinResponse> joinRequest(
-			UserAuth userAuth,
+			UserPrincipal userPrincipal,
 			@PathVariable("groupId") Long groupId,
 			@Valid @RequestBody GroupJoinRequest req) {
-		GroupJoinResponse res = groupJoinService.joinRequest(userAuth, groupId, req);
+		GroupJoinResponse res = groupJoinService.joinRequest(userPrincipal, groupId, req);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
@@ -31,9 +31,9 @@ public class GroupJoinController {
 	//그룹 내 가입 신청한 리스트 조회
 	@GetMapping("/groups/{groupId}/joins")
 	public ResponseEntity<GroupJoinListResponse> findGroupJoinList(
-			UserAuth userAuth,
+			UserPrincipal userPrincipal,
 			@PathVariable("groupId") Long groupId) {
-		GroupJoinListResponse res = groupJoinService.findGroupJoinList(userAuth, groupId);
+		GroupJoinListResponse res = groupJoinService.findGroupJoinList(userPrincipal, groupId);
 
 		return ResponseEntity.ok(res);
 	}
@@ -41,12 +41,12 @@ public class GroupJoinController {
 	//가입 신청 응답
 	@PatchMapping("/groups/{groupId}/joins/{joinId}")
 	public ResponseEntity<GroupJoinRespondResponse> respondToJoinRequest(
-			UserAuth userAuth,
+			UserPrincipal userPrincipal,
 			@PathVariable("groupId") Long groupId,
 			@PathVariable("joinId") Long joinId,
 			@Valid @RequestBody GroupJoinRespondRequest req) {
 
-		GroupJoinRespondResponse res = groupJoinService.respondToJoinRequest(userAuth, groupId, joinId, req);
+		GroupJoinRespondResponse res = groupJoinService.respondToJoinRequest(userPrincipal, groupId, joinId, req);
 
 		return ResponseEntity.ok(res);
 	}
@@ -54,11 +54,11 @@ public class GroupJoinController {
 	//가입 신청 삭제
 	@DeleteMapping("/groups/{groupId}/joins/{joinId}")
 	public ResponseEntity<Void> groupJoinDelete(
-		UserAuth userAuth,
+		UserPrincipal userPrincipal,
 		@PathVariable("groupId") Long groupId,
 		@PathVariable("joinId") Long joinId
 	) {
-		groupJoinService.groupJoinDelete(userAuth, groupId, joinId);
+		groupJoinService.groupJoinDelete(userPrincipal, groupId, joinId);
 
 		return ResponseEntity.noContent().build();
 	}
@@ -66,9 +66,9 @@ public class GroupJoinController {
 	//내가 신청한 가입신청 리스트 조회
 	@GetMapping("/groups/joins/me")
 	public ResponseEntity<FIndGroupJoinListMeResponse> findGroupJoinMe(
-		UserAuth userAuth
+		UserPrincipal userPrincipal
 	) {
-		FIndGroupJoinListMeResponse res = groupJoinService.findGroupJoinListMe(userAuth);
+		FIndGroupJoinListMeResponse res = groupJoinService.findGroupJoinListMe(userPrincipal);
 
 		return ResponseEntity.ok(res);
 	}
