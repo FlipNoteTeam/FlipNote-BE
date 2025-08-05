@@ -70,7 +70,6 @@ public class ImageUploadService {
 		PutObjectRequest putObjectRequest = PutObjectRequest.builder()
 			.bucket(bucket)
 			.key(fileName)
-			.acl("public-read")
 			.contentType(getContentType(fileName))
 			.build();
 
