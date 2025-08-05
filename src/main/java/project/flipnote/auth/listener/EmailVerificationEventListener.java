@@ -34,6 +34,6 @@ public class EmailVerificationEventListener {
 
 	@Recover
 	public void recover(EmailSendException ex, EmailVerificationSendEvent event) {
-		log.error("이메일 인증번호 전송 3회 실패: to={}", event.to(), ex);
+		log.error("이메일 인증번호 전송 실패: to={}", event.to(), ex);
 	}
 }

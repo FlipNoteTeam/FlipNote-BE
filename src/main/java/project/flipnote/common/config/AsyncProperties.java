@@ -1,7 +1,6 @@
 package project.flipnote.common.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.constraints.Positive;
@@ -12,7 +11,6 @@ import lombok.Setter;
 @Setter
 @Validated
 @ConfigurationProperties(prefix = "app.async")
-@Component
 public class AsyncProperties {
 
 	@Positive

@@ -19,7 +19,6 @@ public class SwaggerConfig {
 			.addSecurityItem(
 				new SecurityRequirement()
 					.addList("access-token")
-					.addList("refresh-token-cookie")
 			)
 			.components(new Components()
 				.addSecuritySchemes("access-token",
@@ -27,12 +26,7 @@ public class SwaggerConfig {
 						.type(SecurityScheme.Type.HTTP)
 						.scheme("bearer")
 						.bearerFormat("JWT"))
-				.addSecuritySchemes("refresh-token-cookie",
-					new SecurityScheme()
-						.type(SecurityScheme.Type.APIKEY)
-						.in(SecurityScheme.In.COOKIE)
-						.name(JwtConstants.REFRESH_TOKEN)
-						.description("refreshToken 쿠키에 JWT 값을 담아주세요.")))
+			)
 			.info(apiInfo());
 	}
 

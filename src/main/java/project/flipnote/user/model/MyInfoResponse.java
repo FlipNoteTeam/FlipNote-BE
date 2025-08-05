@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import project.flipnote.user.entity.User;
+import project.flipnote.user.entity.UserProfile;
 
 public record MyInfoResponse(
 	Long userId,
@@ -22,7 +22,7 @@ public record MyInfoResponse(
 	LocalDateTime modifiedAt
 ) {
 
-	public static MyInfoResponse from(User user) {
+	public static MyInfoResponse from(UserProfile user) {
 		return new MyInfoResponse(
 			user.getId(),
 			user.getEmail(),

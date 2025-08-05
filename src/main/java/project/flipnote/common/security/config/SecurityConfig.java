@@ -56,10 +56,17 @@ public class SecurityConfig {
 			.sessionManagement(session
 				-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers(HttpMethod.POST, "/*/users", "/*/auth/token/refresh").permitAll()
+				.requestMatchers(
+					HttpMethod.POST,
+					"/*/users", "/*/auth/token/refresh", "/*/auth/password-resets", "/*/auth/register"
+				).permitAll()
+				.requestMatchers(HttpMethod.PATCH, "/*/auth/password-resets").permitAll()
 				.requestMatchers(
 					HttpMethod.POST,
 					"/*/auth/login", "/*/auth/email", "/*/auth/email/confirm"
+				).permitAll()
+				.requestMatchers(
+					HttpMethod.GET, "/oauth2/authorization/{provider}", "/oauth2/callback/{provider}"
 				).permitAll()
 				.requestMatchers(
 					"/v3/api-docs/**",
