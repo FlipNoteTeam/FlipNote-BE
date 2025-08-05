@@ -19,6 +19,7 @@ public class ImageUploadController {
 
 	private final ImageUploadService fileService;
 
+	//파일 업로드 API
 	@PostMapping("/upload")
 	public ResponseEntity<ImageUploadResponseDto> getPresignedUrl(
 		@AuthenticationPrincipal AuthPrinciple authPrinciple,
