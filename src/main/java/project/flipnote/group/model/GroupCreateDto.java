@@ -1,5 +1,9 @@
 package project.flipnote.group.model;
 
+import org.hibernate.validator.constraints.URL;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -25,8 +29,11 @@ public class GroupCreateDto {
 		Boolean publicVisible,
 
 		@NotNull
+		@Min(1)
+		@Max(100)
 		Integer maxMember,
 
+		@URL
 		String image
 	) {
 	}
