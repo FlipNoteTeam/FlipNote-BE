@@ -30,7 +30,6 @@ import project.flipnote.groupjoin.model.GroupJoinResponse;
 import project.flipnote.groupjoin.repository.GroupJoinRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GroupJoinServiceTest {

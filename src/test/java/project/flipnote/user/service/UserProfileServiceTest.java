@@ -28,7 +28,6 @@ import project.flipnote.user.model.MyInfoResponse;
 import project.flipnote.user.model.UserRegisterResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
-import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("회원 서비스 단위 테스트")
 @ExtendWith(MockitoExtension.class)

@@ -23,7 +23,6 @@ import project.flipnote.common.security.dto.UserPrincipal;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
 
 @Slf4j
 @RequiredArgsConstructor

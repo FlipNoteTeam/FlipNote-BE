@@ -33,7 +33,6 @@ import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
 
 @DisplayName("인증 서비스 단위 테스트")
 @ExtendWith(MockitoExtension.class)

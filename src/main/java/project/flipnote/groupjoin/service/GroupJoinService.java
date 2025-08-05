@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.security.dto.UserPrincipal;
+import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.*;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
@@ -23,7 +23,7 @@ import project.flipnote.groupjoin.repository.GroupJoinRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
-import project.flipnote.user.repository.UserRepository;
+import project.flipnote.user.repository.UserProfileRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,15 +34,15 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class GroupJoinService {
 	private final GroupRepository groupRepository;
-	private final UserRepository userRepository;
+	private final UserProfileRepository userProfileRepository;
 	private final GroupJoinRepository groupJoinRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final GroupPermissionRepository groupPermissionRepository;
 
 	//유저 정보 조회
-	private UserProfile findUser(UserPrincipal userPrincipal) {
-		return userRepository.findByIdAndStatus(userPrincipal.userId(), UserStatus.ACTIVE).orElseThrow(
+	private UserProfile findUser(AuthPrinciple authPrinciple) {
+		return userProfileRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 				() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
@@ -97,9 +97,9 @@ public class GroupJoinService {
 	
 	//가입 신청 요청
 	@Transactional
-	public GroupJoinResponse joinRequest(UserPrincipal userPrincipal, Long groupId, GroupJoinRequest req) {
+	public GroupJoinResponse joinRequest(AuthPrinciple authPrinciple, Long groupId, GroupJoinRequest req) {
 		//유저 조회
-		UserProfile userProfile = findUser(userPrincipal);
+		UserProfile userProfile = findUser(authPrinciple);
 		//그룹 조회
 		Group group = findGroup(groupId);
 
@@ -134,9 +134,9 @@ public class GroupJoinService {
 	}
 
 	//그룹 가입 신청 리스트 조회
-	public GroupJoinListResponse findGroupJoinList(UserPrincipal userPrincipal, Long groupId) {
+	public GroupJoinListResponse findGroupJoinList(AuthPrinciple authPrinciple, Long groupId) {
 		//유저 조회
-		UserProfile userProfile = findUser(userPrincipal);
+		UserProfile userProfile = findUser(authPrinciple);
 
 		//그룹 조회
 		Group group = findGroup(groupId);
@@ -158,9 +158,9 @@ public class GroupJoinService {
 
 	//가입 신청 응답
 	@Transactional
-	public GroupJoinRespondResponse respondToJoinRequest(UserPrincipal userPrincipal, Long groupId, Long joinId, @Valid GroupJoinRespondRequest req) {
+	public GroupJoinRespondResponse respondToJoinRequest(AuthPrinciple authPrinciple, Long groupId, Long joinId, @Valid GroupJoinRespondRequest req) {
 		//유저 조회
-		UserProfile userProfile = findUser(userPrincipal);
+		UserProfile userProfile = findUser(authPrinciple);
 
 		//그룹 조회
 		Group group = findGroup(groupId);
@@ -205,9 +205,9 @@ public class GroupJoinService {
 
 	//삭제
 	@Transactional
-	public void groupJoinDelete(UserPrincipal userPrincipal, Long groupId, Long joinId) {
+	public void groupJoinDelete(AuthPrinciple authPrinciple, Long groupId, Long joinId) {
 		//유저 조회
-		UserProfile userProfile = findUser(userPrincipal);
+		UserProfile userProfile = findUser(authPrinciple);
 
 		//신청 조회
 		GroupJoin groupJoin = groupJoinRepository.findById(joinId).orElseThrow(
@@ -231,9 +231,9 @@ public class GroupJoinService {
 	}
 
 	//내가 신청한 리스트 조회
-	public FIndGroupJoinListMeResponse findGroupJoinListMe(UserPrincipal userPrincipal) {
+	public FIndGroupJoinListMeResponse findGroupJoinListMe(AuthPrinciple authPrinciple) {
 		//유저 조회
-		UserProfile userProfile = findUser(userPrincipal);
+		UserProfile userProfile = findUser(authPrinciple);
 
 		//유저별 그룹 신청 리스트 조회
 		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(userProfile);

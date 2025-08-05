@@ -33,7 +33,6 @@ import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
-import project.flipnote.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
