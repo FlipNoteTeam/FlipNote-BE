@@ -19,7 +19,7 @@ import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "groups")
+@Table(name = "app_groups")
 @Entity
 public class Group extends BaseEntity {
 	@Id
