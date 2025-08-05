@@ -14,8 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
 import project.flipnote.auth.entity.AccountRole;
 import project.flipnote.common.exception.BizException;
@@ -25,7 +23,7 @@ import project.flipnote.image.model.ImageUploadResponseDto;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserProfileRepository;
-
+import software.amazon.awssdk.services.s3.S3Client;
 
 @ExtendWith(MockitoExtension.class)
 class ImageUploadServiceTest {
@@ -36,7 +34,7 @@ class ImageUploadServiceTest {
 	UserProfileRepository userRepository;
 
 	@Mock
-	private AmazonS3 amazonS3;
+	private S3Client s3Client;
 
 	UserProfile user;
 	AuthPrinciple authPrinciple;
