@@ -8,7 +8,7 @@ public record UserInfoResponse(
 	String profileImageUrl
 ) {
 
-	public static UserInfoResponse from(UserProfile userProfile) {
-		return new UserInfoResponse(userProfile.getId(), userProfile.getNickname(), userProfile.getProfileImageUrl());
+	public static UserInfoResponse from(UserProfile user) {
+		return new UserInfoResponse(user.getId(), user.getNickname(), user.getProfileImageUrl());
 	}
 }

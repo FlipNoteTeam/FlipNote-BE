@@ -10,9 +10,9 @@ public record UserUpdateResponse(
 	String profileImageUrl
 ) {
 
-	public static UserUpdateResponse from(UserProfile userProfile) {
+	public static UserUpdateResponse from(UserProfile user) {
 		return new UserUpdateResponse(
-			userProfile.getId(), userProfile.getNickname(), userProfile.getPhone(), userProfile.isSmsAgree(), userProfile.getProfileImageUrl()
+			user.getId(), user.getNickname(), user.getPhone(), user.isSmsAgree(), user.getProfileImageUrl()
 		);
 	}
 }

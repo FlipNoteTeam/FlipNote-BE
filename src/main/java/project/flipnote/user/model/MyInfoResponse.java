@@ -22,17 +22,17 @@ public record MyInfoResponse(
 	LocalDateTime modifiedAt
 ) {
 
-	public static MyInfoResponse from(UserProfile userProfile) {
+	public static MyInfoResponse from(UserProfile user) {
 		return new MyInfoResponse(
-			userProfile.getId(),
-			userProfile.getEmail(),
-			userProfile.getNickname(),
-			userProfile.getName(),
-			userProfile.getPhone(),
-			userProfile.isSmsAgree(),
-			userProfile.getProfileImageUrl(),
-			userProfile.getCreatedAt(),
-			userProfile.getModifiedAt()
+			user.getId(),
+			user.getEmail(),
+			user.getNickname(),
+			user.getName(),
+			user.getPhone(),
+			user.isSmsAgree(),
+			user.getProfileImageUrl(),
+			user.getCreatedAt(),
+			user.getModifiedAt()
 		);
 	}
 }
