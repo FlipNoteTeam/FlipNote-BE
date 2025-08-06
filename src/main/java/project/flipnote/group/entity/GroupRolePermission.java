@@ -30,10 +30,10 @@ public class GroupRolePermission {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
-	private GroupRole role;
+	private GroupMemberRole role;
 
 	@Builder
-	private GroupRolePermission(Group group, GroupPermission groupPermission, GroupRole role) {
+	private GroupRolePermission(Group group, GroupPermission groupPermission, GroupMemberRole role) {
 		this.group = group;
 		this.groupPermission = groupPermission;
 		this.role = role;

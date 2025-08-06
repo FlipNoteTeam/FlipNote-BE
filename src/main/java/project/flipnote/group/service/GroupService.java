@@ -14,7 +14,6 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermission;
-import project.flipnote.group.entity.GroupRole;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
@@ -24,6 +23,7 @@ import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.user.entity.UserProfile;
+import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.repository.UserProfileRepository;
 
@@ -40,18 +40,18 @@ public class GroupService {
 	private final UserProfileRepository userProfileRepository;
 
 	//유저 정보 조회
-	public UserProfile findUser(AuthPrinciple userAuth) {
-		return userProfileRepository.findById(userAuth.userId()).orElseThrow(
+	public UserProfile findUser(AuthPrinciple authPrinciple) {
+		return userProfileRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
 
 	//그룹 생성
 	@Transactional
-	public GroupCreateResponse create(AuthPrinciple userAuth, GroupCreateRequest req) {
+	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
 
 		//1. 유저 조회
-		UserProfile user = findUser(userAuth);
+		UserProfile userProfile = findUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
@@ -60,21 +60,21 @@ public class GroupService {
 		Group group = createGroup(req);
 
 		//4. 그룹 회원 정보 생성
-		saveGroupOwner(group, user);
+		saveGroupOwner(group, userProfile);
 
 		//5. 그룹 내의 모든 권한 조회
 		initializeGroupPermissions(group);
 
 		return GroupCreateResponse.from(group.getId());
 	}
-	
+
 	/*
 	최초 그룹 권한 설정
 	 */
 	private void initializeGroupPermissions(Group group) {
 		List<GroupPermission> groupPermissions = groupPermissionRepository.findAll();
 
-		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupRole.values())
+		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupMemberRole.values())
 				.flatMap(role -> groupPermissions.stream()
 						.map(permission -> GroupRolePermission.builder()
 								.group(group)
@@ -85,7 +85,7 @@ public class GroupService {
 
 		groupRolePermissionRepository.saveAll(groupRolePermissions);
 	}
-	
+
 	/*
 	그룹 생성 메서드
 	 */
@@ -106,7 +106,7 @@ public class GroupService {
 
 		return saveGroup;
 	}
-	
+
 	/*
 	그룹 생성시 오너 멤버 추가
 	 */

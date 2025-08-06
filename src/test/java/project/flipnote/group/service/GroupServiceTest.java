@@ -20,16 +20,17 @@ import org.springframework.test.util.ReflectionTestUtils;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupPermission;
+import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
-
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserProfileRepository;
@@ -51,7 +52,7 @@ class GroupServiceTest {
 	GroupRolePermissionRepository groupRolePermissionRepository;
 
 	@Mock
-	UserProfileRepository userRepository;
+	UserProfileRepository userProfileRepository;
 
 	@Mock
 	EmailVerificationRedisRepository emailVerificationRedisRepository;
@@ -59,16 +60,17 @@ class GroupServiceTest {
 	@Mock
 	GroupMemberRepository groupMemberRepository;
 
-	UserProfile user;
+	UserProfile userProfile;
 	AuthPrinciple authPrinciple;
 
 	@BeforeEach
 	void before() {
-		// user = UserFixture.createActiveUser();
-		// authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
+		// userProfile = UserFixture.createActiveUser();
+		// authPrinciple = new AuthPrinciple(userProfile.getId(), userProfile.getEmail(), userProfile.getRole(), userProfile.getTokenVersion());
 
 		// 사용자 검증 로직
-		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
+			userProfile));
 	}
 
 	// @Test
@@ -82,14 +84,14 @@ class GroupServiceTest {
 	//
 	// 	// 그룹 퍼미션 미리 세팅
 	// 	List<GroupPermission> permissions = List.of(
-	// 			GroupPermission.builder().name("INVITE").build(),
-	// 			GroupPermission.builder().name("KICK").build(),
-	// 			GroupPermission.builder().name("JOIN_REQUEST_MANAGE").build()
+	// 			GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
+	// 			GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
+	// 			GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
 	// 	);
 	// 	given(groupPermissionRepository.findAll()).willReturn(permissions);
 	//
 	// 	// when
-	// 	GroupCreateResponse response = groupService.create(authPrinciple, req);
+	// 	GroupCreateResponse response = groupService.create(userPrincipal, req);
 	//
 	// 	// then
 	// 	assertThat(response.groupId()).isEqualTo(1L);
@@ -104,7 +106,7 @@ class GroupServiceTest {
 	//
 	//
 	// 	// when & then
-	// 	assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+	// 	assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
 	// }
 	//
 	// @Test
@@ -115,6 +117,6 @@ class GroupServiceTest {
 	// 	ReflectionTestUtils.setField(group, "id", 1L);
 	//
 	// 	// when & then
-	// 	assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+	// 	assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
 	// }
 }
