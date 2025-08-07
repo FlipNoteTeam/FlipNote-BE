@@ -1,5 +1,6 @@
 package project.flipnote.cardset.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,6 @@ public class CardSetController {
 	) {
 		CreateCardSetResponse res = cardSetService.createCardSet(groupId, authPrinciple, req);
 
-		return null;
+		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
 }
