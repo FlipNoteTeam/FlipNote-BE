@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import project.flipnote.auth.entity.AccountRole;
 import project.flipnote.cardset.entity.CardSet;
+import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
@@ -94,7 +95,7 @@ class CardSetServiceTest {
 
 				return cardSet;
 			});
-		given(groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(true);
+		given(groupMemberRepository.existsByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(true);
 
 	    //when
 		CreateCardSetResponse res = cardSetService.createCardSet(1L, authPrinciple, req);
@@ -108,7 +109,7 @@ class CardSetServiceTest {
 		CreateCardSetRequest req = new CreateCardSetRequest("1233", true, Category.IT, new ArrayList<>(
 			List.of("123", "456")),"www.aab.com");
 
-		given(groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(false);
+		given(groupMemberRepository.existsByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(false);
 
 
 		//when
@@ -117,6 +118,6 @@ class CardSetServiceTest {
 					() -> cardSetService.createCardSet(1L, authPrinciple, req)
 				);
 
-				assertEquals(GroupJoinErrorCode.USER_NOT_IN_GROUP, exception.getErrorCode());
+				assertEquals(CardSetErrorCode.GROUP_MEMBER_NOT_FOUND, exception.getErrorCode());
 	}
 }
