@@ -32,15 +32,7 @@ public class ImageUploadService {
 
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
-	private final UserProfileRepository userRepository;
 	private static final int EXPIRE_MINUTES = 5;
-
-	//유저 찾기
-	private void findUser(AuthPrinciple authPrinciple) {
-		userRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
-			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
-		);
-	}
 
 	//확장자 형식 찾기
 	private String getContentType(String fileName) {
@@ -56,10 +48,7 @@ public class ImageUploadService {
 	}
 
 	// presigned URL 생성
-	public ImageUploadResponseDto getPresignedUrl(AuthPrinciple authPrinciple, String fileName) {
-
-		// 유저 찾기
-		findUser(authPrinciple);
+	public ImageUploadResponseDto getPresignedUrl(String fileName) {
 
 		// S3에 동일한 파일명이 이미 존재하는지 확인
 		if (objectExists(fileName)) {
