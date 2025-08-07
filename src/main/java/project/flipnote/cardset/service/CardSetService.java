@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
+import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
@@ -48,8 +49,8 @@ public class CardSetService {
 		);
 	}
 
-	private Boolean existGroupMember(Group group, UserProfile user) {
-		return groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId());
+	private boolean existGroupMember(Group group, UserProfile user) {
+		return groupMemberRepository.existsByGroup_idAndUser_id((group.getId()), user.getId());
 	}
 
 	@Transactional
@@ -63,7 +64,7 @@ public class CardSetService {
 		
 		//그룹 내 유저 있는지 확인
 		if (!existGroupMember(group, user)) {
-			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
+			throw new BizException(CardSetErrorCode.GROUP_MEMBER_NOT_FOUND);
 		}
 
 		//해시태그가 없으면 null로 저장
@@ -73,6 +74,7 @@ public class CardSetService {
 
 		CardSet cardSet = CardSet.builder()
 			.name(req.name())
+			.group(group)
 			.publicVisible(req.publicVisible())
 			.category(req.category())
 			.hashtag(hashtags)
