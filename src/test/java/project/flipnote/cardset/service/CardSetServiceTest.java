@@ -20,6 +20,7 @@ import project.flipnote.auth.entity.AccountRole;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
+import project.flipnote.cardset.repository.CardSetManagerRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.fixture.UserFixture;
@@ -48,6 +49,9 @@ class CardSetServiceTest {
 
 	@Mock
 	GroupMemberRepository groupMemberRepository;
+
+	@Mock
+	CardSetManagerRepository cardSetManagerRepository;
 
 	UserProfile user;
 	AuthPrinciple authPrinciple;
@@ -87,6 +91,7 @@ class CardSetServiceTest {
 
 				return cardSet;
 			});
+
 
 	    //when
 		CreateCardSetResponse res = cardSetService.createCardSet(1L, authPrinciple, req);
