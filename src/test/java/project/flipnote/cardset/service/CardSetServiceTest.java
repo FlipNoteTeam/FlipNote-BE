@@ -22,12 +22,15 @@ import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
+import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
+import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserProfileRepository;
@@ -55,12 +58,13 @@ class CardSetServiceTest {
 
 	UserProfile user;
 	AuthPrinciple authPrinciple;
+	Group group;
 
 	@BeforeEach
 	void before() {
 		user = UserFixture.createActiveUser();
 		authPrinciple = new AuthPrinciple(1L, user.getId(), user.getEmail(), AccountRole.USER, 1L);
-		Group group = Group.builder()
+		group = Group.builder()
 				.name("aa")
 					.imageUrl("wwww.~~~")
 						.publicVisible(true)
@@ -72,7 +76,6 @@ class CardSetServiceTest {
 
 		given(userProfileRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
 		given(groupRepository.findById(any())).willReturn(Optional.of(group));
-		given(groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(true);
 	}
 
 	@Test
@@ -91,11 +94,29 @@ class CardSetServiceTest {
 
 				return cardSet;
 			});
-
+		given(groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(true);
 
 	    //when
 		CreateCardSetResponse res = cardSetService.createCardSet(1L, authPrinciple, req);
 		//then
 		assertEquals(1L, res.cardSetId());
+	}
+
+	@Test
+	public void 카드_생성_실패_내가_가입한_그룹이_아닌경우() throws Exception {
+		//given
+		CreateCardSetRequest req = new CreateCardSetRequest("1233", true, Category.IT, new ArrayList<>(
+			List.of("123", "456")),"www.aab.com");
+
+		given(groupMemberRepository.findByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(false);
+
+
+		//when
+		BizException exception = assertThrows(
+					BizException.class,
+					() -> cardSetService.createCardSet(1L, authPrinciple, req)
+				);
+
+				assertEquals(GroupJoinErrorCode.USER_NOT_IN_GROUP, exception.getErrorCode());
 	}
 }
