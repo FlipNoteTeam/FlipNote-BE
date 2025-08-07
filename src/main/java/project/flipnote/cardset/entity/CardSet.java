@@ -6,6 +6,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,7 +32,7 @@ public class CardSet extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 50)
 	private String name;
 
 	@ManyToOne
@@ -40,6 +42,7 @@ public class CardSet extends BaseEntity {
 	@Column(name = "is_public", nullable = false)
 	private Boolean publicVisible;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Category category;
 
