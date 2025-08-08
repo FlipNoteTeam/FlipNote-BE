@@ -24,9 +24,8 @@ public class ImageUploadController {
 	//파일 업로드 API
 	@PostMapping("/upload")
 	public ResponseEntity<ImageUploadResponseDto> getPresignedUrl(
-		@AuthenticationPrincipal AuthPrinciple authPrinciple,
 		@RequestBody @Valid ImageUploadRequestDto req) {
-		ImageUploadResponseDto res = fileService.getPresignedUrl(authPrinciple, req.fileName());
+		ImageUploadResponseDto res = fileService.getPresignedUrl(req.fileName());
 		return ResponseEntity.ok(res);
 	}
 }
