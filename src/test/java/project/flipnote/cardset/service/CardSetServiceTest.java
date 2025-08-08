@@ -111,13 +111,13 @@ class CardSetServiceTest {
 
 		given(groupMemberRepository.existsByGroup_idAndUser_id((group.getId()), user.getId())).willReturn(false);
 
-
 		//when
 		BizException exception = assertThrows(
 					BizException.class,
 					() -> cardSetService.createCardSet(1L, authPrinciple, req)
 				);
 
-				assertEquals(CardSetErrorCode.GROUP_MEMBER_NOT_FOUND, exception.getErrorCode());
+		//then
+		assertEquals(CardSetErrorCode.GROUP_MEMBER_NOT_FOUND, exception.getErrorCode());
 	}
 }
