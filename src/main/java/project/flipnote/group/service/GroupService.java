@@ -14,6 +14,7 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermission;
+import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
@@ -66,6 +67,20 @@ public class GroupService {
 		initializeGroupPermissions(group);
 
 		return GroupCreateResponse.from(group.getId());
+	}
+
+	public Boolean hasPermission(Long groupId, Long userId, GroupPermissionStatus groupPermissionStatus) {
+		GroupMember groupMember = groupMemberRepository.findByGroup_IdAndUser_Id(groupId, userId).orElseThrow(
+			() -> new BizException(GroupErrorCode.USER_NOT_IN_GROUP)
+		);
+
+		GroupPermission groupPermission = groupPermissionRepository.findByName(groupPermissionStatus);
+
+		return groupRolePermissionRepository.existsByGroupAndRoleAndGroupPermission(
+			groupRepository.getReferenceById(groupId),
+			groupMember.getRole(),
+			groupPermission
+		);
 	}
 
 	/*

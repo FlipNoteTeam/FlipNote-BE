@@ -1,6 +1,7 @@
 package project.flipnote.user.service;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ public class UserService {
 
 	@Transactional
 	public void withdraw(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 		user.withdraw();
 
 		eventPublisher.publishEvent(new UserWithdrawnEvent(userId));
@@ -55,7 +56,7 @@ public class UserService {
 
 	@Transactional
 	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		String phone = req.getNormalizedPhone();
 		if (!Objects.equals(user.getPhone(), phone)) {
@@ -68,20 +69,24 @@ public class UserService {
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		return MyInfoResponse.from(user);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		return UserInfoResponse.from(user);
 	}
 
-	private UserProfile findActiveUserById(Long userId) {
+	private UserProfile findActiveUserByIdOrThrow(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
+	}
+
+	public Optional<UserProfile> findActiveUserByEmail(String email) {
+		return userProfileRepository.findByEmailAndStatus(email, UserStatus.ACTIVE);
 	}
 
 	private void validateEmailDuplicate(String email) {
