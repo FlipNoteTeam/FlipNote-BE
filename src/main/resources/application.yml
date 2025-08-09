@@ -89,3 +89,7 @@ cloud:
         scope:
           - email
           - profile
+
+springdoc:
+  server:
+    url: http://localhost:8080
