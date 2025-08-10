@@ -14,4 +14,7 @@ public interface GroupInvitationControllerDocs {
 	ResponseEntity<Void> createGroupInvitation(
 		Long groupId, GroupInvitationCreateRequest req, AuthPrinciple authPrinciple
 	);
+
+	@Operation(summary = "그룹 초대 취소")
+	ResponseEntity<Void> deleteGroupInvitation(Long groupId, Long invitationId, AuthPrinciple authPrinciple);
 }
