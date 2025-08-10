@@ -25,6 +25,13 @@ public class GroupInvitationService {
 	private final GroupGuestInvitationRepository guestInvitationRepository;
 	private final GroupService groupService;
 
+	/**
+	 * 그룹에 회원 혹은 비회원 초대
+	 * @param inviterUserId 초대한 회원 id
+	 * @param groupId 초대한 그룹 id
+	 * @param req 초대 대상 정보
+	 * @author 윤정환
+	 */
 	@Transactional
 	public void createGroupInvitation(Long inviterUserId, Long groupId, GroupInvitationCreateRequest req) {
 		if (!groupService.hasPermission(groupId, inviterUserId, GroupPermissionStatus.INVITE)) {
@@ -39,6 +46,13 @@ public class GroupInvitationService {
 		);
 	}
 
+	/**
+	 * 그룹에 회원 초대
+	 * @param inviterUserId 초대한 회원 id
+	 * @param groupId 초대한 그룹 id
+	 * @param inviteeUser 초대 받는 user
+	 * @author 윤정환
+	 */
 	private void handleMemberInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
 		if (memberInvitationRepository.existsByGroupIdAndInviteeUserId(groupId, inviteeUser.getId())) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
@@ -50,8 +64,17 @@ public class GroupInvitationService {
 			.inviteeUserId(inviteeUser.getId())
 			.build();
 		memberInvitationRepository.save(invitation);
+
+		// TODO: 초대받은 회원한테 알림 전송
 	}
 
+	/**
+	 * 그룹에 비회원 초대
+	 * @param inviterUserId 초대한 회원 id
+	 * @param groupId 초대한 그룹 id
+	 * @param inviteeEmail 초대 받는 비회원 email
+	 * @author 윤정환
+	 */
 	private void handleGuestInvitation(Long inviterUserId, Long groupId, String inviteeEmail) {
 		if (guestInvitationRepository.existsByGroupIdAndInviteeEmail(groupId, inviteeEmail)) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
@@ -63,5 +86,7 @@ public class GroupInvitationService {
 			.inviteeEmail(inviteeEmail)
 			.build();
 		guestInvitationRepository.save(invitation);
+
+		// TODO: 초대받은 비회원한테 이메일 전송
 	}
 }

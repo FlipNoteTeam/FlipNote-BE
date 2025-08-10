@@ -29,6 +29,7 @@ public class GroupInvitationController implements GroupInvitationControllerDocs 
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		groupInvitationService.createGroupInvitation(authPrinciple.userId(), groupId, req);
+
 		return ResponseEntity.ok().build();
 	}
 }
