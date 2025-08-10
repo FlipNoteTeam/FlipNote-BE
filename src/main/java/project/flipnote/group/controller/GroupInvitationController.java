@@ -2,6 +2,7 @@ package project.flipnote.group.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +29,18 @@ public class GroupInvitationController implements GroupInvitationControllerDocs 
 		@Valid @RequestBody GroupInvitationCreateRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		groupInvitationService.createGroupInvitation(authPrinciple.userId(), groupId, req);
+		groupInvitationService.createGroupInvitation(authPrinciple, groupId, req);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@DeleteMapping("/{invitationId}")
+	public ResponseEntity<Void> deleteGroupInvitation(
+		@PathVariable("groupId") Long groupId,
+		@PathVariable("invitationId") Long invitationId,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		groupInvitationService.deleteGroupInvitation(authPrinciple.userId(), groupId, invitationId);
 
 		return ResponseEntity.ok().build();
 	}
