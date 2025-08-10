@@ -17,8 +17,8 @@ import project.flipnote.common.entity.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "group_guest_invitations")
-public class GroupGuestInvitation extends BaseEntity {
+@Table(name = "group_invitations")
+public class GroupInvitation extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,8 @@ public class GroupGuestInvitation extends BaseEntity {
 	@Column(nullable = false)
 	private Long inviterUserId;
 
-	@Column(nullable = false)
+	private Long inviteeUserId;
+
 	private String inviteeEmail;
 
 	@Enumerated(EnumType.STRING)
@@ -38,9 +39,10 @@ public class GroupGuestInvitation extends BaseEntity {
 	private GroupInvitationStatus status;
 
 	@Builder
-	public GroupGuestInvitation(Long groupId, Long inviterUserId, String inviteeEmail) {
+	public GroupInvitation(Long groupId, Long inviterUserId, Long inviteeUserId, String inviteeEmail) {
 		this.groupId = groupId;
 		this.inviterUserId = inviterUserId;
+		this.inviteeUserId = inviteeUserId;
 		this.inviteeEmail = inviteeEmail;
 		this.status = GroupInvitationStatus.PENDING;
 	}
