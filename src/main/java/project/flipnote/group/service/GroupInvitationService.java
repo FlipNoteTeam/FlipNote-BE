@@ -111,13 +111,7 @@ public class GroupInvitationService {
 
 		if (Objects.equals(invitation.getStatus(), GroupInvitationStatus.ACCEPTED)) {
 			// TODO: GroupMember 에서 group과 user의 id만 가지고 있도록 수정
-			GroupMember groupMember = GroupMember.builder()
-				.group(groupRepository.getReferenceById(groupId))
-				.user(em.getReference(UserProfile.class, inviteeUserId))
-				.role(GroupMemberRole.MEMBER)
-				.build();
-
-			groupMemberRepository.save(groupMember);
+			addGroupMember(inviteeUserId, groupId);
 		}
 	}
 
@@ -145,6 +139,24 @@ public class GroupInvitationService {
 		);
 
 		return PageResponse.from(res);
+	}
+
+	/**
+	 * 회원가입시 비회원 그룹 초대를 수락
+	 *
+	 * @param inviteeUserId 초대 받은 회원 ID
+	 * @param inviteeEmail 초대 받은 회원 email
+	 */
+	@Transactional
+	public void acceptPendingInvitationsOnRegister(Long inviteeUserId, String inviteeEmail) {
+		List<GroupInvitation> invitations = groupInvitationRepository
+			.findAllByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
+
+		for (GroupInvitation invitation : invitations) {
+			invitation.respond(GroupInvitationStatus.ACCEPTED);
+
+			addGroupMember(inviteeUserId, invitation.getGroupId());
+		}
 	}
 
 	/**
@@ -209,5 +221,21 @@ public class GroupInvitationService {
 		// TODO: 초대받은 비회원한테 이메일 전송
 
 		return invitation.getId();
+	}
+
+	/**
+	 * 그룹에 회원 추가
+	 *
+	 * @param inviteeUserId 초대 받는 회원 ID
+	 * @param groupId 초대한 그룹 ID
+	 */
+	private void addGroupMember(Long inviteeUserId, Long groupId) {
+		GroupMember groupMember = GroupMember.builder()
+			.group(groupRepository.getReferenceById(groupId))
+			.user(em.getReference(UserProfile.class, inviteeUserId))
+			.role(GroupMemberRole.MEMBER)
+			.build();
+
+		groupMemberRepository.save(groupMember);
 	}
 }
