@@ -61,7 +61,7 @@ public class GroupService {
 	그룹 조회
 	 */
 	public Group valiateGroup(Long groupId) {
-		return groupRepository.findById(groupId).orElseThrow(
+		return groupRepository.findByIdAndDeletedAtIsNull(groupId).orElseThrow(
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
 	}
@@ -156,13 +156,14 @@ public class GroupService {
 	그룹 상세 정보 조회
 	 */
 	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
-		
-		//1. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
 
+		//1. 그룹 조회
 		Group group = valiateGroup(groupId);
 
-		//2. 그룹 내 유저 조회
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
 		if (!validateGroupInUser(user, groupId)) {
 			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
 		}

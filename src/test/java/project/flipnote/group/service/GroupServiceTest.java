@@ -136,7 +136,7 @@ class GroupServiceTest {
 			.imageUrl("www.~~~")
 			.build();
 
-		given(groupRepository.findById(any())).willReturn(Optional.ofNullable(group));
+		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
 		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(true);
 	    
 	    //when
