@@ -5,15 +5,21 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
+import project.flipnote.group.entity.GroupMember;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
+import project.flipnote.group.model.GroupInvitationRespondRequest;
 import project.flipnote.group.repository.GroupInvitationRepository;
+import project.flipnote.group.repository.GroupMemberRepository;
+import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.service.UserService;
 
@@ -25,6 +31,9 @@ public class GroupInvitationService {
 	private final UserService userService;
 	private final GroupInvitationRepository groupInvitationRepository;
 	private final GroupService groupService;
+	private final GroupRepository groupRepository;
+	private final GroupMemberRepository groupMemberRepository;
+	private final EntityManager em;
 
 	/**
 	 * 그룹에 회원 혹은 비회원 초대
@@ -55,7 +64,7 @@ public class GroupInvitationService {
 	 * 그룹 초대를 취소
 	 *
 	 * @param userId       초대를 취소하는 회원 ID
-	 * @param groupId      초대가 속한 그룹 ID
+	 * @param groupId      초대한 그룹 ID
 	 * @param invitationId 취소할 초대의 ID
 	 */
 	@Transactional
@@ -67,6 +76,40 @@ public class GroupInvitationService {
 			.orElseThrow(() -> new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND));
 
 		groupInvitationRepository.delete(invitation);
+	}
+
+	/**
+	 * 그룹 초대에 응답
+	 *
+	 * @param inviteeUserId 초대를 받은 회원 ID
+	 * @param groupId       초대한 그룹 ID
+	 * @param invitationId  응답할 초대의 ID
+	 * @param req           초대에 응답할 정보
+	 */
+	@Transactional
+	public void respondToGroupInvitation(
+		Long inviteeUserId,
+		Long groupId,
+		Long invitationId,
+		GroupInvitationRespondRequest req
+	) {
+		GroupInvitation invitation = groupInvitationRepository.findByIdAndGroupIdAndInviteeUserIdAndStatus(
+				invitationId, groupId, inviteeUserId, GroupInvitationStatus.PENDING
+			)
+			.orElseThrow(() -> new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND));
+
+		invitation.respond(req.toEntityStatus());
+
+		if (Objects.equals(invitation.getStatus(), GroupInvitationStatus.ACCEPTED)) {
+			// TODO: GroupMember 에서 group과 user의 id만 가지고 있도록 수정
+			GroupMember groupMember = GroupMember.builder()
+				.group(groupRepository.getReferenceById(groupId))
+				.user(em.getReference(UserProfile.class, inviteeUserId))
+				.role(GroupMemberRole.MEMBER)
+				.build();
+
+			groupMemberRepository.save(groupMember);
+		}
 	}
 
 	/**

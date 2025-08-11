@@ -46,4 +46,8 @@ public class GroupInvitation extends BaseEntity {
 		this.inviteeEmail = inviteeEmail;
 		this.status = GroupInvitationStatus.PENDING;
 	}
+
+	public void respond(GroupInvitationStatus status) {
+		this.status = status;
+	}
 }
