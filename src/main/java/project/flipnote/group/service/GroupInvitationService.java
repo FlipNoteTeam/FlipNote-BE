@@ -75,6 +75,7 @@ public class GroupInvitationService {
 	 * @param userId       초대를 취소하는 회원 ID
 	 * @param groupId      초대한 그룹 ID
 	 * @param invitationId 취소할 초대의 ID
+	 * @author 윤정환
 	 */
 	@Transactional
 	public void deleteGroupInvitation(Long userId, Long groupId, Long invitationId) {
@@ -94,6 +95,7 @@ public class GroupInvitationService {
 	 * @param groupId       초대한 그룹 ID
 	 * @param invitationId  응답할 초대의 ID
 	 * @param req           초대에 응답할 정보
+	 * @author 윤정환
 	 */
 	@Transactional
 	public void respondToGroupInvitation(
@@ -115,6 +117,16 @@ public class GroupInvitationService {
 		}
 	}
 
+	/**
+	 * 그룹 초대 목록을 페이징하여 조회
+	 *
+	 * @param userId  초대 목록을 조회하는 회원 ID
+	 * @param groupId 초대한 그룹 ID
+	 * @param page    페이지 번호
+	 * @param size    페이지 크기
+	 * @return 페이징된 그룹 초대 목록 응답
+	 * @author 윤정환
+	 */
 	public PageResponse<GroupInvitationResponse> getGroupInvitations(Long userId, Long groupId, int page, int size) {
 		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
 			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
@@ -145,7 +157,8 @@ public class GroupInvitationService {
 	 * 회원가입시 비회원 그룹 초대를 수락
 	 *
 	 * @param inviteeUserId 초대 받은 회원 ID
-	 * @param inviteeEmail 초대 받은 회원 email
+	 * @param inviteeEmail  초대 받은 회원 email
+	 * @author 윤정환
 	 */
 	@Transactional
 	public void acceptPendingInvitationsOnRegister(Long inviteeUserId, String inviteeEmail) {
@@ -227,7 +240,8 @@ public class GroupInvitationService {
 	 * 그룹에 회원 추가
 	 *
 	 * @param inviteeUserId 초대 받는 회원 ID
-	 * @param groupId 초대한 그룹 ID
+	 * @param groupId       초대한 그룹 ID
+	 * @author 윤정환
 	 */
 	private void addGroupMember(Long inviteeUserId, Long groupId) {
 		GroupMember groupMember = GroupMember.builder()
