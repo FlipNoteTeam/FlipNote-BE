@@ -1,8 +1,9 @@
 package project.flipnote.group.repository;
 
-import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import project.flipnote.group.entity.GroupInvitation;
@@ -17,4 +18,6 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 	Optional<GroupInvitation> findByIdAndStatus(Long id, GroupInvitationStatus status);
 
 	Optional<GroupInvitation> findByIdAndGroupIdAndInviteeUserIdAndStatus(Long id, Long groupId, Long inviteeUserId, GroupInvitationStatus status);
+
+	Page<GroupInvitation> findAllByGroupIdAndStatus(Long groupId, GroupInvitationStatus status, Pageable pageable);
 }

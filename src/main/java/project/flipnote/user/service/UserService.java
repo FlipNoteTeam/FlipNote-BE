@@ -1,7 +1,10 @@
 package project.flipnote.user.service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -11,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.dto.UserCreateCommand;
 import project.flipnote.common.event.UserWithdrawnEvent;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.group.model.UserIdNickname;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -103,5 +107,12 @@ public class UserService {
 		if (userProfileRepository.existsByPhone(phone)) {
 			throw new BizException(UserErrorCode.DUPLICATE_PHONE);
 		}
+	}
+
+	public Map<Long, String> getIdAndNicknames(List<Long> inviteeUserIds) {
+		List<UserIdNickname> idAndNicknames = userProfileRepository.findIdAndNicknameByIdIn(inviteeUserIds);
+
+		return idAndNicknames.stream()
+			.collect(Collectors.toMap(UserIdNickname::getId, UserIdNickname::getNickname));
 	}
 }

@@ -1,13 +1,18 @@
 package project.flipnote.group.service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -18,6 +23,7 @@ import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
 import project.flipnote.group.model.GroupInvitationCreateResponse;
 import project.flipnote.group.model.GroupInvitationRespondRequest;
+import project.flipnote.group.model.GroupInvitationResponse;
 import project.flipnote.group.repository.GroupInvitationRepository;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -45,7 +51,8 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public GroupInvitationCreateResponse createGroupInvitation(AuthPrinciple authPrinciple, Long groupId, GroupInvitationCreateRequest req) {
+	public GroupInvitationCreateResponse createGroupInvitation(AuthPrinciple authPrinciple, Long groupId,
+		GroupInvitationCreateRequest req) {
 		Long inviterUserId = authPrinciple.userId();
 		validateGroupInvitePermission(inviterUserId, groupId);
 
@@ -114,6 +121,32 @@ public class GroupInvitationService {
 		}
 	}
 
+	public PageResponse<GroupInvitationResponse> getGroupInvitations(Long userId, Long groupId, int page, int size) {
+		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
+			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
+		}
+
+		// TODO: Projection 및 카운트 쿼리 튜닝 필요
+		PageRequest pageRequest = PageRequest.of(page, size);
+		Page<GroupInvitation> invitationPage = groupInvitationRepository
+			.findAllByGroupIdAndStatus(groupId, GroupInvitationStatus.PENDING, pageRequest);
+
+		List<Long> inviteeUserIds = invitationPage.getContent()
+			.stream()
+			.filter(Objects::nonNull)
+			.map(GroupInvitation::getInviteeUserId)
+			.toList();
+		Map<Long, String> idAndNicknames = userService.getIdAndNicknames(inviteeUserIds);
+
+		Page<GroupInvitationResponse> res = invitationPage.map(
+			(invitation) -> GroupInvitationResponse.from(
+				invitation, idAndNicknames.getOrDefault(invitation.getInviteeUserId(), "")
+			)
+		);
+
+		return PageResponse.from(res);
+	}
+
 	/**
 	 * 그룹 초대 권한을 검증
 	 *
@@ -144,6 +177,7 @@ public class GroupInvitationService {
 			.groupId(groupId)
 			.inviterUserId(inviterUserId)
 			.inviteeUserId(inviteeUser.getId())
+			.inviteeEmail(inviteeUser.getEmail())
 			.build();
 		groupInvitationRepository.save(invitation);
 
