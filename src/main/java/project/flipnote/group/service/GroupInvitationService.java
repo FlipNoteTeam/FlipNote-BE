@@ -16,6 +16,7 @@ import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
+import project.flipnote.group.model.GroupInvitationCreateResponse;
 import project.flipnote.group.model.GroupInvitationRespondRequest;
 import project.flipnote.group.repository.GroupInvitationRepository;
 import project.flipnote.group.repository.GroupMemberRepository;
@@ -44,7 +45,7 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void createGroupInvitation(AuthPrinciple authPrinciple, Long groupId, GroupInvitationCreateRequest req) {
+	public GroupInvitationCreateResponse createGroupInvitation(AuthPrinciple authPrinciple, Long groupId, GroupInvitationCreateRequest req) {
 		Long inviterUserId = authPrinciple.userId();
 		validateGroupInvitePermission(inviterUserId, groupId);
 
@@ -54,10 +55,11 @@ public class GroupInvitationService {
 			throw new BizException(GroupInvitationErrorCode.CANNOT_INVITE_SELF);
 		}
 
-		userService.findActiveUserByEmail(inviteeEmail).ifPresentOrElse(
-			inviteeUser -> createUserInvitation(inviterUserId, groupId, inviteeUser),
-			() -> createGuestInvitation(inviterUserId, groupId, inviteeEmail)
-		);
+		Long invitationId = userService.findActiveUserByEmail(inviteeEmail)
+			.map(inviteeUser -> createUserInvitation(inviterUserId, groupId, inviteeUser))
+			.orElseGet(() -> createGuestInvitation(inviterUserId, groupId, inviteeEmail));
+
+		return new GroupInvitationCreateResponse(invitationId);
 	}
 
 	/**
@@ -133,7 +135,7 @@ public class GroupInvitationService {
 	 * @param inviteeUser   초대 받는 user
 	 * @author 윤정환
 	 */
-	private void createUserInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
+	private Long createUserInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
 		if (groupInvitationRepository.existsByGroupIdAndInviteeUserId(groupId, inviteeUser.getId())) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
@@ -146,6 +148,8 @@ public class GroupInvitationService {
 		groupInvitationRepository.save(invitation);
 
 		// TODO: 초대받은 회원한테 알림 전송
+
+		return invitation.getId();
 	}
 
 	/**
@@ -156,7 +160,7 @@ public class GroupInvitationService {
 	 * @param inviteeEmail  초대 받는 비회원 email
 	 * @author 윤정환
 	 */
-	private void createGuestInvitation(Long inviterUserId, Long groupId, String inviteeEmail) {
+	private Long createGuestInvitation(Long inviterUserId, Long groupId, String inviteeEmail) {
 		if (groupInvitationRepository.existsByGroupIdAndInviteeEmail(groupId, inviteeEmail)) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
@@ -169,5 +173,7 @@ public class GroupInvitationService {
 		groupInvitationRepository.save(invitation);
 
 		// TODO: 초대받은 비회원한테 이메일 전송
+
+		return invitation.getId();
 	}
 }
