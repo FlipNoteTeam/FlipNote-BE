@@ -1,7 +1,7 @@
 package project.flipnote.group.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.List;
@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import project.flipnote.auth.entity.AccountRole;
 import project.flipnote.auth.repository.EmailVerificationRedisRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
@@ -25,6 +27,7 @@ import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupPermissionStatus;
+import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
@@ -65,58 +68,103 @@ class GroupServiceTest {
 
 	@BeforeEach
 	void before() {
-		// userProfile = UserFixture.createActiveUser();
-		// authPrinciple = new AuthPrinciple(userProfile.getId(), userProfile.getEmail(), userProfile.getRole(), userProfile.getTokenVersion());
+		userProfile = UserFixture.createActiveUser();
+		authPrinciple = new AuthPrinciple(1L, userProfile.getId(), userProfile.getEmail(), AccountRole.USER, 1L);
 
 		// 사용자 검증 로직
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
 			userProfile));
 	}
 
-	// @Test
-	// void 그룹_생성_성공() {
-	// 	// given
-	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
-	// 	Group group = Group.builder().name(req.name()).build();
-	// 	ReflectionTestUtils.setField(group, "id", 1L);
-	//
-	// 	given(groupRepository.save(any(Group.class))).willReturn(group);
-	//
-	// 	// 그룹 퍼미션 미리 세팅
-	// 	List<GroupPermission> permissions = List.of(
-	// 			GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
-	// 			GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
-	// 			GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
-	// 	);
-	// 	given(groupPermissionRepository.findAll()).willReturn(permissions);
-	//
-	// 	// when
-	// 	GroupCreateResponse response = groupService.create(userPrincipal, req);
-	//
-	// 	// then
-	// 	assertThat(response.groupId()).isEqualTo(1L);
-	// }
-	//
-	// @Test
-	// void 그룹_생성_실패_음수() {
-	// 	// given
-	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
-	// 	Group group = Group.builder().name(req.name()).build();
-	// 	ReflectionTestUtils.setField(group, "id", 1L);
-	//
-	//
-	// 	// when & then
-	// 	assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
-	// }
-	//
-	// @Test
-	// void 그룹_생성_실패_초과() {
-	// 	// given
-	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
-	// 	Group group = Group.builder().name(req.name()).build();
-	// 	ReflectionTestUtils.setField(group, "id", 1L);
-	//
-	// 	// when & then
-	// 	assertThrows(BizException.class, () -> groupService.create(userPrincipal, req));
-	// }
+	@Test
+	void 그룹_생성_성공() {
+		// given
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+
+		given(groupRepository.save(any(Group.class))).willReturn(group);
+
+		// 그룹 퍼미션 미리 세팅
+		List<GroupPermission> permissions = List.of(
+				GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
+				GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
+				GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
+		);
+		given(groupPermissionRepository.findAll()).willReturn(permissions);
+
+		// when
+		GroupCreateResponse response = groupService.create(authPrinciple, req);
+
+		// then
+		assertThat(response.groupId()).isEqualTo(1L);
+	}
+
+	@Test
+	void 그룹_생성_실패_음수() {
+		// given
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+
+
+		// when & then
+		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+	}
+
+	@Test
+	void 그룹_생성_실패_초과() {
+		// given
+		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
+		Group group = Group.builder().name(req.name()).build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+
+		// when & then
+		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+	}
+	
+	@Test
+	public void 그룹_상세_조회_성공() throws Exception {
+	    //given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		given(groupRepository.findById(any())).willReturn(Optional.ofNullable(group));
+		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(true);
+	    
+	    //when
+		groupService.findGroupDetail(authPrinciple, 1L);
+	    
+	    //then
+	}
+
+	@Test
+	public void 그룹_상세_조회_실패_삭제() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		groupRepository.save(group);
+		groupRepository.delete(group);
+
+		//when & then
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
+
+		assertEquals(GroupErrorCode.GROUP_NOT_FOUND, exception.getErrorCode());
+	}
 }
