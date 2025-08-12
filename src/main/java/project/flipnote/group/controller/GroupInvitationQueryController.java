@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.controller.docs.GroupInvitationQueryControllerDocs;
-import project.flipnote.group.model.OutgoingGroupInvitationResponse;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
+import project.flipnote.group.model.OutgoingGroupInvitationResponse;
 import project.flipnote.group.service.GroupInvitationService;
 
 @RequiredArgsConstructor
@@ -26,8 +27,8 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 	@GetMapping("/groups/{groupId}/invitations")
 	public ResponseEntity<PageResponse<OutgoingGroupInvitationResponse>> getOutgoingInvitations(
 		@PathVariable("groupId") Long groupId,
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size,
+		@Min(0) @RequestParam(defaultValue = "0") int page,
+		@Min(1) @Min(30) @RequestParam(defaultValue = "20") int size,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PageResponse<OutgoingGroupInvitationResponse> res
@@ -38,8 +39,8 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 
 	@GetMapping("/group-invitations/incoming")
 	public ResponseEntity<PageResponse<IncomingGroupInvitationResponse>> getIncomingInvitations(
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size,
+		@Min(0) @RequestParam(defaultValue = "0") int page,
+		@Min(1) @Min(30) @RequestParam(defaultValue = "20") int size,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PageResponse<IncomingGroupInvitationResponse> res
