@@ -61,7 +61,7 @@ public class GroupService {
 	/*
 	그룹 조회
 	 */
-	public Group valiateGroup(Long groupId) {
+	public Group validateGroup(Long groupId) {
 		return groupRepository.findByIdAndDeletedAtIsNull(groupId).orElseThrow(
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
@@ -173,7 +173,7 @@ public class GroupService {
 	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
 
 		//1. 그룹 조회
-		Group group = valiateGroup(groupId);
+		Group group = validateGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
@@ -184,5 +184,9 @@ public class GroupService {
 		}
 
 		return GroupDetailResponse.from(group);
+	}
+
+	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
+
 	}
 }
