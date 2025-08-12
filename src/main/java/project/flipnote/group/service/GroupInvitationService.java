@@ -262,6 +262,10 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	private void addGroupMember(Long inviteeUserId, Long groupId) {
+		if (groupMemberRepository.existsByGroup_idAndUser_id(groupId, inviteeUserId)) {
+			return;
+		}
+
 		GroupMember groupMember = GroupMember.builder()
 			.group(groupRepository.getReferenceById(groupId))
 			.user(em.getReference(UserProfile.class, inviteeUserId))
