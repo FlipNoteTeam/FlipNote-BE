@@ -30,10 +30,12 @@ import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
+import project.flipnote.group.model.GroupDetailResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
+import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserProfileRepository;
@@ -70,10 +72,6 @@ class GroupServiceTest {
 	void before() {
 		userProfile = UserFixture.createActiveUser();
 		authPrinciple = new AuthPrinciple(1L, userProfile.getId(), userProfile.getEmail(), AccountRole.USER, 1L);
-
-		// 사용자 검증 로직
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(
-			userProfile));
 	}
 
 	@Test
@@ -84,6 +82,9 @@ class GroupServiceTest {
 		ReflectionTestUtils.setField(group, "id", 1L);
 
 		given(groupRepository.save(any(Group.class))).willReturn(group);
+		// 사용자 검증 로직
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+			.willReturn(Optional.of(userProfile));
 
 		// 그룹 퍼미션 미리 세팅
 		List<GroupPermission> permissions = List.of(
@@ -106,7 +107,9 @@ class GroupServiceTest {
 		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
 		Group group = Group.builder().name(req.name()).build();
 		ReflectionTestUtils.setField(group, "id", 1L);
-
+		// 사용자 검증 로직
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+			.willReturn(Optional.of(userProfile));
 
 		// when & then
 		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
@@ -118,6 +121,9 @@ class GroupServiceTest {
 		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
 		Group group = Group.builder().name(req.name()).build();
 		ReflectionTestUtils.setField(group, "id", 1L);
+		// 사용자 검증 로직
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+			.willReturn(Optional.of(userProfile));
 
 		// when & then
 		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
@@ -138,15 +144,44 @@ class GroupServiceTest {
 
 		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
 		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(true);
-	    
+		// 사용자 검증 로직
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+			.willReturn(Optional.of(userProfile));
+
 	    //when
-		groupService.findGroupDetail(authPrinciple, 1L);
-	    
-	    //then
+		GroupDetailResponse res = groupService.findGroupDetail(authPrinciple, 1L);
+
+		//then
+		assertEquals("그룹1", res.name());
 	}
 
 	@Test
-	public void 그룹_상세_조회_실패_삭제() throws Exception {
+	public void 그룹_상세_조회_실패_그룹내_유저가_없는경우() throws Exception {
+	    //given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(false);
+
+	    //when
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
+
+	    //then
+		assertEquals(GroupJoinErrorCode.USER_NOT_IN_GROUP, exception.getErrorCode());
+	}
+
+	@Test
+	public void 그룹_상세_조회_실패_삭제된_경우() throws Exception {
 		//given
 		Group group = Group.builder()
 			.name("그룹1")

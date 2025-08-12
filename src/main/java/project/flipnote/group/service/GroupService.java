@@ -168,7 +168,6 @@ public class GroupService {
 			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
 		}
 
-		
 		return GroupDetailResponse.from(group);
 	}
 }
