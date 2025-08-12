@@ -110,9 +110,17 @@ public class UserService {
 	}
 
 	public Map<Long, String> getIdAndNicknames(List<Long> inviteeUserIds) {
-		List<UserIdNickname> idAndNicknames = userProfileRepository.findIdAndNicknameByIdIn(inviteeUserIds);
+		if (inviteeUserIds == null || inviteeUserIds.isEmpty()) {
+			return java.util.Collections.emptyMap();
+		}
 
+		List<Long> distinctIds = inviteeUserIds.stream().distinct().toList();
+		List<UserIdNickname> idAndNicknames = userProfileRepository.findIdAndNicknameByIdIn(distinctIds);
 		return idAndNicknames.stream()
-			.collect(Collectors.toMap(UserIdNickname::getId, UserIdNickname::getNickname));
+			.collect(Collectors.toMap(
+				UserIdNickname::getId,
+				UserIdNickname::getNickname,
+				(a, b) -> a
+			));
 	}
 }
