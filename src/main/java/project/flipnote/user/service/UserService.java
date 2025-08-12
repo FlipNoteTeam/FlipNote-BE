@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.dto.UserCreateCommand;
 import project.flipnote.common.event.UserWithdrawnEvent;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.group.model.UserIdNickname;
+import project.flipnote.user.model.UserIdNickname;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
