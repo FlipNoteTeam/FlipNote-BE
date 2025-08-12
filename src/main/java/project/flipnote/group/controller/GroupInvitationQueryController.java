@@ -37,7 +37,7 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 		return ResponseEntity.ok(res);
 	}
 
-	@GetMapping("/group-invitations/incoming")
+	@GetMapping("/group-invitations")
 	public ResponseEntity<PageResponse<IncomingGroupInvitationResponse>> getIncomingInvitations(
 		@Min(0) @RequestParam(defaultValue = "0") int page,
 		@Min(1) @Min(30) @RequestParam(defaultValue = "20") int size,
