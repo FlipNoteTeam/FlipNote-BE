@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -38,8 +40,9 @@ public class GroupInvitation extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private Long groupId;
+	@ManyToOne
+	@JoinColumn(name = "group_id", nullable = false)
+	private Group group;
 
 	@Column(nullable = false)
 	private Long inviterUserId;
@@ -53,8 +56,8 @@ public class GroupInvitation extends BaseEntity {
 	private GroupInvitationStatus status;
 
 	@Builder
-	public GroupInvitation(Long groupId, Long inviterUserId, Long inviteeUserId, String inviteeEmail) {
-		this.groupId = groupId;
+	public GroupInvitation(Group group, Long inviterUserId, Long inviteeUserId, String inviteeEmail) {
+		this.group = group;
 		this.inviterUserId = inviterUserId;
 		this.inviteeUserId = inviteeUserId;
 		this.inviteeEmail = inviteeEmail;

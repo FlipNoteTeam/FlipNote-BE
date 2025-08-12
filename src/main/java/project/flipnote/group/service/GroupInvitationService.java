@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
 import project.flipnote.group.entity.GroupMember;
@@ -105,15 +106,16 @@ public class GroupInvitationService {
 		Long invitationId,
 		GroupInvitationRespondRequest req
 	) {
-		GroupInvitation invitation = groupInvitationRepository.findByIdAndGroupIdAndInviteeUserIdAndStatus(
+		GroupInvitation invitation = groupInvitationRepository.findWithGroupByIdAndGroup_IdAndInviteeUserIdAndStatus(
 				invitationId, groupId, inviteeUserId, GroupInvitationStatus.PENDING
 			)
 			.orElseThrow(() -> new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND));
 
+		invitation.getGroup().validateJoinable();
+
 		invitation.respond(req.toEntityStatus());
 
 		if (Objects.equals(invitation.getStatus(), GroupInvitationStatus.ACCEPTED)) {
-			// TODO: GroupMember 에서 group과 user의 id만 가지고 있도록 수정
 			addGroupMember(inviteeUserId, groupId);
 		}
 	}
@@ -136,12 +138,12 @@ public class GroupInvitationService {
 
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
 		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByGroupId(groupId, pageRequest);
+		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByGroup_Id(groupId, pageRequest);
 
 		List<Long> inviteeUserIds = invitationPage.getContent()
 			.stream()
-			.filter(Objects::nonNull)
 			.map(GroupInvitation::getInviteeUserId)
+			.filter(Objects::nonNull)
 			.toList();
 		Map<Long, String> idAndNicknames = userService.getIdAndNicknames(inviteeUserIds);
 
@@ -164,6 +166,7 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	public PageResponse<IncomingGroupInvitationResponse> getIncomingInvitations(Long userId, int page, int size) {
+		// TODO: Projection 및 카운트 쿼리 튜닝 필요
 		PageRequest pageRequest = PageRequest.of(page, size);
 		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByInviteeUserId(userId, pageRequest);
 
@@ -181,12 +184,16 @@ public class GroupInvitationService {
 	@Transactional
 	public void acceptPendingInvitationsOnRegister(Long inviteeUserId, String inviteeEmail) {
 		List<GroupInvitation> invitations = groupInvitationRepository
-			.findAllByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
+			.findAllWithGroupByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
 
 		for (GroupInvitation invitation : invitations) {
+			Group group = invitation.getGroup();
+
+			group.validateJoinable();
+
 			invitation.respond(GroupInvitationStatus.ACCEPTED);
 
-			addGroupMember(inviteeUserId, invitation.getGroupId());
+			addGroupMember(inviteeUserId, group.getId());
 		}
 	}
 
@@ -212,12 +219,12 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	private Long createUserInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
-		if (groupInvitationRepository.existsByGroupIdAndInviteeUserId(groupId, inviteeUser.getId())) {
+		if (groupInvitationRepository.existsByGroup_IdAndInviteeUserId(groupId, inviteeUser.getId())) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
 
 		GroupInvitation invitation = GroupInvitation.builder()
-			.groupId(groupId)
+			.group(groupRepository.getReferenceById(groupId))
 			.inviterUserId(inviterUserId)
 			.inviteeUserId(inviteeUser.getId())
 			.inviteeEmail(inviteeUser.getEmail())
@@ -238,12 +245,12 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	private Long createGuestInvitation(Long inviterUserId, Long groupId, String inviteeEmail) {
-		if (groupInvitationRepository.existsByGroupIdAndInviteeEmail(groupId, inviteeEmail)) {
+		if (groupInvitationRepository.existsByGroup_IdAndInviteeEmail(groupId, inviteeEmail)) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
 
 		GroupInvitation invitation = GroupInvitation.builder()
-			.groupId(groupId)
+			.group(groupRepository.getReferenceById(groupId))
 			.inviterUserId(inviterUserId)
 			.inviteeEmail(inviteeEmail)
 			.build();

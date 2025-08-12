@@ -18,7 +18,7 @@ public record IncomingGroupInvitationResponse(
 	public static IncomingGroupInvitationResponse from(GroupInvitation invitation) {
 		return new IncomingGroupInvitationResponse(
 			invitation.getId(),
-			invitation.getGroupId(),
+			invitation.getGroup().getId(),
 			GroupInvitationStatus.from(invitation.getStatus()),
 			invitation.getCreatedAt()
 		);

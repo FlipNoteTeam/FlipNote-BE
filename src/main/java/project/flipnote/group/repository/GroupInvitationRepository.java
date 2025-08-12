@@ -6,23 +6,48 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
 
 public interface GroupInvitationRepository extends JpaRepository<GroupInvitation, Long> {
 
-	boolean existsByGroupIdAndInviteeUserId(Long groupId, Long inviteeUserId);
+	boolean existsByGroup_IdAndInviteeUserId(Long groupId, Long inviteeUserId);
 
-	boolean existsByGroupIdAndInviteeEmail(Long groupId, String inviteeEmail);
+	boolean existsByGroup_IdAndInviteeEmail(Long groupId, String inviteeEmail);
 
 	Optional<GroupInvitation> findByIdAndStatus(Long id, GroupInvitationStatus status);
 
-	Optional<GroupInvitation> findByIdAndGroupIdAndInviteeUserIdAndStatus(Long id, Long groupId, Long inviteeUserId, GroupInvitationStatus status);
+	@Query("""
+		SELECT gi
+		FROM GroupInvitation gi
+		JOIN FETCH gi.group g
+		WHERE gi.id = :id
+		  AND g.id = :groupId
+		  AND gi.inviteeUserId = :inviteeUserId
+		  AND gi.status = :status
+		""")
+	Optional<GroupInvitation> findWithGroupByIdAndGroup_IdAndInviteeUserIdAndStatus(
+		@Param("id") Long id,
+		@Param("groupId") Long groupId,
+		@Param("inviteeUserId") Long inviteeUserId,
+		@Param("status") GroupInvitationStatus status
+	);
 
-	Page<GroupInvitation> findAllByGroupId(Long groupId, Pageable pageable);
+	Page<GroupInvitation> findAllByGroup_Id(Long groupId, Pageable pageable);
 
-	List<GroupInvitation> findAllByInviteeEmailAndStatus(String InviteeEmail, GroupInvitationStatus status);
-
+	@Query("""
+		SELECT gi
+		FROM GroupInvitation gi
+		JOIN FETCH gi.group g
+		WHERE gi.inviteeEmail = :inviteeEmail
+		  AND gi.status = :status
+		""")
+	List<GroupInvitation> findAllWithGroupByInviteeEmailAndStatus(
+		@Param("inviteeEmail") String inviteeEmail,
+		@Param("status") GroupInvitationStatus status
+	);
 	Page<GroupInvitation> findAllByInviteeUserId(Long inviteeUserId, Pageable pageable);
 }
