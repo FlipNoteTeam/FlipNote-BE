@@ -112,7 +112,11 @@ class GroupServiceTest {
 			.willReturn(Optional.of(userProfile));
 
 		// when & then
-		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+		BizException exception = assertThrows(
+			BizException.class, () -> groupService.create(authPrinciple, req)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(GroupErrorCode.INVALID_MAX_MEMBER);
 	}
 
 	@Test
@@ -169,7 +173,7 @@ class GroupServiceTest {
 			.build();
 
 		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
 		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(false);
 
 	    //when
@@ -193,8 +197,7 @@ class GroupServiceTest {
 			.imageUrl("www.~~~")
 			.build();
 
-		groupRepository.save(group);
-		groupRepository.delete(group);
+		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.empty());
 
 		//when & then
 		BizException exception =
