@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    Optional<Group> findById(Long groupId);
+    Optional<Group> findByIdAndDeletedAtIsNull(Long groupId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from Group g where g.id = :id")

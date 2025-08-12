@@ -19,10 +19,12 @@ import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
+import project.flipnote.group.model.GroupDetailResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
+import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -40,19 +42,40 @@ public class GroupService {
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final UserProfileRepository userProfileRepository;
 
-	//유저 정보 조회
-	public UserProfile findUser(AuthPrinciple authPrinciple) {
+	/*
+	유저 정보 조회
+	 */
+	public UserProfile validateUser(AuthPrinciple authPrinciple) {
 		return userProfileRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
+	
+	/*
+	그룹 내 유저 조회
+	 */
+	public boolean validateGroupInUser(UserProfile user, Long groupId) {
+		return groupMemberRepository.existsByGroup_idAndUser_id(groupId, user.getId());
+	}
+	
+	/*
+	그룹 조회
+	 */
+	public Group validateGroup(Long groupId) {
+		return groupRepository.findByIdAndDeletedAtIsNull(groupId).orElseThrow(
+			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
+		);
+	}
 
-	//그룹 생성
+
+	/*
+	그룹 생성
+	 */
 	@Transactional
 	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
 
 		//1. 유저 조회
-		UserProfile userProfile = findUser(authPrinciple);
+		UserProfile user = validateUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
@@ -61,7 +84,7 @@ public class GroupService {
 		Group group = createGroup(req);
 
 		//4. 그룹 회원 정보 생성
-		saveGroupOwner(group, userProfile);
+		saveGroupOwner(group, user);
 
 		//5. 그룹 내의 모든 권한 조회
 		initializeGroupPermissions(group);
@@ -135,11 +158,35 @@ public class GroupService {
 		groupMemberRepository.save(groupMember);
 	}
 
-	//인원수 검증
+	/*
+	인원수 검증
+	 */
 	private void validateMaxMember(int maxMember) {
 		if (maxMember < 1 || maxMember > 100) {
 			throw new BizException(GroupErrorCode.INVALID_MAX_MEMBER);
 		}
 	}
 
+	/*
+	그룹 상세 정보 조회
+	 */
+	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
+
+		//1. 그룹 조회
+		Group group = validateGroup(groupId);
+
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
+		if (!validateGroupInUser(user, groupId)) {
+			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
+		}
+
+		return GroupDetailResponse.from(group);
+	}
+
+	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
+
+	}
 }
