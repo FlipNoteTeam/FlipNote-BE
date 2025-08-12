@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.common.exception.BizException;
+import project.flipnote.group.exception.GroupErrorCode;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -66,5 +68,11 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
+	}
+
+	public void validateJoinable() {
+		if (maxMember < 1 || maxMember >= 100) {
+			throw new BizException(GroupErrorCode.INVALID_MAX_MEMBER);
+		}
 	}
 }

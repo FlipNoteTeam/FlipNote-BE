@@ -35,6 +35,7 @@ import project.flipnote.auth.util.PasswordResetTokenGenerator;
 import project.flipnote.auth.util.VerificationCodeGenerator;
 import project.flipnote.common.config.ClientProperties;
 import project.flipnote.common.dto.UserCreateCommand;
+import project.flipnote.common.event.UserRegisteredEvent;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
@@ -76,6 +77,8 @@ public class AuthService {
 			.userId(userId)
 			.build();
 		userAuthRepository.save(userAuth);
+
+		eventPublisher.publishEvent(new UserRegisteredEvent(userId, email));
 
 		return UserRegisterResponse.from(userId);
 	}
