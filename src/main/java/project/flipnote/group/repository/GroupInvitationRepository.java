@@ -14,10 +14,6 @@ import project.flipnote.group.entity.GroupInvitationStatus;
 
 public interface GroupInvitationRepository extends JpaRepository<GroupInvitation, Long> {
 
-	boolean existsByGroup_IdAndInviteeUserId(Long groupId, Long inviteeUserId);
-
-	boolean existsByGroup_IdAndInviteeEmail(Long groupId, String inviteeEmail);
-
 	Optional<GroupInvitation> findByIdAndStatus(Long id, GroupInvitationStatus status);
 
 	@Query("""
@@ -50,4 +46,8 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 		@Param("status") GroupInvitationStatus status
 	);
 	Page<GroupInvitation> findAllByInviteeUserId(Long inviteeUserId, Pageable pageable);
+
+	boolean existsByGroup_IdAndInviteeUserIdAndStatus(Long groupId, Long inviteeUserId, GroupInvitationStatus status);
+
+	boolean existsByGroup_IdAndInviteeEmailAndStatus(Long groupId, String inviteeEmail, GroupInvitationStatus status);
 }

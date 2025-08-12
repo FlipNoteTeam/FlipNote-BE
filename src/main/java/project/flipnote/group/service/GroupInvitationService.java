@@ -219,7 +219,13 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	private Long createUserInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
-		if (groupInvitationRepository.existsByGroup_IdAndInviteeUserId(groupId, inviteeUser.getId())) {
+		if (groupMemberRepository.existsByGroup_idAndUser_id(groupId, inviteeUser.getId())) {
+			throw new BizException(GroupInvitationErrorCode.ALREADY_GROUP_MEMBER);
+		}
+
+		if (groupInvitationRepository
+			.existsByGroup_IdAndInviteeUserIdAndStatus(groupId, inviteeUser.getId(), GroupInvitationStatus.PENDING)
+		) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
 
@@ -245,7 +251,9 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	private Long createGuestInvitation(Long inviterUserId, Long groupId, String inviteeEmail) {
-		if (groupInvitationRepository.existsByGroup_IdAndInviteeEmail(groupId, inviteeEmail)) {
+		if (groupInvitationRepository
+			.existsByGroup_IdAndInviteeEmailAndStatus(groupId, inviteeEmail, GroupInvitationStatus.PENDING)
+		) {
 			throw new BizException(GroupInvitationErrorCode.ALREADY_INVITED);
 		}
 
