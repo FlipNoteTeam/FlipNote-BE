@@ -6,24 +6,26 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import project.flipnote.group.entity.GroupInvitation;
 
-public record GroupInvitationResponse(
+public record OutgoingGroupInvitationResponse(
 	Long invitationId,
 	Long inviterUserId,
 	Long inviteeUserId,
 	String inviteeEmail,
 	String inviteeNickname,
+	GroupInvitationStatus status,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	LocalDateTime createdAt
 ) {
 
-	public static GroupInvitationResponse from(GroupInvitation invitation, String inviteeNickname) {
-		return new GroupInvitationResponse(
+	public static OutgoingGroupInvitationResponse from(GroupInvitation invitation, String inviteeNickname) {
+		return new OutgoingGroupInvitationResponse(
 			invitation.getId(),
 			invitation.getInviterUserId(),
 			invitation.getInviteeUserId(),
 			invitation.getInviteeEmail(),
 			inviteeNickname,
+			GroupInvitationStatus.from(invitation.getStatus()),
 			invitation.getCreatedAt()
 		);
 	}

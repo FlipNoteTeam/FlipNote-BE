@@ -20,7 +20,9 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 
 	Optional<GroupInvitation> findByIdAndGroupIdAndInviteeUserIdAndStatus(Long id, Long groupId, Long inviteeUserId, GroupInvitationStatus status);
 
-	Page<GroupInvitation> findAllByGroupIdAndStatus(Long groupId, GroupInvitationStatus status, Pageable pageable);
+	Page<GroupInvitation> findAllByGroupId(Long groupId, Pageable pageable);
 
 	List<GroupInvitation> findAllByInviteeEmailAndStatus(String InviteeEmail, GroupInvitationStatus status);
+
+	Page<GroupInvitation> findAllByInviteeUserId(Long inviteeUserId, Pageable pageable);
 }
