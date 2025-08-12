@@ -7,7 +7,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +19,19 @@ import project.flipnote.common.entity.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "group_invitations")
+@Table(
+	name = "group_invitation",
+	indexes = {
+		@Index(name = "idx_group_invitee_user", columnList = "group_id, invitee_user_id, status"),
+		@Index(name = "idx_group_invitee_email", columnList = "group_id, invitee_email, status"),
+		@Index(name = "idx_invitee_user_status", columnList = "invitee_user_id, status"),
+		@Index(name = "idx_invitee_email_status", columnList = "invitee_email, status")
+	},
+	uniqueConstraints = {
+		@UniqueConstraint(name = "uq_group_invitee_user", columnNames = {"group_id", "invitee_user_id"}),
+		@UniqueConstraint(name = "uq_group_invitee_email", columnNames = {"group_id", "invitee_email"})
+	}
+)
 public class GroupInvitation extends BaseEntity {
 
 	@Id
