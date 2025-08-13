@@ -116,7 +116,14 @@ public class GroupInvitationService {
 		invitation.respond(req.toEntityStatus());
 
 		if (invitation.getStatus() == GroupInvitationStatus.ACCEPTED) {
-			groupMemberPolicyService.addGroupMember(inviteeUserId, groupId);
+			try {
+				groupMemberPolicyService.addGroupMember(inviteeUserId, groupId);
+			} catch (BizException ex) {
+				// 이미 그룹 멤버인 경우 롤백되지 않게 하기 위함
+				if (ex.getErrorCode() != GroupErrorCode.ALREADY_GROUP_MEMBER) {
+					throw ex;
+				}
+			}
 		}
 	}
 
@@ -192,10 +199,12 @@ public class GroupInvitationService {
 
 			try {
 				groupMemberPolicyService.addGroupMember(invitation.getInviteeUserId(), invitation.getGroup().getId());
-			} catch (Exception ignored) {
-			} finally {
 				invitation.respond(GroupInvitationStatus.ACCEPTED);
-			}
+			} catch (BizException ex) {
+				if (ex.getErrorCode() == GroupErrorCode.ALREADY_GROUP_MEMBER) {
+					invitation.respond(GroupInvitationStatus.ACCEPTED);
+				}
+			} catch (Exception ignored) { }
 		}
 	}
 

@@ -74,7 +74,7 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
-		this.memberCount = 0;
+		this.memberCount = 1;
 	}
 
 	public void validateJoinable() {
@@ -84,6 +84,7 @@ public class Group extends BaseEntity {
 	}
 
 	public void increaseMemberCount() {
-		this.memberCount++;
+		validateJoinable();
+		memberCount++;
 	}
 }
