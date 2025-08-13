@@ -32,6 +32,7 @@ import project.flipnote.group.exception.GroupErrorCode;
 @SQLDelete(sql = "UPDATE app_groups SET deleted_at = now() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Group extends BaseEntity {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -59,6 +60,11 @@ public class Group extends BaseEntity {
 
 	private String imageUrl;
 
+	@Column(nullable = false)
+	@Min(1)
+	@Max(100)
+	private Integer memberCount;
+
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -79,11 +85,17 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
+		this.memberCount = 1;
 	}
 
 	public void validateJoinable() {
-		if (maxMember < 1 || maxMember >= 100) {
-			throw new BizException(GroupErrorCode.INVALID_MAX_MEMBER);
+		if (memberCount >= maxMember) {
+			throw new BizException(GroupErrorCode.GROUP_IS_ALREADY_MAX_MEMBER);
 		}
+	}
+
+	public void increaseMemberCount() {
+		validateJoinable();
+		memberCount++;
 	}
 }
