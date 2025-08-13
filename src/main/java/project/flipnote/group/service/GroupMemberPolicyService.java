@@ -59,7 +59,7 @@ public class GroupMemberPolicyService {
 			lockedGroup.increaseMemberCount();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			throw new RuntimeException("Interrupted while trying to acquire distributed lock", e);
+			throw new BizException(CommonErrorCode.SERVICE_TEMPORARILY_UNAVAILABLE);
 		} finally {
 			if (isLocked && lock.isHeldByCurrentThread()) {
 				lock.unlock();

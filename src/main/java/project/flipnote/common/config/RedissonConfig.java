@@ -1,12 +1,14 @@
 package project.flipnote.common.config;
 
+import java.util.Arrays;
+
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.thymeleaf.util.StringUtils;
+import org.springframework.util.StringUtils;
 
 @Configuration
 public class RedissonConfig {
@@ -29,12 +31,19 @@ public class RedissonConfig {
 
 		if (!clusterNodes.isBlank()) {
 			config.useClusterServers()
-				.addNodeAddress(clusterNodes.split(","))
-				.setPassword(StringUtils.isEmpty(password) ? null : password);
+				.addNodeAddress(
+					Arrays.stream(clusterNodes.split(","))
+						.map(String::trim)
+						.filter(s -> !s.isEmpty())
+						.map(addr -> addr.startsWith("redis://") || addr.startsWith("rediss://") ? addr :
+							"redis://" + addr)
+						.toArray(String[]::new)
+				)
+				.setPassword(StringUtils.hasText(password) ? password : null);
 		} else {
 			config.useSingleServer()
 				.setAddress("redis://" + host + ":" + port)
-				.setPassword(StringUtils.isEmpty(password) ? null : password);
+				.setPassword(StringUtils.hasText(password) ? password : null);
 		}
 
 		return Redisson.create(config);
