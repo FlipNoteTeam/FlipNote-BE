@@ -1,13 +1,16 @@
 package project.flipnote.group.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -45,9 +48,18 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 		@Param("inviteeEmail") String inviteeEmail,
 		@Param("status") GroupInvitationStatus status
 	);
+
 	Page<GroupInvitation> findAllByInviteeUserId(Long inviteeUserId, Pageable pageable);
 
 	boolean existsByGroup_IdAndInviteeUserIdAndStatus(Long groupId, Long inviteeUserId, GroupInvitationStatus status);
 
 	boolean existsByGroup_IdAndInviteeEmailAndStatus(Long groupId, String inviteeEmail, GroupInvitationStatus status);
+
+	@Modifying
+	@Transactional
+	@Query("UPDATE GroupInvitation gi " +
+		"SET gi.status = project.flipnote.group.entity.GroupInvitationStatus.EXPIRED " +
+		"WHERE gi.status = project.flipnote.group.entity.GroupInvitationStatus.PENDING " +
+		"AND gi.expiredAt < :now")
+	int bulkExpire(@Param("now") LocalDateTime now);
 }

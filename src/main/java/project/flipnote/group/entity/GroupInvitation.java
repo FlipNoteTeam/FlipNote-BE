@@ -1,5 +1,8 @@
 package project.flipnote.group.entity;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.common.exception.BizException;
+import project.flipnote.group.exception.GroupInvitationErrorCode;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,6 +40,8 @@ import project.flipnote.common.entity.BaseEntity;
 	}
 )
 public class GroupInvitation extends BaseEntity {
+
+	private static final long DEFAULT_EXPIRATION_DAYS = 7L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,6 +62,9 @@ public class GroupInvitation extends BaseEntity {
 	@Column(nullable = false)
 	private GroupInvitationStatus status;
 
+	@Column(nullable = false)
+	private LocalDateTime expiredAt;
+
 	@Builder
 	public GroupInvitation(Group group, Long inviterUserId, Long inviteeUserId, String inviteeEmail) {
 		this.group = group;
@@ -62,9 +72,28 @@ public class GroupInvitation extends BaseEntity {
 		this.inviteeUserId = inviteeUserId;
 		this.inviteeEmail = inviteeEmail;
 		this.status = GroupInvitationStatus.PENDING;
+		this.expiredAt = LocalDateTime.now().plusDays(DEFAULT_EXPIRATION_DAYS);
 	}
 
 	public void respond(GroupInvitationStatus status) {
 		this.status = status;
+	}
+
+	public void validateNotExpired() {
+		if (isExpired()) {
+			throw new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND);
+		}
+	}
+
+	public boolean isExpired() {
+		return Objects.equals(this.status, GroupInvitationStatus.EXPIRED)
+			|| this.expiredAt.isBefore(LocalDateTime.now());
+	}
+
+	public GroupInvitationStatus getStatus() {
+		if (isExpired()) {
+			return GroupInvitationStatus.EXPIRED;
+		}
+		return status;
 	}
 }

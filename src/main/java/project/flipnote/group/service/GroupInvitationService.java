@@ -111,6 +111,7 @@ public class GroupInvitationService {
 			)
 			.orElseThrow(() -> new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND));
 
+		invitation.validateNotExpired();
 		invitation.getGroup().validateJoinable();
 
 		invitation.respond(req.toEntityStatus());
@@ -189,7 +190,9 @@ public class GroupInvitationService {
 		for (GroupInvitation invitation : invitations) {
 			Group group = invitation.getGroup();
 
-			group.validateJoinable();
+			if (group.isFull() || invitation.isExpired()) {
+				continue;
+			}
 
 			invitation.respond(GroupInvitationStatus.ACCEPTED);
 
