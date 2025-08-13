@@ -54,8 +54,10 @@ public class GroupService {
 	/*
 	그룹 내 유저 조회
 	 */
-	public boolean validateGroupInUser(UserProfile user, Long groupId) {
-		return groupMemberRepository.existsByGroup_idAndUser_id(groupId, user.getId());
+	public GroupMember validateGroupInUser(UserProfile user, Long groupId) {
+		return groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
+			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
+		);
 	}
 	
 	/*
@@ -66,7 +68,6 @@ public class GroupService {
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
 	}
-
 
 	/*
 	그룹 생성
@@ -138,11 +139,7 @@ public class GroupService {
 				.imageUrl(req.image())
 				.build();
 
-		Group saveGroup = groupRepository.save(group);
-
-		log.info("생성 시간: {}", group.getCreatedAt());
-
-		return saveGroup;
+		return groupRepository.save(group);
 	}
 
 	/*
@@ -179,14 +176,30 @@ public class GroupService {
 		UserProfile user = validateUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
-		if (!validateGroupInUser(user, groupId)) {
-			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
-		}
+		validateGroupInUser(user, groupId);
 
 		return GroupDetailResponse.from(group);
 	}
 
+	//그룹 삭제 메서드
+	@Transactional
 	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
+		//1. 그룹 조회
+		Group group = validateGroup(groupId);
+
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
+		GroupMember groupMember = validateGroupInUser(user, groupId);
+
+		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
+			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
+		}
+
+		groupMemberRepository.delete(groupMember);
+
+		groupRepository.delete(group);
 
 	}
 }
