@@ -25,8 +25,6 @@ import project.flipnote.group.exception.GroupErrorCode;
 @Entity
 public class Group extends BaseEntity {
 
-	private static final int MAX_MEMBER_LIMIT = 100;
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -49,10 +47,15 @@ public class Group extends BaseEntity {
 
 	@Column(nullable = false)
 	@Min(1)
-	@Max(MAX_MEMBER_LIMIT)
+	@Max(100)
 	private Integer maxMember;
 
 	private String imageUrl;
+
+	@Column(nullable = false)
+	@Min(1)
+	@Max(100)
+	private Integer memberCount;
 
 	@Builder
 	private Group(
@@ -71,15 +74,16 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
+		this.memberCount = 0;
 	}
 
 	public void validateJoinable() {
-		if (isFull()) {
-			throw new BizException(GroupErrorCode.INVALID_MAX_MEMBER);
+		if (memberCount >= maxMember) {
+			throw new BizException(GroupErrorCode.GROUP_IS_ALREADY_MAX_MEMBER);
 		}
 	}
 
-	public boolean isFull() {
-		return maxMember <= 0 || maxMember >= MAX_MEMBER_LIMIT;
+	public void increaseMemberCount() {
+		this.memberCount++;
 	}
 }

@@ -78,7 +78,7 @@ public class AuthService {
 			.build();
 		userAuthRepository.save(userAuth);
 
-		eventPublisher.publishEvent(new UserRegisteredEvent(userId, email));
+		eventPublisher.publishEvent(new UserRegisteredEvent(email));
 
 		return UserRegisterResponse.from(userId);
 	}

@@ -27,11 +27,11 @@ public class UserRegisteredEventListener {
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void HandleUserRegisteredEvent(UserRegisteredEvent event) {
-		groupInvitationService.acceptPendingInvitationsOnRegister(event.userId(), event.email());
+		groupInvitationService.acceptPendingInvitationsOnRegister(event.email());
 	}
 
 	@Recover
 	public void recover(Exception ex, UserRegisteredEvent event) {
-		log.error("회원가입 후속 처리 예외 발생: userId={}, email={}", event.userId(), event.email(), ex);
+		log.error("회원가입 후속 처리 예외 발생: email={}", event.email(), ex);
 	}
 }

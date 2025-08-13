@@ -18,35 +18,13 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 
 	Optional<GroupInvitation> findByIdAndStatus(Long id, GroupInvitationStatus status);
 
-	@Query("""
-		SELECT gi
-		FROM GroupInvitation gi
-		JOIN FETCH gi.group g
-		WHERE gi.id = :id
-		  AND g.id = :groupId
-		  AND gi.inviteeUserId = :inviteeUserId
-		  AND gi.status = :status
-		""")
-	Optional<GroupInvitation> findWithGroupByIdAndGroup_IdAndInviteeUserIdAndStatus(
-		@Param("id") Long id,
-		@Param("groupId") Long groupId,
-		@Param("inviteeUserId") Long inviteeUserId,
-		@Param("status") GroupInvitationStatus status
+	Optional<GroupInvitation> findByIdAndGroup_IdAndInviteeUserIdAndStatus(
+		Long id, Long groupId, Long inviteeUserId, GroupInvitationStatus status
 	);
 
 	Page<GroupInvitation> findAllByGroup_Id(Long groupId, Pageable pageable);
 
-	@Query("""
-		SELECT gi
-		FROM GroupInvitation gi
-		JOIN FETCH gi.group g
-		WHERE gi.inviteeEmail = :inviteeEmail
-		  AND gi.status = :status
-		""")
-	List<GroupInvitation> findAllWithGroupByInviteeEmailAndStatus(
-		@Param("inviteeEmail") String inviteeEmail,
-		@Param("status") GroupInvitationStatus status
-	);
+	List<GroupInvitation> findAllByInviteeEmailAndStatus(String inviteeEmail, GroupInvitationStatus status);
 
 	Page<GroupInvitation> findAllByInviteeUserId(Long inviteeUserId, Pageable pageable);
 

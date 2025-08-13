@@ -9,17 +9,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
-import project.flipnote.group.entity.GroupMember;
-import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermissionStatus;
+import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
 import project.flipnote.group.model.GroupInvitationCreateResponse;
@@ -42,7 +39,7 @@ public class GroupInvitationService {
 	private final GroupService groupService;
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
-	private final EntityManager em;
+	private final GroupMemberPolicyService groupMemberPolicyService;
 
 	/**
 	 * 그룹에 회원 혹은 비회원 초대
@@ -106,18 +103,17 @@ public class GroupInvitationService {
 		Long invitationId,
 		GroupInvitationRespondRequest req
 	) {
-		GroupInvitation invitation = groupInvitationRepository.findWithGroupByIdAndGroup_IdAndInviteeUserIdAndStatus(
+		GroupInvitation invitation = groupInvitationRepository.findByIdAndGroup_IdAndInviteeUserIdAndStatus(
 				invitationId, groupId, inviteeUserId, GroupInvitationStatus.PENDING
 			)
 			.orElseThrow(() -> new BizException(GroupInvitationErrorCode.INVITATION_NOT_FOUND));
 
 		invitation.validateNotExpired();
-		invitation.getGroup().validateJoinable();
 
 		invitation.respond(req.toEntityStatus());
 
-		if (Objects.equals(invitation.getStatus(), GroupInvitationStatus.ACCEPTED)) {
-			addGroupMember(inviteeUserId, groupId);
+		if (invitation.getStatus() == GroupInvitationStatus.ACCEPTED) {
+			groupMemberPolicyService.addGroupMember(inviteeUserId, groupId);
 		}
 	}
 
@@ -178,25 +174,25 @@ public class GroupInvitationService {
 	/**
 	 * 회원가입시 비회원 그룹 초대를 수락
 	 *
-	 * @param inviteeUserId 초대 받은 회원 ID
-	 * @param inviteeEmail  초대 받은 회원 email
+	 * @param inviteeEmail 초대 받은 회원 email
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void acceptPendingInvitationsOnRegister(Long inviteeUserId, String inviteeEmail) {
+	public void acceptPendingInvitationsOnRegister(String inviteeEmail) {
 		List<GroupInvitation> invitations = groupInvitationRepository
-			.findAllWithGroupByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
+			.findAllByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
 
 		for (GroupInvitation invitation : invitations) {
-			Group group = invitation.getGroup();
-
-			if (group.isFull() || invitation.isExpired()) {
+			if (invitation.isExpired()) {
 				continue;
 			}
 
-			invitation.respond(GroupInvitationStatus.ACCEPTED);
-
-			addGroupMember(inviteeUserId, group.getId());
+			try {
+				groupMemberPolicyService.addGroupMember(invitation.getInviteeUserId(), invitation.getGroup().getId());
+			} catch (Exception ignored) {
+			} finally {
+				invitation.respond(GroupInvitationStatus.ACCEPTED);
+			}
 		}
 	}
 
@@ -223,7 +219,7 @@ public class GroupInvitationService {
 	 */
 	private Long createUserInvitation(Long inviterUserId, Long groupId, UserProfile inviteeUser) {
 		if (groupMemberRepository.existsByGroup_idAndUser_id(groupId, inviteeUser.getId())) {
-			throw new BizException(GroupInvitationErrorCode.ALREADY_GROUP_MEMBER);
+			throw new BizException(GroupErrorCode.ALREADY_GROUP_MEMBER);
 		}
 
 		if (groupInvitationRepository
@@ -270,26 +266,5 @@ public class GroupInvitationService {
 		// TODO: 초대받은 비회원한테 이메일 전송
 
 		return invitation.getId();
-	}
-
-	/**
-	 * 그룹에 회원 추가
-	 *
-	 * @param inviteeUserId 초대 받는 회원 ID
-	 * @param groupId       초대한 그룹 ID
-	 * @author 윤정환
-	 */
-	private void addGroupMember(Long inviteeUserId, Long groupId) {
-		if (groupMemberRepository.existsByGroup_idAndUser_id(groupId, inviteeUserId)) {
-			return;
-		}
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(groupRepository.getReferenceById(groupId))
-			.user(em.getReference(UserProfile.class, inviteeUserId))
-			.role(GroupMemberRole.MEMBER)
-			.build();
-
-		groupMemberRepository.save(groupMember);
 	}
 }
