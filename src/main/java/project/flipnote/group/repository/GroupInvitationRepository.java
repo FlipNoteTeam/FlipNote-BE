@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -55,8 +54,7 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 
 	boolean existsByGroup_IdAndInviteeEmailAndStatus(Long groupId, String inviteeEmail, GroupInvitationStatus status);
 
-	@Modifying
-	@Transactional
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("UPDATE GroupInvitation gi " +
 		"SET gi.status = project.flipnote.group.entity.GroupInvitationStatus.EXPIRED " +
 		"WHERE gi.status = project.flipnote.group.entity.GroupInvitationStatus.PENDING " +
