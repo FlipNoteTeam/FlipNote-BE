@@ -86,10 +86,10 @@ public class GroupInvitation extends BaseEntity {
 	}
 
 	public boolean isExpired() {
-		if (Objects.equals(this.status, GroupInvitationStatus.EXPIRED)) {
+		if (this.status == GroupInvitationStatus.EXPIRED) {
 			return true;
 		}
-		if (!Objects.equals(this.status, GroupInvitationStatus.PENDING)) {
+		if (this.status != GroupInvitationStatus.PENDING) {
 			return false;
 		}
 		return this.expiredAt.isBefore(LocalDateTime.now());
