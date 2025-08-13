@@ -27,7 +27,7 @@ import project.flipnote.group.exception.GroupInvitationErrorCode;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-	name = "group_invitation",
+	name = "group_invitations",
 	indexes = {
 		@Index(name = "idx_group_invitee_user", columnList = "group_id, invitee_user_id, status"),
 		@Index(name = "idx_group_invitee_email", columnList = "group_id, invitee_email, status"),

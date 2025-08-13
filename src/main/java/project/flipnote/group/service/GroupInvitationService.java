@@ -50,8 +50,11 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public GroupInvitationCreateResponse createGroupInvitation(AuthPrinciple authPrinciple, Long groupId,
-		GroupInvitationCreateRequest req) {
+	public GroupInvitationCreateResponse createGroupInvitation(
+		AuthPrinciple authPrinciple,
+		Long groupId,
+		GroupInvitationCreateRequest req
+	) {
 		Long inviterUserId = authPrinciple.userId();
 		validateGroupInvitePermission(inviterUserId, groupId);
 

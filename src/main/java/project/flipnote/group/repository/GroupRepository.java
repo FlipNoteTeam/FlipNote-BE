@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.persistence.LockModeType;
 import project.flipnote.group.entity.Group;
 
@@ -15,6 +16,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select g from Group g where g.id = :id")
-	Optional<Group> findByIdForUpdate(Long groupId);
+	Optional<Group> findByIdForUpdate(@Param("id") Long id);
 
 }

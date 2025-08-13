@@ -27,8 +27,8 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 	@GetMapping("/groups/{groupId}/invitations")
 	public ResponseEntity<PageResponse<OutgoingGroupInvitationResponse>> getOutgoingInvitations(
 		@PathVariable("groupId") Long groupId,
-		@Min(0) @RequestParam(defaultValue = "0") int page,
-		@Min(1) @Min(30) @RequestParam(defaultValue = "20") int size,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PageResponse<OutgoingGroupInvitationResponse> res
@@ -39,8 +39,8 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 
 	@GetMapping("/group-invitations")
 	public ResponseEntity<PageResponse<IncomingGroupInvitationResponse>> getIncomingInvitations(
-		@Min(0) @RequestParam(defaultValue = "0") int page,
-		@Min(1) @Min(30) @RequestParam(defaultValue = "20") int size,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "20") int size,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PageResponse<IncomingGroupInvitationResponse> res
