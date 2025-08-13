@@ -1,5 +1,11 @@
 package project.flipnote.group.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,6 +29,8 @@ import project.flipnote.group.exception.GroupErrorCode;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "app_groups")
 @Entity
+@SQLDelete(sql = "UPDATE app_groups SET deleted_at = now() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Group extends BaseEntity {
 
 	@Id
@@ -56,6 +64,9 @@ public class Group extends BaseEntity {
 	@Min(1)
 	@Max(100)
 	private Integer memberCount;
+
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
 
 	@Builder
 	private Group(

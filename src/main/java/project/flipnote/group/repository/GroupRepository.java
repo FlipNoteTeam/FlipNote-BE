@@ -14,6 +14,8 @@ import project.flipnote.group.entity.Group;
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
 
+  Optional<Group> findByIdAndDeletedAtIsNull(Long groupId);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select g from Group g where g.id = :id")
 	Optional<Group> findByIdForUpdate(@Param("id") Long id);
