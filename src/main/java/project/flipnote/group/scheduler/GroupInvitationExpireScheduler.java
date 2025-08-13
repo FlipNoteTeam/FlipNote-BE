@@ -25,7 +25,7 @@ public class GroupInvitationExpireScheduler {
 		lockAtLeastFor = "PT59M",
 		lockAtMostFor = "PT65M"
 	)
-	@Scheduled(cron = "0 0 * * * *")
+	@Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
 	public void runExpireJob() {
 		LocalDateTime now = LocalDateTime.now();
 
