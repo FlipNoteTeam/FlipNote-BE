@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.response.PageResponse;
+import project.flipnote.common.model.event.GroupInvitationCreatedEvent;
+import project.flipnote.common.model.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -40,6 +42,7 @@ public class GroupInvitationService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupMemberPolicyService groupMemberPolicyService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 그룹에 회원 혹은 비회원 초대
@@ -248,7 +251,7 @@ public class GroupInvitationService {
 			.build();
 		groupInvitationRepository.save(invitation);
 
-		// TODO: 초대받은 회원한테 알림 전송
+		eventPublisher.publishEvent(new GroupInvitationCreatedEvent(groupId, inviteeUser.getId()));
 
 		return invitation.getId();
 	}

@@ -12,7 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import project.flipnote.common.response.ApiResponse;
+import project.flipnote.common.model.response.ApiResponse;
 import project.flipnote.common.security.exception.CustomSecurityException;
 
 @Slf4j

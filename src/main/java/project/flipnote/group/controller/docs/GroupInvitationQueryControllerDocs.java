@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import project.flipnote.common.response.PageResponse;
+import project.flipnote.common.model.response.PageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
 import project.flipnote.group.model.OutgoingGroupInvitationResponse;

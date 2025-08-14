@@ -20,4 +20,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 	@Query("select g from Group g where g.id = :id")
 	Optional<Group> findByIdForUpdate(@Param("id") Long id);
 
+	@Query("SELECT g.name FROM Group g WHERE g.id = :id")
+	Optional<String> findGroupNameById(@Param("id") Long id);
 }

@@ -93,3 +93,6 @@ cloud:
 springdoc:
   server:
     url: http://localhost:8080
+
+firebase:
+  config-path: ${FIREBASE_CONFIG_PATH:firebase-service-account.json}

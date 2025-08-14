@@ -189,4 +189,9 @@ public class GroupService {
 	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
 
 	}
+
+	public String findGroupName(Long groupId) {
+		return groupRepository.findGroupNameById(groupId)
+			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+	}
 }

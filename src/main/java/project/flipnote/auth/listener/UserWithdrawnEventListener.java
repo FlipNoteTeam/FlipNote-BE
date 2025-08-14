@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.entity.AccountStatus;
 import project.flipnote.auth.repository.UserAuthRepository;
-import project.flipnote.common.event.UserWithdrawnEvent;
+import project.flipnote.common.model.event.UserWithdrawnEvent;
 
 @Slf4j
 @RequiredArgsConstructor

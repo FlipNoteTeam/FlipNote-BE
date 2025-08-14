@@ -1,4 +1,4 @@
-package project.flipnote.common.event;
+package project.flipnote.common.model.event;
 
 public record UserWithdrawnEvent(
 	Long userId
