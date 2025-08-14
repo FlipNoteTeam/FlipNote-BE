@@ -28,6 +28,7 @@ import project.flipnote.notification.entity.FcmToken;
 import project.flipnote.notification.entity.Notification;
 import project.flipnote.notification.entity.NotificationType;
 import project.flipnote.notification.exception.NotificationErrorCode;
+import project.flipnote.notification.model.MarkNotificationsAsReadRequest;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
 import project.flipnote.notification.model.TokenRegisterRequest;
@@ -92,6 +93,11 @@ public class NotificationService {
 				FcmToken::updateLastUsedAt,
 				() -> saveFcmToken(userId, req)
 			);
+	}
+
+	@Transactional
+	public void markNotificationsAsRead(Long userId, MarkNotificationsAsReadRequest req) {
+		notificationRepository.bulkMarkAsRead(userId, req.notificationIds(), LocalDateTime.now());
 	}
 
 	private void sendNotification(Long userId, String body) {
