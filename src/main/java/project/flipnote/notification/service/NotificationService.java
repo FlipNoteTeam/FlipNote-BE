@@ -88,11 +88,19 @@ public class NotificationService {
 
 	@Transactional
 	public void registerFcmToken(Long userId, TokenRegisterRequest req) {
-		fcmTokenRepository.findByUserIdAndToken(userId, req.token())
-			.ifPresentOrElse(
-				FcmToken::updateLastUsedAt,
-				() -> saveFcmToken(userId, req)
-			);
+		Optional<FcmToken> existingToken = fcmTokenRepository.findByToken(req.token());
+
+		if (existingToken.isPresent()) {
+			FcmToken token = existingToken.get();
+
+			if (Objects.equals(token.getUserId(), userId)) {
+				token.updateLastUsedAt();
+			} else {
+				fcmTokenRepository.deleteById(token.getId());
+			}
+		} else {
+			saveFcmToken(userId, req.token());
+		}
 	}
 
 	@Transactional

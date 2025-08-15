@@ -21,5 +21,5 @@ public interface FcmTokenRepository extends JpaRepository<FcmToken, Long> {
 	@Query("UPDATE FcmToken f SET f.lastUsedAt = :now WHERE f.token IN :tokens")
 	int bulkUpdateLastUsedAt(@Param("tokens") List<String> tokens, @Param("now") LocalDateTime now);
 
-	Optional<FcmToken> findByUserIdAndToken(Long userId, String token);
+	Optional<FcmToken> findByToken(String token);
 }
