@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import project.flipnote.user.model.UserIdNickname;
 import project.flipnote.user.entity.UserProfile;
@@ -23,5 +24,5 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
 	List<UserIdNickname> findIdAndNicknameByIdIn(List<Long> ids);
 
 	@Query("SELECT up.nickname FROM UserProfile up WHERE up.id = :userId")
-	Optional<String> findNicknameById(Long userId);
+	Optional<String> findNicknameById(@Param("userId") Long userId);
 }
