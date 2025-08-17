@@ -46,7 +46,11 @@ public class FirebaseService {
 		}
 	}
 
-	public BatchResponse sendEachForMulticast(List<String> tokens, String title, String body) throws FirebaseMessagingException {
+	public BatchResponse sendEachForMulticast(
+		List<String> tokens,
+		String title,
+		String body
+	) throws FirebaseMessagingException {
 		Notification notification = Notification.builder()
 			.setTitle(title)
 			.setBody(body)

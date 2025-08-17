@@ -15,11 +15,11 @@ import project.flipnote.notification.entity.Notification;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
 	@Query("""
-		    SELECT n FROM Notification n
-		    WHERE (:cursor IS NULL OR n.id < :cursor)
-		      AND (:groupId IS NULL OR n.groupId = :groupId)
-		      AND (:read IS NULL OR n.read = :read)
-		      AND n.receiverId = :receiverId
+		SELECT n FROM Notification n
+		WHERE (:cursor IS NULL OR n.id < :cursor)
+		AND (:groupId IS NULL OR n.groupId = :groupId)
+		AND (:read IS NULL OR n.read = :read)
+		AND n.receiverId = :receiverId
 		""")
 	List<Notification> findNotificationsByReceiverIdAndCursor(
 		@Param("receiverId") Long receiverId,
@@ -32,9 +32,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("""
 		UPDATE Notification n
-		   SET n.read = TRUE, n.readAt = :now
-		 WHERE n.receiverId = :userId
-		   AND n.read is FALSE
+		SET n.read = TRUE, n.readAt = :now
+		WHERE n.receiverId = :userId
+		AND n.read is FALSE
 		""")
 	int bulkMarkAsRead(
 		@Param("userId") Long userId,

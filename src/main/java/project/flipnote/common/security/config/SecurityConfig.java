@@ -58,7 +58,8 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
 					HttpMethod.POST,
-					"/*/users", "/*/auth/token/refresh", "/*/auth/password-resets", "/*/auth/register", "/*/images/upload"
+					"/*/users", "/*/auth/token/refresh", "/*/auth/password-resets", "/*/auth/register",
+					"/*/images/upload"
 				).permitAll()
 				.requestMatchers(HttpMethod.PATCH, "/*/auth/password-resets").permitAll()
 				.requestMatchers(

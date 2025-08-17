@@ -235,11 +235,11 @@ public class NotificationService {
 			List<String> validTokens = new ArrayList<>();
 			List<String> invalidTokens = new ArrayList<>();
 			for (int i = 0; i < response.getResponses().size(); i++) {
-				SendResponse r = response.getResponses().get(i);
-				if (r.isSuccessful()) {
+				SendResponse res = response.getResponses().get(i);
+				if (res.isSuccessful()) {
 					validTokens.add(tokens.get(i));
 				} else {
-					String errorName = r.getException().getMessagingErrorCode().name();
+					String errorName = res.getException().getMessagingErrorCode().name();
 					FcmErrorCode code = FcmErrorCode.from(errorName);
 					if (code == FcmErrorCode.UNREGISTERED || code == FcmErrorCode.INVALID_ARGUMENT) {
 						invalidTokens.add(tokens.get(i));

@@ -33,8 +33,8 @@ public class GroupJoinRequestedEventListener {
 	@Recover
 	public void recover(Exception ex, GroupJoinRequestedEvent event) {
 		log.error(
-			"그룹 가입 신청 후속 처리 예외 발생: groupId={}, receiverIds={}, requesterId={}"
-			, event.groupId(), event.receiverIds(), event.requesterId(), ex
+			"그룹 가입 신청 후속 처리 예외 발생: groupId={}, receiverIds={}, requesterId={}",
+			event.groupId(), event.receiverIds(), event.requesterId(), ex
 		);
 	}
 }
