@@ -25,4 +25,7 @@ public interface NotificationControllerDocs {
 
 	@Operation(summary = "여러 알림을 읽음 처리")
 	ResponseEntity<Void> markNotificationsAsRead(MarkNotificationsAsReadRequest req, AuthPrinciple authPrinciple);
+
+	@Operation(summary = "알림 읽음 처리")
+	ResponseEntity<Void> markNotificationAsRead(Long notificationId, AuthPrinciple authPrinciple);
 }

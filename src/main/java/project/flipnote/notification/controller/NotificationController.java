@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +56,16 @@ public class NotificationController implements NotificationControllerDocs {
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		notificationService.markNotificationsAsRead(authPrinciple.userId(), req);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/{notificationId}/read")
+	public ResponseEntity<Void> markNotificationAsRead(
+		@PathVariable("notificationId") Long notificationId,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		notificationService.markNotificationAsRead(authPrinciple.userId(), notificationId);
 
 		return ResponseEntity.ok().build();
 	}

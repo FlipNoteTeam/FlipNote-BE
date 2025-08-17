@@ -193,6 +193,25 @@ public class NotificationService {
 	}
 
 	/**
+	 * 알림 읽음 처리
+	 *
+	 * @param userId         알림 읽음 처리를 시도하는 회원 ID
+	 * @param notificationId 읽음 처리할 알림 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void markNotificationAsRead(Long userId, Long notificationId) {
+		Notification notification = notificationRepository.findByIdAndReceiverId(notificationId, userId)
+			.orElseThrow(() -> new BizException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+		if (notification.isRead()) {
+			throw new BizException(NotificationErrorCode.ALREADY_READ_NOTIFICATION);
+		}
+
+		notification.markAsRead();
+	}
+
+	/**
 	 * FCM을 통해 실제 알림 전송
 	 * <p>
 	 * 반드시 트랜잭션이 적용된 public 메서드에서 호출해야 합니다.
