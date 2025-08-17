@@ -1,4 +1,4 @@
-package project.flipnote.common.dto;
+package project.flipnote.common.model.request;
 
 public record UserCreateCommand(
 	String email,

@@ -1,0 +1,68 @@
+package project.flipnote.notification.entity;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.common.entity.MapToJsonConverter;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "notifications")
+public class Notification extends BaseEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@Column(nullable = false)
+	private Long receiverId;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private NotificationType type;
+
+	@Convert(converter = MapToJsonConverter.class)
+	private Map<String, Object> variables;
+
+	@Convert(converter = MapToJsonConverter.class)
+	private Map<String, Object> additionalData;
+
+	@Column(name = "is_read", nullable = false)
+	boolean read;
+
+	LocalDateTime readAt;
+
+	@Builder
+	public Notification(
+		Long receiverId, NotificationType type, Map<String, Object> variables, Map<String, Object> additionalData
+	) {
+		this.receiverId = receiverId;
+		this.type = type;
+		this.variables = variables == null ? new HashMap<>() : variables;
+		this.additionalData = additionalData == null ? new HashMap<>() : additionalData;
+		this.read = false;
+	}
+
+	public void markAsRead() {
+		if (!this.read) {
+			this.read = true;
+			this.readAt = LocalDateTime.now();
+		}
+	}
+}
