@@ -169,7 +169,7 @@ public class GroupJoinService {
 			.toList();
 		List<Long> receiverIds = groupMemberRepository.findByGroupAndRoleIn(group, memberRoles)
 			.stream()
-			.map(GroupMember::getId)
+			.map((groupMember ->  groupMember.getGroup().getId()))
 			.toList();
 
 		eventPublisher.publishEvent(new GroupJoinRequestedEvent(group.getId(), receiverIds, requester.getId()));
