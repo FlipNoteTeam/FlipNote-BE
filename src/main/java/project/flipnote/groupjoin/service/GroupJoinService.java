@@ -144,7 +144,9 @@ public class GroupJoinService {
 
 		groupJoinRepository.save(groupJoin);
 
-		sendJoinRequestNotification(group, user);
+		if (group.getApplicationRequired()) {
+			sendJoinRequestNotification(group, user);
+		}
 
 		return GroupJoinResponse.from(groupJoin.getId(), groupJoin.getStatus());
 	}
