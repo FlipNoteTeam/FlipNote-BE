@@ -26,12 +26,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 		UPDATE Notification n
 		   SET n.read = TRUE, n.readAt = :now
 		 WHERE n.receiverId = :userId
-		   AND n.id IN :ids
 		   AND n.read is FALSE
 		""")
 	int bulkMarkAsRead(
 		@Param("userId") Long userId,
-		@Param("ids") List<Long> ids,
 		@Param("now") LocalDateTime now
 	);
 

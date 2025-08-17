@@ -32,7 +32,6 @@ import project.flipnote.notification.entity.Notification;
 import project.flipnote.notification.entity.NotificationType;
 import project.flipnote.notification.exception.NotificationErrorCode;
 import project.flipnote.notification.model.GroupJoinNotificationDispatchEvent;
-import project.flipnote.notification.model.MarkNotificationsAsReadRequest;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
 import project.flipnote.notification.model.TokenRegisterRequest;
@@ -133,15 +132,14 @@ public class NotificationService {
 	}
 
 	/**
-	 * 여러 알림을 읽음 처리
+	 * 모든 알림을 읽음 처리
 	 *
-	 * @param userId 알림 읽음 처리를 사용하는 회원 ID
-	 * @param req    알림 읽음 처리를 위한 정보
+	 * @param userId 모든 알림 읽음 처리를 사용하는 회원 ID
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void markNotificationsAsRead(Long userId, MarkNotificationsAsReadRequest req) {
-		notificationRepository.bulkMarkAsRead(userId, req.notificationIds(), LocalDateTime.now());
+	public void markAllNotificationsAsRead(Long userId) {
+		notificationRepository.bulkMarkAsRead(userId, LocalDateTime.now());
 	}
 
 	/**
