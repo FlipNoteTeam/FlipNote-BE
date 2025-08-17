@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,9 +63,10 @@ public class NotificationService {
 	 * @author 윤정환
 	 */
 	public CursorPageResponse<NotificationResponse> getNotifications(Long userId, NotificationListRequest req) {
-		Pageable pageable = PageRequest.of(0, req.getSize() + 1);
-		List<Notification> notifications
-			= notificationRepository.findNotificationsByReceiverIdAndCursor(userId, req.getCursorId(), pageable);
+		Pageable pageable = PageRequest.of(0, req.getSize() + 1, Sort.by("id").descending());
+		List<Notification> notifications = notificationRepository.findNotificationsByReceiverIdAndCursor(
+			userId, req.getCursorId(), req.getGroupId(), req.getRead(), pageable
+		);
 
 		boolean hasNext = notifications.size() > req.getSize();
 		Long nextCursor = null;

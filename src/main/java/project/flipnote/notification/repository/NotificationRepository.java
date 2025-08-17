@@ -14,10 +14,18 @@ import project.flipnote.notification.entity.Notification;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-	@Query("SELECT n FROM Notification n WHERE (:cursor IS NULL OR n.id < :cursor) AND n.receiverId = :receiverId ORDER BY n.id DESC")
+	@Query("""
+		    SELECT n FROM Notification n
+		    WHERE (:cursor IS NULL OR n.id < :cursor)
+		      AND (:groupId IS NULL OR n.groupId = :groupId)
+		      AND (:read IS NULL OR n.read = :read)
+		      AND n.receiverId = :receiverId
+		""")
 	List<Notification> findNotificationsByReceiverIdAndCursor(
 		@Param("receiverId") Long receiverId,
 		@Param("cursor") Long cursor,
+		@Param("groupId") Long groupId,
+		@Param("read") Boolean read,
 		Pageable pageable
 	);
 
