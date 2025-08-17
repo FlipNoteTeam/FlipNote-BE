@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.text.StringSubstitutor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,12 +31,14 @@ import project.flipnote.notification.entity.FcmToken;
 import project.flipnote.notification.entity.Notification;
 import project.flipnote.notification.entity.NotificationType;
 import project.flipnote.notification.exception.NotificationErrorCode;
+import project.flipnote.notification.model.GroupJoinNotificationDispatchEvent;
 import project.flipnote.notification.model.MarkNotificationsAsReadRequest;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
 import project.flipnote.notification.model.TokenRegisterRequest;
 import project.flipnote.notification.repository.FcmTokenRepository;
 import project.flipnote.notification.repository.NotificationRepository;
+import project.flipnote.user.service.UserService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +51,8 @@ public class NotificationService {
 	private final GroupService groupService;
 	private final FcmTokenRepository fcmTokenRepository;
 	private final FirebaseService firebaseService;
+	private final UserService userService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 알림 목록 커서 기반 페이징으로 조회
@@ -93,9 +98,9 @@ public class NotificationService {
 
 		Notification notification = Notification.builder()
 			.receiverId(inviteeId)
+			.groupId(groupId)
 			.type(type)
 			.variables(Map.of("groupName", groupName))
-			.additionalData(Map.of("groupId", groupId))
 			.build();
 		notificationRepository.save(notification);
 
@@ -137,6 +142,54 @@ public class NotificationService {
 	@Transactional
 	public void markNotificationsAsRead(Long userId, MarkNotificationsAsReadRequest req) {
 		notificationRepository.bulkMarkAsRead(userId, req.notificationIds(), LocalDateTime.now());
+	}
+
+	/**
+	 * 그룹 가입 신청 알림 전송
+	 *
+	 * @param groupId     가입 신청 대상 그룹 ID
+	 * @param receiverIds 알림 받는 회원 ID 목록
+	 * @param requesterId 가입 신청 회원 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void sendGroupJoinRequest(Long groupId, List<Long> receiverIds, Long requesterId) {
+		NotificationType type = NotificationType.GROUP_JOIN_REQUEST;
+		String requesterNickname = userService.getNickname(requesterId);
+
+		List<Notification> notifications = receiverIds.stream()
+			.map((receiverId) -> Notification.builder()
+				.receiverId(receiverId)
+				.groupId(groupId)
+				.type(type)
+				.variables(Map.of("requesterNickname", requesterNickname))
+				.metadata(Map.of("requesterId", requesterId))
+				.build())
+			.toList();
+		notificationRepository.saveAll(notifications);
+
+		eventPublisher.publishEvent(new GroupJoinNotificationDispatchEvent(notifications));
+	}
+
+	/**
+	 * 그룹 가입 신청 알림 회원들에게 전송
+	 *
+	 * @param notifications 전송할 알림 데이터 목록
+	 * @author 윤정환
+	 */
+	public void sendGroupJoinRequestNotifications(List<Notification> notifications) {
+		for (Notification notification : notifications) {
+			try {
+				// TODO: 전송 실패시 재처리
+				String message = buildMessage(notification, Locale.KOREA);
+				sendNotification(notification.getReceiverId(), message);
+			} catch (Exception ex) {
+				log.error(
+					"Failed to send group join request notification to receiverId={}, notificationId={}",
+					notification.getReceiverId(), notification.getId(), ex
+				);
+			}
+		}
 	}
 
 	/**
@@ -182,7 +235,6 @@ public class NotificationService {
 				fcmTokenRepository.bulkUpdateLastUsedAt(validTokens, LocalDateTime.now());
 			}
 		} catch (FirebaseMessagingException e) {
-			log.error("FCM 전송 실패 userId:{}", userId, e);
 			String errorName = e.getMessagingErrorCode() != null ? e.getMessagingErrorCode().name() : "INTERNAL";
 			FcmErrorCode code = FcmErrorCode.from(errorName);
 			if (code == FcmErrorCode.UNAVAILABLE) {

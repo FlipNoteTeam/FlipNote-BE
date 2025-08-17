@@ -6,8 +6,10 @@ import project.flipnote.group.entity.Group;
 
 import org.springframework.stereotype.Repository;
 import project.flipnote.group.entity.GroupMember;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.user.entity.UserProfile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +22,5 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
 	Optional<GroupMember> findByGroup_IdAndUser_Id(Long groupId, Long userId);
 
+	List<GroupMember> findByGroupAndRoleIn(Group group, List<GroupMemberRole> roles);
 }

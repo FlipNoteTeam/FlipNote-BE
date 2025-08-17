@@ -123,4 +123,9 @@ public class UserService {
 				(a, b) -> a
 			));
 	}
+
+	public String getNickname(Long userId) {
+		return userProfileRepository.findNicknameById(userId)
+			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
+	}
 }
