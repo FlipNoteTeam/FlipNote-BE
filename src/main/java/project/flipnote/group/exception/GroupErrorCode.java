@@ -11,7 +11,8 @@ import project.flipnote.common.exception.ErrorCode;
 @RequiredArgsConstructor
 public enum GroupErrorCode implements ErrorCode {
 	GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_002", "그룹이 존재하지 않습니다."),
-	INVALID_MAX_MEMBER(HttpStatus.BAD_REQUEST, "GROUP_001", "최대 인원 수는 1 이상 100 이하여야 합니다.");
+	INVALID_MAX_MEMBER(HttpStatus.BAD_REQUEST, "GROUP_001", "최대 인원 수는 1 이상 100 이하여야 합니다."),
+	INVALID_MEMBER_COUNT(HttpStatus.BAD_REQUEST, "GROUP_006", "그룹 내에 인원수보다 많게 수정해야합니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

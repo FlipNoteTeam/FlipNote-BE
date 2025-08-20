@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.group.model.GroupPutRequest;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -66,5 +68,15 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
+	}
+
+	public void changeGroup(GroupPutRequest req) {
+		this.name = req.name();
+		this.category = req.category();
+		this.description = req.description();
+		this.applicationRequired = req.applicationRequired();
+		this.publicVisible = req.publicVisible();
+		this.maxMember = req.maxMember();
+		this.imageUrl = req.image();
 	}
 }

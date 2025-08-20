@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -18,6 +19,8 @@ import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
+import project.flipnote.group.model.GroupPutRequest;
+import project.flipnote.group.model.GroupPutResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -46,6 +49,12 @@ public class GroupService {
 		);
 	}
 
+	public Group findGroup(Long groupId) {
+		return groupRepository.findById(groupId).orElseThrow(
+			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
+		);
+	}
+
 	//그룹 생성
 	@Transactional
 	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
@@ -62,7 +71,7 @@ public class GroupService {
 		//4. 그룹 회원 정보 생성
 		saveGroupOwner(group, userProfile);
 
-		//5. 그룹 내의 모든 권한 조회
+		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
 		return GroupCreateResponse.from(group.getId());
@@ -127,4 +136,31 @@ public class GroupService {
 		}
 	}
 
+	//유저수 검증
+	private void validateUserCount(Group group, int maxMember) {
+		long count = groupMemberRepository.countByGroup_Id(group.getId());
+		if (count > maxMember) {
+			throw new BizException(GroupErrorCode.INVALID_MEMBER_COUNT);
+		}
+	}
+
+	//그룹 수정
+	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, @Valid GroupPutRequest req, Long groupId) {
+
+		//1. 유저 조회
+		UserProfile userProfile = findUser(authPrinciple);
+
+		//2. 인원수 검증
+		validateMaxMember(req.maxMember());
+
+		//3. 그룹 가져오기
+		Group group = findGroup(groupId);
+		
+		//4. 유저 수 보다 적게 할 경우 오류
+		validateUserCount(group, req.maxMember());
+		
+		group.changeGroup(req);
+
+		return GroupPutResponse.from(group.getId());
+	}
 }
