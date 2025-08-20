@@ -220,6 +220,7 @@ class GroupServiceTest {
 			.maxMember(100)
 			.imageUrl("www.~~~")
 			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
 		GroupMember groupMember = GroupMember.builder()
 				.group(group)
@@ -227,12 +228,12 @@ class GroupServiceTest {
 						.user(userProfile)
 							.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
+		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.of(groupMember));
 		given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
 		//when
-		groupService.deleteGroup(authPrinciple, 1L);
+		groupService.deleteGroup(authPrinciple, group.getId());
 
 		//then
 	}
@@ -249,6 +250,7 @@ class GroupServiceTest {
 			.maxMember(100)
 			.imageUrl("www.~~~")
 			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
 		GroupMember groupMember = GroupMember.builder()
 			.group(group)
@@ -256,9 +258,9 @@ class GroupServiceTest {
 			.user(userProfile)
 			.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
 		// given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
 		
 		//when & then
@@ -287,14 +289,14 @@ class GroupServiceTest {
 			.user(userProfile)
 			.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
-		given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(2L);
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
+		given(groupMemberRepository.countByGroup_idAndUser_idNot(group.getId(),userProfile.getId())).willReturn(2L);
 
 		//when & then
 		BizException exception =
-			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, 1L));
+			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, group.getId()));
 
 		assertEquals(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP, exception.getErrorCode());
 	}
