@@ -1,9 +1,5 @@
 package project.flipnote.cardset.entity;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.LastModifiedDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,9 +47,6 @@ public class CardSet extends BaseEntity {
 	@Column(nullable = false)
 	private String imageUrl;
 
-	@Column
-	private LocalDateTime deletedAt;
-
 	@Builder
 	private CardSet(String name, Group group, Boolean publicVisible, Category category, String hashtag,
 		String imageUrl) {
@@ -63,9 +56,5 @@ public class CardSet extends BaseEntity {
 		this.category = category;
 		this.hashtag = hashtag;
 		this.imageUrl = imageUrl;
-	}
-
-	public void deleteCardSet() {
-		this.deletedAt = LocalDateTime.now();
 	}
 }
