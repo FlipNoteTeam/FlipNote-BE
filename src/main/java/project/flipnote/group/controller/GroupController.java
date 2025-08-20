@@ -50,7 +50,6 @@ public class GroupController {
 		@AuthenticationPrincipal AuthPrinciple authPrinciple,
 		@PathVariable("groupId") Long groupId
 	) {
-
 		groupService.deleteGroup(authPrinciple, groupId);
 
 		return ResponseEntity.noContent().build();

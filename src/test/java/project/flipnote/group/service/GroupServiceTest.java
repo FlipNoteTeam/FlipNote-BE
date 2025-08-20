@@ -25,6 +25,8 @@ import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.fixture.UserFixture;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.entity.GroupMember;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
@@ -204,5 +206,96 @@ class GroupServiceTest {
 			assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
 
 		assertEquals(GroupErrorCode.GROUP_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	public void 그룹_삭제_성공() throws Exception {
+	    //given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		GroupMember groupMember = GroupMember.builder()
+				.group(group)
+					.role(GroupMemberRole.OWNER)
+						.user(userProfile)
+							.build();
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
+		given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
+		//when
+		groupService.deleteGroup(authPrinciple, 1L);
+
+		//then
+	}
+
+	@Test
+	public void 그룹_삭제_실패_오너아닌경우() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.role(GroupMemberRole.MEMBER)
+			.user(userProfile)
+			.build();
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
+		// given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
+		
+		//when & then
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, 1L));
+
+		assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
+	}
+
+	@Test
+	public void 그룹_삭제_실패_유저존재하는경우() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.role(GroupMemberRole.OWNER)
+			.user(userProfile)
+			.build();
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.ofNullable(group));
+		given(userProfileRepository.findByIdAndStatus(1L, UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.ofNullable(groupMember));
+		given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(2L);
+
+		//when & then
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, 1L));
+
+		assertEquals(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP, exception.getErrorCode());
 	}
 }
