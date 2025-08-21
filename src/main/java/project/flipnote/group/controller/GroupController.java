@@ -38,6 +38,7 @@ public class GroupController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
 
+	//그룹 수정
 	@PutMapping("/{groupId}")
 	public ResponseEntity<GroupPutResponse> changeGroup(
 		@AuthenticationPrincipal AuthPrinciple authPrinciple,

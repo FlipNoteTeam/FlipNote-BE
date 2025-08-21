@@ -54,12 +54,6 @@ public class GroupService {
 		);
 	}
 
-	public Group findGroup(Long groupId) {
-		return groupRepository.findById(groupId).orElseThrow(
-			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
-		);
-	}
-
 	//그룹 생성
 	/*
 	그룹 내 유저 조회
@@ -176,8 +170,7 @@ public class GroupService {
 
 	//유저수 검증
 	private void validateUserCount(Group group, int maxMember) {
-		long count = groupMemberRepository.countByGroup_Id(group.getId());
-		if (count > maxMember) {
+		if (group.getMemberCount() > maxMember) {
 			throw new BizException(GroupErrorCode.INVALID_MEMBER_COUNT);
 		}
 	}
@@ -186,20 +179,30 @@ public class GroupService {
 	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, @Valid GroupPutRequest req, Long groupId) {
 
 		//1. 유저 조회
-		UserProfile userProfile = validateUser(authPrinciple);
+		UserProfile user = validateUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
 		//3. 그룹 가져오기
-		Group group = findGroup(groupId);
+		Group group = validateGroup(groupId);
+
+		//4. 그룹 내 유저 조회
+		GroupMember groupMember = validateGroupInUser(user, groupId);
+
+		//5. 유저 권환 조회
+		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
+			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
+		}
 
 		//4. 유저 수 보다 적게 할 경우 오류
 		validateUserCount(group, req.maxMember());
 
 		group.changeGroup(req);
 
-		return GroupPutResponse.from(group.getId());
+		groupRepository.save(group);
+
+		return GroupPutResponse.from(group);
 	}
 	/*
 	그룹 내 오너를 제외한 인원이 존재하는 경우 체크

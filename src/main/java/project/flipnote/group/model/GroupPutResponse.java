@@ -1,9 +1,40 @@
 package project.flipnote.group.model;
 
+import java.time.LocalDateTime;
+
+import project.flipnote.group.entity.Category;
+import project.flipnote.group.entity.Group;
+
 public record GroupPutResponse(
-	Long groupId
+	String name,
+
+	Category category,
+
+	String description,
+
+	Boolean applicationRequired,
+
+	Boolean publicVisible,
+
+	Integer maxMember,
+
+	String imageUrl,
+
+	LocalDateTime createdAt,
+
+	LocalDateTime modifiedAt
 ) {
-	public static GroupPutResponse from(Long groupId) {
-		return new GroupPutResponse(groupId);
+	public static GroupPutResponse from(Group group) {
+		return new GroupPutResponse(
+			group.getName(),
+			group.getCategory(),
+			group.getDescription(),
+			group.getApplicationRequired(),
+			group.getPublicVisible(),
+			group.getMaxMember(),
+			group.getImageUrl(),
+			group.getCreatedAt(),
+			group.getModifiedAt()
+		);
 	}
 }
