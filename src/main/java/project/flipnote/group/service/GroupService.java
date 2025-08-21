@@ -176,6 +176,7 @@ public class GroupService {
 	}
 
 	//그룹 수정
+	@Transactional
 	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, @Valid GroupPutRequest req, Long groupId) {
 
 		//1. 유저 조회
