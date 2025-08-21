@@ -217,4 +217,9 @@ public class GroupService {
 		groupRepository.delete(group);
 
 	}
+
+	public String findGroupName(Long groupId) {
+		return groupRepository.findGroupNameById(groupId)
+			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+	}
 }

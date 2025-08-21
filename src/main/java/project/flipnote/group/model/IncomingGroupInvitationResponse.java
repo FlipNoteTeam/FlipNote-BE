@@ -19,7 +19,7 @@ public record IncomingGroupInvitationResponse(
 		return new IncomingGroupInvitationResponse(
 			invitation.getId(),
 			invitation.getGroup().getId(),
-			GroupInvitationStatus.from(invitation.getStatus()),
+			GroupInvitationStatus.from(invitation),
 			invitation.getCreatedAt()
 		);
 	}

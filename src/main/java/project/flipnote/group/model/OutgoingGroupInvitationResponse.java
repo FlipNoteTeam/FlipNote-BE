@@ -25,7 +25,7 @@ public record OutgoingGroupInvitationResponse(
 			invitation.getInviteeUserId(),
 			invitation.getInviteeEmail(),
 			inviteeNickname,
-			GroupInvitationStatus.from(invitation.getStatus()),
+			GroupInvitationStatus.from(invitation),
 			invitation.getCreatedAt()
 		);
 	}

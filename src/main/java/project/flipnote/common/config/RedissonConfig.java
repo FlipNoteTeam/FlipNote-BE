@@ -1,0 +1,51 @@
+package project.flipnote.common.config;
+
+import java.util.Arrays;
+
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
+
+@Configuration
+public class RedissonConfig {
+
+	@Value("${spring.data.redis.host}")
+	private String host;
+
+	@Value("${spring.data.redis.port}")
+	private int port;
+
+	@Value("${spring.data.redis.password:}")
+	private String password;
+
+	@Value("${spring.data.redis.cluster.nodes:}")
+	private String clusterNodes;
+
+	@Bean(destroyMethod = "shutdown")
+	public RedissonClient redissonClient() {
+		Config config = new Config();
+
+		if (!clusterNodes.isBlank()) {
+			config.useClusterServers()
+				.addNodeAddress(
+					Arrays.stream(clusterNodes.split(","))
+						.map(String::trim)
+						.filter(s -> !s.isEmpty())
+						.map(addr -> addr.startsWith("redis://") || addr.startsWith("rediss://") ? addr :
+							"redis://" + addr)
+						.toArray(String[]::new)
+				)
+				.setPassword(StringUtils.hasText(password) ? password : null);
+		} else {
+			config.useSingleServer()
+				.setAddress("redis://" + host + ":" + port)
+				.setPassword(StringUtils.hasText(password) ? password : null);
+		}
+
+		return Redisson.create(config);
+	}
+}

@@ -1,4 +1,4 @@
-package project.flipnote.common.response;
+package project.flipnote.common.model.response;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
