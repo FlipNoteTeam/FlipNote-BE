@@ -29,6 +29,10 @@ public class CursorPageRequest {
 			return null;
 		}
 
-		return Long.valueOf(normalized);
+		try {
+			return Long.valueOf(normalized);
+		} catch (NumberFormatException ex) {
+			return null;
+		}
 	}
 }

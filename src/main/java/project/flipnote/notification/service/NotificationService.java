@@ -9,9 +9,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.text.StringSubstitutor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +32,13 @@ import project.flipnote.notification.entity.FcmToken;
 import project.flipnote.notification.entity.Notification;
 import project.flipnote.notification.entity.NotificationType;
 import project.flipnote.notification.exception.NotificationErrorCode;
-import project.flipnote.notification.model.MarkNotificationsAsReadRequest;
+import project.flipnote.notification.model.GroupJoinNotificationDispatchEvent;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
 import project.flipnote.notification.model.TokenRegisterRequest;
 import project.flipnote.notification.repository.FcmTokenRepository;
 import project.flipnote.notification.repository.NotificationRepository;
+import project.flipnote.user.service.UserService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +51,8 @@ public class NotificationService {
 	private final GroupService groupService;
 	private final FcmTokenRepository fcmTokenRepository;
 	private final FirebaseService firebaseService;
+	private final UserService userService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 알림 목록 커서 기반 페이징으로 조회
@@ -58,9 +63,10 @@ public class NotificationService {
 	 * @author 윤정환
 	 */
 	public CursorPageResponse<NotificationResponse> getNotifications(Long userId, NotificationListRequest req) {
-		Pageable pageable = PageRequest.of(0, req.getSize() + 1);
-		List<Notification> notifications
-			= notificationRepository.findNotificationsByReceiverIdAndCursor(userId, req.getCursorId(), pageable);
+		Pageable pageable = PageRequest.of(0, req.getSize() + 1, Sort.by("id").descending());
+		List<Notification> notifications = notificationRepository.findNotificationsByReceiverIdAndCursor(
+			userId, req.getCursorId(), req.getGroupId(), req.getRead(), pageable
+		);
 
 		boolean hasNext = notifications.size() > req.getSize();
 		Long nextCursor = null;
@@ -93,9 +99,9 @@ public class NotificationService {
 
 		Notification notification = Notification.builder()
 			.receiverId(inviteeId)
+			.groupId(groupId)
 			.type(type)
 			.variables(Map.of("groupName", groupName))
-			.additionalData(Map.of("groupId", groupId))
 			.build();
 		notificationRepository.save(notification);
 
@@ -128,15 +134,81 @@ public class NotificationService {
 	}
 
 	/**
-	 * 여러 알림을 읽음 처리
+	 * 모든 알림을 읽음 처리
 	 *
-	 * @param userId 알림 읽음 처리를 사용하는 회원 ID
-	 * @param req    알림 읽음 처리를 위한 정보
+	 * @param userId 모든 알림 읽음 처리를 사용하는 회원 ID
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void markNotificationsAsRead(Long userId, MarkNotificationsAsReadRequest req) {
-		notificationRepository.bulkMarkAsRead(userId, req.notificationIds(), LocalDateTime.now());
+	public void markAllNotificationsAsRead(Long userId) {
+		notificationRepository.bulkMarkAsRead(userId, LocalDateTime.now());
+	}
+
+	/**
+	 * 그룹 가입 신청 알림 전송
+	 *
+	 * @param groupId     가입 신청 대상 그룹 ID
+	 * @param receiverIds 알림 받는 회원 ID 목록
+	 * @param requesterId 가입 신청 회원 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void sendGroupJoinRequest(Long groupId, List<Long> receiverIds, Long requesterId) {
+		NotificationType type = NotificationType.GROUP_JOIN_REQUEST;
+		String requesterNickname = userService.getNickname(requesterId);
+
+		List<Notification> notifications = receiverIds.stream()
+			.map((receiverId) -> Notification.builder()
+				.receiverId(receiverId)
+				.groupId(groupId)
+				.type(type)
+				.variables(Map.of("requesterNickname", requesterNickname))
+				.metadata(Map.of("requesterId", requesterId))
+				.build())
+			.toList();
+		notificationRepository.saveAll(notifications);
+
+		eventPublisher.publishEvent(new GroupJoinNotificationDispatchEvent(notifications));
+	}
+
+	/**
+	 * 그룹 가입 신청 알림 회원들에게 전송
+	 *
+	 * @param notifications 전송할 알림 데이터 목록
+	 * @author 윤정환
+	 */
+	public void sendGroupJoinRequestNotifications(List<Notification> notifications) {
+		for (Notification notification : notifications) {
+			try {
+				// TODO: 전송 실패시 재처리
+				String message = buildMessage(notification, Locale.KOREA);
+				sendNotification(notification.getReceiverId(), message);
+			} catch (Exception ex) {
+				log.error(
+					"Failed to send group join request notification to receiverId={}, notificationId={}",
+					notification.getReceiverId(), notification.getId(), ex
+				);
+			}
+		}
+	}
+
+	/**
+	 * 알림 읽음 처리
+	 *
+	 * @param userId         알림 읽음 처리를 시도하는 회원 ID
+	 * @param notificationId 읽음 처리할 알림 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void markNotificationAsRead(Long userId, Long notificationId) {
+		Notification notification = notificationRepository.findByIdAndReceiverId(notificationId, userId)
+			.orElseThrow(() -> new BizException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+		if (notification.isRead()) {
+			throw new BizException(NotificationErrorCode.ALREADY_READ_NOTIFICATION);
+		}
+
+		notification.markAsRead();
 	}
 
 	/**
@@ -163,11 +235,11 @@ public class NotificationService {
 			List<String> validTokens = new ArrayList<>();
 			List<String> invalidTokens = new ArrayList<>();
 			for (int i = 0; i < response.getResponses().size(); i++) {
-				SendResponse r = response.getResponses().get(i);
-				if (r.isSuccessful()) {
+				SendResponse res = response.getResponses().get(i);
+				if (res.isSuccessful()) {
 					validTokens.add(tokens.get(i));
 				} else {
-					String errorName = r.getException().getMessagingErrorCode().name();
+					String errorName = res.getException().getMessagingErrorCode().name();
 					FcmErrorCode code = FcmErrorCode.from(errorName);
 					if (code == FcmErrorCode.UNREGISTERED || code == FcmErrorCode.INVALID_ARGUMENT) {
 						invalidTokens.add(tokens.get(i));
@@ -182,7 +254,6 @@ public class NotificationService {
 				fcmTokenRepository.bulkUpdateLastUsedAt(validTokens, LocalDateTime.now());
 			}
 		} catch (FirebaseMessagingException e) {
-			log.error("FCM 전송 실패 userId:{}", userId, e);
 			String errorName = e.getMessagingErrorCode() != null ? e.getMessagingErrorCode().name() : "INTERNAL";
 			FcmErrorCode code = FcmErrorCode.from(errorName);
 			if (code == FcmErrorCode.UNAVAILABLE) {

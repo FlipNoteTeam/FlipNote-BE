@@ -9,8 +9,9 @@ import project.flipnote.notification.entity.Notification;
 
 public record NotificationResponse(
 	Long notificationId,
+	Long groupId,
 	String message,
-	Map<String, Object> additionalData,
+	Map<String, Object> metadata,
 	boolean isRead,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -23,8 +24,9 @@ public record NotificationResponse(
 	public static NotificationResponse of(Notification notification, String message) {
 		return new NotificationResponse(
 			notification.getId(),
+			notification.getGroupId(),
 			message,
-			notification.getAdditionalData(),
+			notification.getMetadata(),
 			notification.isRead(),
 			notification.getReadAt(),
 			notification.getCreatedAt()

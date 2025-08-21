@@ -1,18 +1,19 @@
 package project.flipnote.group.repository;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import project.flipnote.group.entity.Group;
-
-import org.springframework.stereotype.Repository;
 import project.flipnote.group.entity.GroupMember;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.user.entity.UserProfile;
-
-import java.util.Optional;
 
 @Repository
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
-    Optional<GroupMember> findByGroupAndUser(Group group, UserProfile userProfile);
+	Optional<GroupMember> findByGroupAndUser(Group group, UserProfile userProfile);
 
 	long countByGroup_Id(Long groupId);
 
@@ -22,4 +23,5 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
 	long countByGroup_idAndUser_idNot(Long groupId, Long userId);
 
+	List<GroupMember> findByGroupAndRoleIn(Group group, List<GroupMemberRole> roles);
 }
