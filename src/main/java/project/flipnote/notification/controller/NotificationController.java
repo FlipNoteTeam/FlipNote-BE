@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.model.response.CursorPageResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.notification.controller.docs.NotificationControllerDocs;
-import project.flipnote.notification.model.MarkNotificationsAsReadRequest;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
 import project.flipnote.notification.model.TokenRegisterRequest;
@@ -49,12 +49,21 @@ public class NotificationController implements NotificationControllerDocs {
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
-	@PostMapping("/read")
-	public ResponseEntity<Void> markNotificationsAsRead(
-		@Valid @RequestBody MarkNotificationsAsReadRequest req,
+	@PostMapping("/read-all")
+	public ResponseEntity<Void> markAllNotificationsAsRead(
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		notificationService.markNotificationsAsRead(authPrinciple.userId(), req);
+		notificationService.markAllNotificationsAsRead(authPrinciple.userId());
+
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/{notificationId}/read")
+	public ResponseEntity<Void> markNotificationAsRead(
+		@PathVariable("notificationId") Long notificationId,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		notificationService.markNotificationAsRead(authPrinciple.userId(), notificationId);
 
 		return ResponseEntity.ok().build();
 	}

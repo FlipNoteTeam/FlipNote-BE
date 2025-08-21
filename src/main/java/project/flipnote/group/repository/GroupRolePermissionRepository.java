@@ -1,5 +1,7 @@
 package project.flipnote.group.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import project.flipnote.group.entity.Group;
@@ -11,4 +13,6 @@ import project.flipnote.group.entity.GroupRolePermission;
 @Repository
 public interface GroupRolePermissionRepository extends JpaRepository<GroupRolePermission, Long> {
     boolean existsByGroupAndRoleAndGroupPermission(Group group, GroupMemberRole role, GroupPermission groupPermission);
+
+    List<GroupRolePermission> findByGroupAndGroupPermission(Group group, GroupPermission groupPermission);
 }

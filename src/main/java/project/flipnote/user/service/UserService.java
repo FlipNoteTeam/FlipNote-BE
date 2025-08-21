@@ -11,14 +11,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.model.request.UserCreateCommand;
-import project.flipnote.common.model.event.UserWithdrawnEvent;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.user.model.UserIdNickname;
+import project.flipnote.common.model.event.UserWithdrawnEvent;
+import project.flipnote.common.model.request.UserCreateCommand;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.UserIdNickname;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
@@ -122,5 +122,10 @@ public class UserService {
 				UserIdNickname::getNickname,
 				(a, b) -> a
 			));
+	}
+
+	public String getNickname(Long userId) {
+		return userProfileRepository.findNicknameById(userId)
+			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
 	}
 }

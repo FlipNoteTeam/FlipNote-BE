@@ -33,6 +33,8 @@ public class Notification extends BaseEntity {
 	@Column(nullable = false)
 	private Long receiverId;
 
+	private Long groupId;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private NotificationType type;
@@ -41,7 +43,7 @@ public class Notification extends BaseEntity {
 	private Map<String, Object> variables;
 
 	@Convert(converter = MapToJsonConverter.class)
-	private Map<String, Object> additionalData;
+	private Map<String, Object> metadata;
 
 	@Column(name = "is_read", nullable = false)
 	boolean read;
@@ -50,12 +52,17 @@ public class Notification extends BaseEntity {
 
 	@Builder
 	public Notification(
-		Long receiverId, NotificationType type, Map<String, Object> variables, Map<String, Object> additionalData
+		Long receiverId,
+		Long groupId,
+		NotificationType type,
+		Map<String, Object> variables,
+		Map<String, Object> metadata
 	) {
 		this.receiverId = receiverId;
+		this.groupId = groupId;
 		this.type = type;
 		this.variables = variables == null ? new HashMap<>() : variables;
-		this.additionalData = additionalData == null ? new HashMap<>() : additionalData;
+		this.metadata = metadata == null ? new HashMap<>() : metadata;
 		this.read = false;
 	}
 

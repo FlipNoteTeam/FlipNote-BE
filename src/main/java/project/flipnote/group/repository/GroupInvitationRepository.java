@@ -33,9 +33,11 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
 	boolean existsByGroup_IdAndInviteeEmailAndStatus(Long groupId, String inviteeEmail, GroupInvitationStatus status);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("UPDATE GroupInvitation gi " +
-		"SET gi.status = project.flipnote.group.entity.GroupInvitationStatus.EXPIRED " +
-		"WHERE gi.status = project.flipnote.group.entity.GroupInvitationStatus.PENDING " +
-		"AND gi.expiredAt < :now")
+	@Query("""
+		UPDATE GroupInvitation gi
+		SET gi.status = project.flipnote.group.entity.GroupInvitationStatus.EXPIRED
+		WHERE gi.status = project.flipnote.group.entity.GroupInvitationStatus.PENDING
+		AND gi.expiredAt < :now
+		""")
 	int bulkExpire(@Param("now") LocalDateTime now);
 }

@@ -50,14 +50,14 @@ public class GroupService {
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
-	
+
 	/*
 	그룹 내 유저 조회
 	 */
 	public boolean validateGroupInUser(UserProfile user, Long groupId) {
 		return groupMemberRepository.existsByGroup_idAndUser_id(groupId, user.getId());
 	}
-	
+
 	/*
 	그룹 조회
 	 */
@@ -66,7 +66,6 @@ public class GroupService {
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
 	}
-
 
 	/*
 	그룹 생성
@@ -113,13 +112,13 @@ public class GroupService {
 		List<GroupPermission> groupPermissions = groupPermissionRepository.findAll();
 
 		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupMemberRole.values())
-				.flatMap(role -> groupPermissions.stream()
-						.map(permission -> GroupRolePermission.builder()
-								.group(group)
-								.groupPermission(permission)
-								.role(role)
-								.build()))
-				.toList();
+			.flatMap(role -> groupPermissions.stream()
+				.map(permission -> GroupRolePermission.builder()
+					.group(group)
+					.groupPermission(permission)
+					.role(role)
+					.build()))
+			.toList();
 
 		groupRolePermissionRepository.saveAll(groupRolePermissions);
 	}
@@ -127,16 +126,16 @@ public class GroupService {
 	/*
 	그룹 생성 메서드
 	 */
-    private Group createGroup(GroupCreateRequest req) {
+	private Group createGroup(GroupCreateRequest req) {
 		Group group = Group.builder()
-				.name(req.name())
-				.category(req.category())
-				.description(req.description())
-				.applicationRequired(req.applicationRequired())
-				.publicVisible(req.publicVisible())
-				.maxMember(req.maxMember())
-				.imageUrl(req.image())
-				.build();
+			.name(req.name())
+			.category(req.category())
+			.description(req.description())
+			.applicationRequired(req.applicationRequired())
+			.publicVisible(req.publicVisible())
+			.maxMember(req.maxMember())
+			.imageUrl(req.image())
+			.build();
 
 		Group saveGroup = groupRepository.save(group);
 
@@ -150,10 +149,10 @@ public class GroupService {
 	 */
 	private void saveGroupOwner(Group group, UserProfile user) {
 		GroupMember groupMember = GroupMember.builder()
-				.group(group)
-				.user(user)
-				.role(GroupMemberRole.OWNER)
-				.build();
+			.group(group)
+			.user(user)
+			.role(GroupMemberRole.OWNER)
+			.build();
 
 		groupMemberRepository.save(groupMember);
 	}
