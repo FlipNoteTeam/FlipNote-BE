@@ -148,8 +148,14 @@ class GroupServiceTest {
 			.imageUrl("www.~~~")
 			.build();
 
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.user(userProfile)
+			.role(GroupMemberRole.MEMBER)
+			.build();
+
 		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
-		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(true);
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.of(groupMember));
 		// 사용자 검증 로직
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
 			.willReturn(Optional.of(userProfile));
@@ -176,7 +182,7 @@ class GroupServiceTest {
 
 		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.existsByGroup_idAndUser_id(any(), any())).willReturn(false);
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.empty());
 
 	    //when
 		BizException exception =
