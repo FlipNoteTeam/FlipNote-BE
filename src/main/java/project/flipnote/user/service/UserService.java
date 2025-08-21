@@ -1,19 +1,24 @@
 package project.flipnote.user.service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.dto.UserCreateCommand;
-import project.flipnote.common.event.UserWithdrawnEvent;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.model.event.UserWithdrawnEvent;
+import project.flipnote.common.model.request.UserCreateCommand;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
 import project.flipnote.user.model.MyInfoResponse;
+import project.flipnote.user.model.UserIdNickname;
 import project.flipnote.user.model.UserInfoResponse;
 import project.flipnote.user.model.UserUpdateRequest;
 import project.flipnote.user.model.UserUpdateResponse;
@@ -47,7 +52,7 @@ public class UserService {
 
 	@Transactional
 	public void withdraw(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 		user.withdraw();
 
 		eventPublisher.publishEvent(new UserWithdrawnEvent(userId));
@@ -55,7 +60,7 @@ public class UserService {
 
 	@Transactional
 	public UserUpdateResponse update(Long userId, UserUpdateRequest req) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		String phone = req.getNormalizedPhone();
 		if (!Objects.equals(user.getPhone(), phone)) {
@@ -68,20 +73,24 @@ public class UserService {
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		return MyInfoResponse.from(user);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
-		UserProfile user = findActiveUserById(userId);
+		UserProfile user = findActiveUserByIdOrThrow(userId);
 
 		return UserInfoResponse.from(user);
 	}
 
-	private UserProfile findActiveUserById(Long userId) {
+	private UserProfile findActiveUserByIdOrThrow(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
 			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
+	}
+
+	public Optional<UserProfile> findActiveUserByEmail(String email) {
+		return userProfileRepository.findByEmailAndStatus(email, UserStatus.ACTIVE);
 	}
 
 	private void validateEmailDuplicate(String email) {
@@ -98,5 +107,25 @@ public class UserService {
 		if (userProfileRepository.existsByPhone(phone)) {
 			throw new BizException(UserErrorCode.DUPLICATE_PHONE);
 		}
+	}
+
+	public Map<Long, String> getIdAndNicknames(List<Long> inviteeUserIds) {
+		if (inviteeUserIds == null || inviteeUserIds.isEmpty()) {
+			return java.util.Collections.emptyMap();
+		}
+
+		List<Long> distinctIds = inviteeUserIds.stream().distinct().toList();
+		List<UserIdNickname> idAndNicknames = userProfileRepository.findIdAndNicknameByIdIn(distinctIds);
+		return idAndNicknames.stream()
+			.collect(Collectors.toMap(
+				UserIdNickname::getId,
+				UserIdNickname::getNickname,
+				(a, b) -> a
+			));
+	}
+
+	public String getNickname(Long userId) {
+		return userProfileRepository.findNicknameById(userId)
+			.orElseThrow(() -> new BizException(UserErrorCode.USER_NOT_FOUND));
 	}
 }

@@ -1,5 +1,11 @@
 package project.flipnote.group.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,13 +23,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.common.exception.BizException;
+import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupPutRequest;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "app_groups")
 @Entity
+@SQLDelete(sql = "UPDATE app_groups SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Group extends BaseEntity {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -51,6 +62,14 @@ public class Group extends BaseEntity {
 
 	private String imageUrl;
 
+	@Column(nullable = false)
+	@Min(1)
+	@Max(100)
+	private Integer memberCount;
+
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
+
 	@Builder
 	private Group(
 		String name,
@@ -68,6 +87,18 @@ public class Group extends BaseEntity {
 		this.publicVisible = publicVisible;
 		this.maxMember = maxMember;
 		this.imageUrl = imageUrl;
+		this.memberCount = 1;
+	}
+
+	public void validateJoinable() {
+		if (memberCount >= maxMember) {
+			throw new BizException(GroupErrorCode.GROUP_IS_ALREADY_MAX_MEMBER);
+		}
+	}
+
+	public void increaseMemberCount() {
+		validateJoinable();
+		memberCount++;
 	}
 
 	public void changeGroup(GroupPutRequest req) {

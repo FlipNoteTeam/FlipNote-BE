@@ -45,11 +45,6 @@ class ImageUploadServiceTest {
 	@BeforeEach
 	void before() {
 		ReflectionTestUtils.setField(imageUploadService, "bucket", bucket);
-		// user = UserFixture.createActiveUser();
-		// authPrinciple = new AuthPrinciple(user.getId(), user.getEmail(), user.getRole(), user.getTokenVersion());
-
-		// 사용자 검증 로직
-		given(userRepository.findByIdAndStatus(user.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(user));
 	}
 	
 	// @Test
