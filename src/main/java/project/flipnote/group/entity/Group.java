@@ -29,7 +29,7 @@ import project.flipnote.group.exception.GroupErrorCode;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "app_groups")
 @Entity
-@SQLDelete(sql = "UPDATE app_groups SET deleted_at = now() WHERE id = ?")
+@SQLDelete(sql = "UPDATE app_groups SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Group extends BaseEntity {
 

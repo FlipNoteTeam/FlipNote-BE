@@ -54,8 +54,10 @@ public class GroupService {
 	/*
 	그룹 내 유저 조회
 	 */
-	public boolean validateGroupInUser(UserProfile user, Long groupId) {
-		return groupMemberRepository.existsByGroup_idAndUser_id(groupId, user.getId());
+	public GroupMember validateGroupInUser(UserProfile user, Long groupId) {
+		return groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
+			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
+		);
 	}
 
 	/*
@@ -137,11 +139,7 @@ public class GroupService {
 			.imageUrl(req.image())
 			.build();
 
-		Group saveGroup = groupRepository.save(group);
-
-		log.info("생성 시간: {}", group.getCreatedAt());
-
-		return saveGroup;
+		return groupRepository.save(group);
 	}
 
 	/*
@@ -167,6 +165,17 @@ public class GroupService {
 	}
 
 	/*
+	그룹 내 오너를 제외한 인원이 존재하는 경우 체크
+	 */
+	private boolean checkUserNotExistInGroup(UserProfile user, Long groupId) {
+		long count = groupMemberRepository.countByGroup_idAndUser_idNot(groupId, user.getId());
+		if (count > 0) {
+			return false;
+		}
+		return true;
+	}
+
+	/*
 	그룹 상세 정보 조회
 	 */
 	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
@@ -178,14 +187,34 @@ public class GroupService {
 		UserProfile user = validateUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
-		if (!validateGroupInUser(user, groupId)) {
-			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
-		}
+		validateGroupInUser(user, groupId);
 
 		return GroupDetailResponse.from(group);
 	}
 
+	//그룹 삭제 메서드
+	@Transactional
 	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
+		//1. 그룹 조회
+		Group group = validateGroup(groupId);
+
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
+		GroupMember groupMember = validateGroupInUser(user, groupId);
+
+		//4. 유저 권환 조회
+		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
+			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
+		}
+
+		//5. 오너를 제외한 모든 유저가 없어야 삭제 가능
+		if (!checkUserNotExistInGroup(user, groupId)) {
+			throw new BizException(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP);
+		}
+
+		groupRepository.delete(group);
 
 	}
 
