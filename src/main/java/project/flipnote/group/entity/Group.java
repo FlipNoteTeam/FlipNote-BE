@@ -96,6 +96,12 @@ public class Group extends BaseEntity {
 		}
 	}
 
+	public void validateMaxMemberUpdatable(int changeNumber) {
+		if (memberCount > changeNumber) {
+			throw new BizException(GroupErrorCode.INVALID_MEMBER_COUNT);
+		}
+	}
+
 	public void increaseMemberCount() {
 		validateJoinable();
 		memberCount++;

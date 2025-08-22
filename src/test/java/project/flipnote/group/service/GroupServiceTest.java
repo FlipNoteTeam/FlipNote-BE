@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -68,6 +70,9 @@ class GroupServiceTest {
 
 	@Mock
 	GroupMemberRepository groupMemberRepository;
+
+	@Mock
+	GroupPolicyService groupPolicyService;
 
 	UserProfile userProfile;
 	AuthPrinciple authPrinciple;
@@ -156,7 +161,7 @@ class GroupServiceTest {
 			.role(GroupMemberRole.MEMBER)
 			.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
+		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.of(group));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.of(groupMember));
 		// 사용자 검증 로직
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
@@ -335,6 +340,15 @@ class GroupServiceTest {
 		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+
+		willAnswer(inv -> {
+			Long idArg = inv.getArgument(0, Long.class);
+			GroupPutRequest reqArg = inv.getArgument(1, GroupPutRequest.class);
+			// 실제 서비스 로직처럼 그룹 변경을 흉내냄
+			group.changeGroup(reqArg);
+			return group; // 변경된 그룹 반환
+		}).given(groupPolicyService).changeGroup(group.getId(), req);
+
 		//when
 		GroupPutResponse res = groupService.changeGroup(authPrinciple, req, group.getId());
 
@@ -403,6 +417,10 @@ class GroupServiceTest {
 		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+
+		willThrow(new BizException(GroupErrorCode.INVALID_MEMBER_COUNT))
+			.given(groupPolicyService).changeGroup(group.getId(), req);
+
 		//when
 		BizException exception =
 			assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));

@@ -44,6 +44,7 @@ public class GroupService {
 	private final GroupPermissionRepository groupPermissionRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final UserProfileRepository userProfileRepository;
+	private final GroupPolicyService groupPolicyService;
 
 	/*
 	유저 정보 조회
@@ -54,7 +55,6 @@ public class GroupService {
 		);
 	}
 
-	//그룹 생성
 	/*
 	그룹 내 유저 조회
 	 */
@@ -177,7 +177,7 @@ public class GroupService {
 
 	//그룹 수정
 	@Transactional
-	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, @Valid GroupPutRequest req, Long groupId) {
+	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, GroupPutRequest req, Long groupId) {
 
 		//1. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
@@ -196,14 +196,10 @@ public class GroupService {
 			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
 		}
 
-		//4. 유저 수 보다 적게 할 경우 오류
-		validateUserCount(group, req.maxMember());
+		//6. 그룹 수정
+		Group changeGroup = groupPolicyService.changeGroup(groupId, req);
 
-		group.changeGroup(req);
-
-		groupRepository.save(group);
-
-		return GroupPutResponse.from(group);
+		return GroupPutResponse.from(changeGroup);
 	}
 	/*
 	그룹 내 오너를 제외한 인원이 존재하는 경우 체크
