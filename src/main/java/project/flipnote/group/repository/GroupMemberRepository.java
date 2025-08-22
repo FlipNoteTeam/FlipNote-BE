@@ -12,7 +12,7 @@ import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.user.entity.UserProfile;
 
 @Repository
-public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
+public interface GroupMemberRepository extends JpaRepository<GroupMember, Long>, GroupMemberRepositoryCustom {
 	Optional<GroupMember> findByGroupAndUser(Group group, UserProfile userProfile);
 
 	long countByGroup_Id(Long groupId);
@@ -24,4 +24,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 	long countByGroup_idAndUser_idNot(Long groupId, Long userId);
 
 	List<GroupMember> findByGroupAndRoleIn(Group group, List<GroupMemberRole> roles);
+
+	List<GroupMember> findAllByGroup_Id(Long groupId);
+
 }

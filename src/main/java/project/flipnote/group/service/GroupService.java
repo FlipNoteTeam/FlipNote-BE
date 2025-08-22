@@ -17,9 +17,11 @@ import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
+import project.flipnote.group.model.FindGroupMemberResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
+import project.flipnote.group.model.GroupMemberInfo;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -50,16 +52,25 @@ public class GroupService {
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
 	}
-
+	
 	/*
-	그룹 내 유저 조회
+	그룹 내 유저 검증
 	 */
-	public GroupMember validateGroupInUser(UserProfile user, Long groupId) {
-		return groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
+	public void validateGroupInUser(UserProfile user, Long groupId) {
+		groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
 			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
 		);
 	}
 
+	/*
+	그룹 내 유저 조회
+	 */
+	public GroupMember getGroupMember(UserProfile user, Long groupId) {
+		return groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
+			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
+		);
+	}
+	
 	/*
 	그룹 조회
 	 */
@@ -174,6 +185,14 @@ public class GroupService {
 		}
 		return true;
 	}
+	
+	/*
+	그룹 내 모든 멤버리스트 조회
+	 */
+	private List<GroupMemberInfo> findGroupMembers(Long groupId) {
+		//각 그룹멤버의 id를 가지고 유저를 찾고 유저명, 권한, 등등 가져오기
+		return groupMemberRepository.findGroupMembers(groupId);
+	}
 
 	/*
 	그룹 상세 정보 조회
@@ -202,7 +221,7 @@ public class GroupService {
 		UserProfile user = validateUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
-		GroupMember groupMember = validateGroupInUser(user, groupId);
+		GroupMember groupMember = getGroupMember(user, groupId);
 
 		//4. 유저 권환 조회
 		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
@@ -221,5 +240,21 @@ public class GroupService {
 	public String findGroupName(Long groupId) {
 		return groupRepository.findGroupNameById(groupId)
 			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+	}
+
+	public FindGroupMemberResponse findGroupMembers(AuthPrinciple authPrinciple, Long groupId) {
+		//1. 그룹 조회
+		Group group = validateGroup(groupId);
+
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
+		validateGroupInUser(user, groupId);
+
+		//4. 그룹 내 모든 유저 조회
+		List<GroupMemberInfo> groupMembers = findGroupMembers(groupId);
+
+		return FindGroupMemberResponse.from(groupMembers);
 	}
 }
