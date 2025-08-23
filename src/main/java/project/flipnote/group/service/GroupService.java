@@ -61,9 +61,9 @@ public class GroupService {
 	그룹 내 유저 검증
 	 */
 	public void validateGroupInUser(UserProfile user, Long groupId) {
-		groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
-			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
-		);
+		if(!groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, user.getId())) {
+			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
+		}
 	}
 
 	/*
@@ -76,9 +76,18 @@ public class GroupService {
 	}
 
 	/*
+	그룹 검증
+	 */
+	public void validateGroup(Long groupId) {
+		if(!groupRepository.existsByIdAndDeletedAtIsNull(groupId)) {
+			throw new BizException(GroupErrorCode.GROUP_NOT_FOUND);
+		}
+	}
+
+	/*
 	그룹 조회
 	 */
-	public Group validateGroup(Long groupId) {
+	public Group getGroup(Long groupId) {
 		return groupRepository.findByIdAndDeletedAtIsNull(groupId).orElseThrow(
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
@@ -196,8 +205,8 @@ public class GroupService {
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
-		//3. 그룹 가져오기
-		Group group = validateGroup(groupId);
+		//3. 그룹 조회
+		validateGroup(groupId);
 
 		//4. 그룹 내 유저 조회
 		GroupMember groupMember = getGroupMember(user, groupId);
@@ -237,7 +246,7 @@ public class GroupService {
 	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
 
 		//1. 그룹 조회
-		Group group = validateGroup(groupId);
+		Group group = getGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
@@ -252,7 +261,7 @@ public class GroupService {
 	@Transactional
 	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
 		//1. 그룹 조회
-		Group group = validateGroup(groupId);
+		Group group = getGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
@@ -274,14 +283,16 @@ public class GroupService {
 
 	}
 
+	//그룹이름 찾는 메서드
 	public String findGroupName(Long groupId) {
 		return groupRepository.findGroupNameById(groupId)
 			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
 	}
 
+	//그룹 내 멤버 조회 메서드
 	public FindGroupMemberResponse findGroupMembers(AuthPrinciple authPrinciple, Long groupId) {
-		//1. 그룹 조회
-		Group group = validateGroup(groupId);
+		//1. 그룹 검증
+		validateGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);

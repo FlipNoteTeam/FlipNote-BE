@@ -160,6 +160,7 @@ class GroupServiceTest {
 			.maxMember(100)
 			.imageUrl("www.~~~")
 			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
 		GroupMember groupMember = GroupMember.builder()
 			.group(group)
@@ -167,8 +168,8 @@ class GroupServiceTest {
 			.role(GroupMemberRole.MEMBER)
 			.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.of(group));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.of(groupMember));
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(true);
 		// 사용자 검증 로직
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
 			.willReturn(Optional.of(userProfile));
@@ -192,10 +193,11 @@ class GroupServiceTest {
 			.maxMember(100)
 			.imageUrl("www.~~~")
 			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.empty());
+		given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(false);
 
 	    //when
 		BizException exception =
@@ -344,16 +346,16 @@ class GroupServiceTest {
 
 		List<GroupMemberInfo> groupMembers = List.of(GroupMemberInfo.from(userProfile.getId(), groupMember.getRole(), userProfile.getName(), userProfile.getProfileImageUrl()));
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(groupRepository.existsByIdAndDeletedAtIsNull(group.getId())).willReturn(true);
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+		given(groupMemberRepository.existsByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(true);
 		given(groupMemberRepository.findGroupMembers(group.getId())).willReturn(groupMembers);
 	    //when
 		FindGroupMemberResponse res = groupService.findGroupMembers(authPrinciple, group.getId());
 		//then
 		assertEquals(1, res.groupMembers().size());
 		assertEquals(userProfile.getId(), res.groupMembers().get(0).id());
-		then(groupRepository).should().findByIdAndDeletedAtIsNull(group.getId());
+		then(groupRepository).should().existsByIdAndDeletedAtIsNull(group.getId());
 		then(groupMemberRepository).should().findGroupMembers(group.getId());
 	}
 
@@ -380,7 +382,7 @@ class GroupServiceTest {
 
 		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
 
@@ -396,8 +398,8 @@ class GroupServiceTest {
 		GroupPutResponse res = groupService.changeGroup(authPrinciple, req, group.getId());
 
 		//then
-		assertEquals(req.name(), group.getName());
-		assertEquals(req.category(), group.getCategory());
+		assertEquals(req.name(), res.name());
+		assertEquals(req.category(), res.category());
 	}
 
 	@Test
@@ -423,7 +425,7 @@ class GroupServiceTest {
 
 		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
 		//when
@@ -457,7 +459,7 @@ class GroupServiceTest {
 
 		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 50, "www.~~");
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
 

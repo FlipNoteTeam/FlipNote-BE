@@ -22,4 +22,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
 	@Query("SELECT g.name FROM Group g WHERE g.id = :id")
 	Optional<String> findGroupNameById(@Param("id") Long id);
+
+	boolean existsByIdAndDeletedAtIsNull(Long groupId);
 }
