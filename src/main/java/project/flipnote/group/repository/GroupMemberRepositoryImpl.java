@@ -12,7 +12,7 @@ import project.flipnote.group.model.GroupMemberInfo;
 import project.flipnote.user.entity.QUserProfile;
 
 @RequiredArgsConstructor
-public class GroupMemberRepositoryImpl{
+public class GroupMemberRepositoryImpl implements GroupMemberRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 
