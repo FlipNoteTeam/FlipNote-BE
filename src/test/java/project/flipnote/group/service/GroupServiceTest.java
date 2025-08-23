@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -33,6 +35,8 @@ import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
+import project.flipnote.group.model.GroupPutRequest;
+import project.flipnote.group.model.GroupPutResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -66,6 +70,9 @@ class GroupServiceTest {
 
 	@Mock
 	GroupMemberRepository groupMemberRepository;
+
+	@Mock
+	GroupPolicyService groupPolicyService;
 
 	UserProfile userProfile;
 	AuthPrinciple authPrinciple;
@@ -154,7 +161,7 @@ class GroupServiceTest {
 			.role(GroupMemberRole.MEMBER)
 			.build();
 
-		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.ofNullable(group));
+		given(groupRepository.findByIdAndDeletedAtIsNull(any())).willReturn(Optional.of(group));
 		given(groupMemberRepository.findByGroup_IdAndUser_Id(any(), any())).willReturn(Optional.of(groupMember));
 		// 사용자 검증 로직
 		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
@@ -305,5 +312,119 @@ class GroupServiceTest {
 			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, group.getId()));
 
 		assertEquals(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP, exception.getErrorCode());
+	}
+
+	@Test
+	public void 그룹_수정_성공() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.role(GroupMemberRole.OWNER)
+			.user(userProfile)
+			.build();
+		ReflectionTestUtils.setField(groupMember, "id", 1L);
+
+		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+
+		willAnswer(inv -> {
+			Long idArg = inv.getArgument(0, Long.class);
+			GroupPutRequest reqArg = inv.getArgument(1, GroupPutRequest.class);
+			// 실제 서비스 로직처럼 그룹 변경을 흉내냄
+			group.changeGroup(reqArg);
+			return group; // 변경된 그룹 반환
+		}).given(groupPolicyService).changeGroup(group.getId(), req);
+
+		//when
+		GroupPutResponse res = groupService.changeGroup(authPrinciple, req, group.getId());
+
+		//then
+		assertEquals(req.name(), group.getName());
+		assertEquals(req.category(), group.getCategory());
+	}
+
+	@Test
+	public void 그룹_수정_실패_오너아닌경우() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.role(GroupMemberRole.MEMBER)
+			.user(userProfile)
+			.build();
+		ReflectionTestUtils.setField(groupMember, "id", 1L);
+
+		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+		//when
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
+
+		assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
+	}
+
+	@Test
+	public void 그룹_수정_실패_유저수보다_적게한경우() throws Exception {
+		//given
+		Group group = Group.builder()
+			.name("그룹1")
+			.category(Category.IT)
+			.description("설명1")
+			.publicVisible(true)
+			.applicationRequired(true)
+			.maxMember(100)
+			.imageUrl("www.~~~")
+			.build();
+		ReflectionTestUtils.setField(group, "id", 1L);
+		ReflectionTestUtils.setField(group, "memberCount", 100);
+
+		GroupMember groupMember = GroupMember.builder()
+			.group(group)
+			.role(GroupMemberRole.OWNER)
+			.user(userProfile)
+			.build();
+		ReflectionTestUtils.setField(groupMember, "id", 1L);
+
+		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 50, "www.~~");
+
+		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+
+		willThrow(new BizException(GroupErrorCode.INVALID_MEMBER_COUNT))
+			.given(groupPolicyService).changeGroup(group.getId(), req);
+
+		//when
+		BizException exception =
+			assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
+
+		assertEquals(GroupErrorCode.INVALID_MEMBER_COUNT, exception.getErrorCode());
 	}
 }

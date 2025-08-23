@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -20,6 +21,8 @@ import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
+import project.flipnote.group.model.GroupPutRequest;
+import project.flipnote.group.model.GroupPutResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -41,6 +44,7 @@ public class GroupService {
 	private final GroupPermissionRepository groupPermissionRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final UserProfileRepository userProfileRepository;
+	private final GroupPolicyService groupPolicyService;
 
 	/*
 	유저 정보 조회
@@ -87,7 +91,7 @@ public class GroupService {
 		//4. 그룹 회원 정보 생성
 		saveGroupOwner(group, user);
 
-		//5. 그룹 내의 모든 권한 조회
+		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
 		return GroupCreateResponse.from(group.getId());
@@ -164,6 +168,39 @@ public class GroupService {
 		}
 	}
 
+	//유저수 검증
+	private void validateUserCount(Group group, int maxMember) {
+		if (group.getMemberCount() > maxMember) {
+			throw new BizException(GroupErrorCode.INVALID_MEMBER_COUNT);
+		}
+	}
+
+	//그룹 수정
+	@Transactional
+	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, GroupPutRequest req, Long groupId) {
+
+		//1. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//2. 인원수 검증
+		validateMaxMember(req.maxMember());
+
+		//3. 그룹 가져오기
+		Group group = validateGroup(groupId);
+
+		//4. 그룹 내 유저 조회
+		GroupMember groupMember = validateGroupInUser(user, groupId);
+
+		//5. 유저 권환 조회
+		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
+			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
+		}
+
+		//6. 그룹 수정
+		Group changeGroup = groupPolicyService.changeGroup(groupId, req);
+
+		return GroupPutResponse.from(changeGroup);
+	}
 	/*
 	그룹 내 오너를 제외한 인원이 존재하는 경우 체크
 	 */
