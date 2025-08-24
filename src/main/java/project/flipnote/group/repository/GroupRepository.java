@@ -12,7 +12,7 @@ import jakarta.persistence.LockModeType;
 import project.flipnote.group.entity.Group;
 
 @Repository
-public interface GroupRepository extends JpaRepository<Group, Long> {
+public interface GroupRepository extends JpaRepository<Group, Long>, GroupRepositoryCustom {
 
 	Optional<Group> findByIdAndDeletedAtIsNull(Long groupId);
 

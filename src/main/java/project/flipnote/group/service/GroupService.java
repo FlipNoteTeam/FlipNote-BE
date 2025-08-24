@@ -23,6 +23,7 @@ import project.flipnote.group.model.FindGroupResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
+import project.flipnote.group.model.GroupInfo;
 import project.flipnote.group.model.GroupMemberInfo;
 import project.flipnote.group.model.GroupPutRequest;
 import project.flipnote.group.model.GroupPutResponse;
@@ -323,7 +324,11 @@ public class GroupService {
 		//2. 카테고리 변환
 		Category category = convertCategory(rawCategory);
 
-		return null;
+		List<GroupInfo> groups = groupRepository.findAllByCursor(lastId, category);
+
+		Long nextCursor = groups.isEmpty() ? null : groups.get(groups.size() - 1).groupId();
+
+		return FindGroupResponse.from(groups, nextCursor);
 	}
 
 	private Category convertCategory(String rawCategory) {
