@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.model.FindGroupMemberResponse;
 import project.flipnote.group.model.FindGroupMemberResponse;
+import project.flipnote.group.model.FindGroupResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
@@ -77,6 +79,18 @@ public class GroupController {
 		@AuthenticationPrincipal AuthPrinciple authPrinciple,
 		@PathVariable("groupId") Long groupId) {
 		FindGroupMemberResponse res = groupService.findGroupMembers(authPrinciple, groupId);
+
+		return ResponseEntity.ok(res);
+	}
+
+	//그룹 전체 조회
+	@GetMapping
+	public ResponseEntity<FindGroupResponse> findGroup(
+		@AuthenticationPrincipal AuthPrinciple authPrinciple,
+		@RequestParam(name = "lastId", required = false) Long lastId,
+		@RequestParam(name = "category", required = false) String category
+	) {
+		FindGroupResponse res = groupService.findGroup(authPrinciple, lastId, category);
 
 		return ResponseEntity.ok(res);
 	}

@@ -6,11 +6,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
 import project.flipnote.group.entity.GroupMember;
 import project.flipnote.group.entity.GroupMemberRole;
@@ -19,6 +19,7 @@ import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.FindGroupMemberResponse;
+import project.flipnote.group.model.FindGroupResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
@@ -51,10 +52,19 @@ public class GroupService {
 	/*
 	유저 정보 조회
 	 */
-	public UserProfile validateUser(AuthPrinciple authPrinciple) {
+	public UserProfile getUser(AuthPrinciple authPrinciple) {
 		return userProfileRepository.findByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE).orElseThrow(
 			() -> new BizException(UserErrorCode.USER_NOT_FOUND)
 		);
+	}
+
+	/*
+	유저 정보 조회
+	 */
+	public void validateUser(AuthPrinciple authPrinciple) {
+		if(!userProfileRepository.existsByIdAndStatus(authPrinciple.userId(), UserStatus.ACTIVE)) {
+			throw new BizException(UserErrorCode.USER_NOT_FOUND);
+		}
 	}
 
 	/*
@@ -100,7 +110,7 @@ public class GroupService {
 	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
 
 		//1. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
+		UserProfile user = getUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
@@ -200,7 +210,7 @@ public class GroupService {
 	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, GroupPutRequest req, Long groupId) {
 
 		//1. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
+		UserProfile user = getUser(authPrinciple);
 
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
@@ -249,7 +259,7 @@ public class GroupService {
 		Group group = getGroup(groupId);
 
 		//2. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
+		UserProfile user = getUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
 		validateGroupInUser(user, groupId);
@@ -264,7 +274,7 @@ public class GroupService {
 		Group group = getGroup(groupId);
 
 		//2. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
+		UserProfile user = getUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
 		GroupMember groupMember = getGroupMember(user, groupId);
@@ -295,7 +305,7 @@ public class GroupService {
 		validateGroup(groupId);
 
 		//2. 유저 조회
-		UserProfile user = validateUser(authPrinciple);
+		UserProfile user = getUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
 		validateGroupInUser(user, groupId);
@@ -304,5 +314,27 @@ public class GroupService {
 		List<GroupMemberInfo> groupMembers = findGroupMembers(groupId);
 
 		return FindGroupMemberResponse.from(groupMembers);
+	}
+
+	public FindGroupResponse findGroup(AuthPrinciple authPrinciple, Long lastId, String rawCategory) {
+		//1. 유저 조회
+		validateUser(authPrinciple);
+
+		//2. 카테고리 변환
+		Category category = convertCategory(rawCategory);
+
+		return null;
+	}
+
+	private Category convertCategory(String rawCategory) {
+		Category category = null;
+		if (rawCategory != null && !rawCategory.isBlank()) {
+			try {
+				category = Category.valueOf(rawCategory.trim().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw new BizException(GroupErrorCode.INVALID_CATEGORY);
+			}
+		}
+		return category;
 	}
 }
