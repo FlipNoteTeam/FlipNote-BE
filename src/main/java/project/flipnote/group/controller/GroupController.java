@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.group.model.FindGroupMemberResponse;
+import project.flipnote.group.model.FindGroupMemberResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
@@ -67,5 +69,15 @@ public class GroupController {
 		groupService.deleteGroup(authPrinciple, groupId);
 
 		return ResponseEntity.noContent().build();
+	}
+
+	//그룹내 멤버 조회
+	@GetMapping("/{groupId}/members")
+	public ResponseEntity<FindGroupMemberResponse> findGroupMembers(
+		@AuthenticationPrincipal AuthPrinciple authPrinciple,
+		@PathVariable("groupId") Long groupId) {
+		FindGroupMemberResponse res = groupService.findGroupMembers(authPrinciple, groupId);
+
+		return ResponseEntity.ok(res);
 	}
 }

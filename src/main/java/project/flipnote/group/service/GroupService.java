@@ -18,9 +18,11 @@ import project.flipnote.group.entity.GroupPermission;
 import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
+import project.flipnote.group.model.FindGroupMemberResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
+import project.flipnote.group.model.GroupMemberInfo;
 import project.flipnote.group.model.GroupPutRequest;
 import project.flipnote.group.model.GroupPutResponse;
 import project.flipnote.group.repository.GroupMemberRepository;
@@ -56,18 +58,36 @@ public class GroupService {
 	}
 
 	/*
+	그룹 내 유저 검증
+	 */
+	public void validateGroupInUser(UserProfile user, Long groupId) {
+		if(!groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, user.getId())) {
+			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
+		}
+	}
+
+	/*
 	그룹 내 유저 조회
 	 */
-	public GroupMember validateGroupInUser(UserProfile user, Long groupId) {
+	public GroupMember getGroupMember(UserProfile user, Long groupId) {
 		return groupMemberRepository.findByGroup_IdAndUser_Id(groupId, user.getId()).orElseThrow(
 			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
 		);
 	}
 
 	/*
+	그룹 검증
+	 */
+	public void validateGroup(Long groupId) {
+		if(!groupRepository.existsByIdAndDeletedAtIsNull(groupId)) {
+			throw new BizException(GroupErrorCode.GROUP_NOT_FOUND);
+		}
+	}
+
+	/*
 	그룹 조회
 	 */
-	public Group validateGroup(Long groupId) {
+	public Group getGroup(Long groupId) {
 		return groupRepository.findByIdAndDeletedAtIsNull(groupId).orElseThrow(
 			() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND)
 		);
@@ -185,11 +205,11 @@ public class GroupService {
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
-		//3. 그룹 가져오기
-		Group group = validateGroup(groupId);
+		//3. 그룹 조회
+		validateGroup(groupId);
 
 		//4. 그룹 내 유저 조회
-		GroupMember groupMember = validateGroupInUser(user, groupId);
+		GroupMember groupMember = getGroupMember(user, groupId);
 
 		//5. 유저 권환 조회
 		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
@@ -213,12 +233,20 @@ public class GroupService {
 	}
 
 	/*
+	그룹 내 모든 멤버리스트 조회
+	 */
+	private List<GroupMemberInfo> findGroupMembers(Long groupId) {
+		//각 그룹멤버의 id를 가지고 유저를 찾고 유저명, 권한, 등등 가져오기
+		return groupMemberRepository.findGroupMembers(groupId);
+	}
+
+	/*
 	그룹 상세 정보 조회
 	 */
 	public GroupDetailResponse findGroupDetail(AuthPrinciple authPrinciple, Long groupId) {
 
 		//1. 그룹 조회
-		Group group = validateGroup(groupId);
+		Group group = getGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
@@ -233,13 +261,13 @@ public class GroupService {
 	@Transactional
 	public void deleteGroup(AuthPrinciple authPrinciple, Long groupId) {
 		//1. 그룹 조회
-		Group group = validateGroup(groupId);
+		Group group = getGroup(groupId);
 
 		//2. 유저 조회
 		UserProfile user = validateUser(authPrinciple);
 
 		//3. 그룹 내 유저 조회
-		GroupMember groupMember = validateGroupInUser(user, groupId);
+		GroupMember groupMember = getGroupMember(user, groupId);
 
 		//4. 유저 권환 조회
 		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
@@ -255,8 +283,26 @@ public class GroupService {
 
 	}
 
+	//그룹이름 찾는 메서드
 	public String findGroupName(Long groupId) {
 		return groupRepository.findGroupNameById(groupId)
 			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+	}
+
+	//그룹 내 멤버 조회 메서드
+	public FindGroupMemberResponse findGroupMembers(AuthPrinciple authPrinciple, Long groupId) {
+		//1. 그룹 검증
+		validateGroup(groupId);
+
+		//2. 유저 조회
+		UserProfile user = validateUser(authPrinciple);
+
+		//3. 그룹 내 유저 조회
+		validateGroupInUser(user, groupId);
+
+		//4. 그룹 내 모든 유저 조회
+		List<GroupMemberInfo> groupMembers = findGroupMembers(groupId);
+
+		return FindGroupMemberResponse.from(groupMembers);
 	}
 }
