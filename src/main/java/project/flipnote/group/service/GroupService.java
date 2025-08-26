@@ -43,7 +43,7 @@ import project.flipnote.user.repository.UserProfileRepository;
 @Transactional(readOnly = true)
 public class GroupService {
 
-	final int SIZE = 10;
+	private static final int SIZE = 10;
 
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
@@ -328,9 +328,15 @@ public class GroupService {
 		//2. 카테고리 변환
 		Category category = convertCategory(rawCategory);
 
-		List<GroupInfo> groups = groupRepository.findAllByCursor(lastId, category);
+		int pageSize = SIZE;
 
-		boolean hasNext = groups.size() == SIZE;
+		List<GroupInfo> groups = groupRepository.findAllByCursor(lastId, category, pageSize);
+
+		boolean hasNext = groups.size() > SIZE;
+
+		if (hasNext) {
+			groups = groups.subList(0, SIZE);
+		}
 
 		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
 

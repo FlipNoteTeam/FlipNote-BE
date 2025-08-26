@@ -15,15 +15,12 @@ import project.flipnote.group.model.GroupInfo;
 @RequiredArgsConstructor
 public class GroupRepositoryImpl implements GroupRepositoryCustom {
 
-	private static final int SIZE = 10;
-
 	private final JPAQueryFactory queryFactory;
 
 	QGroup group = QGroup.group;
 
-
 	@Override
-	public List<GroupInfo> findAllByCursor(Long lastId, Category category) {
+	public List<GroupInfo> findAllByCursor(Long lastId, Category category, int pageSize) {
 		BooleanBuilder where = new BooleanBuilder()
 			.and(group.deletedAt.isNull());
 
@@ -46,7 +43,7 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 			.from(group)
 			.where(where)
 			.orderBy(group.id.desc())
-			.limit(SIZE)
+			.limit(pageSize+1)
 			.fetch();
 	}
 
