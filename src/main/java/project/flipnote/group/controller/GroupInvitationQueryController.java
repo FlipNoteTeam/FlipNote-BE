@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.model.request.PagingRequest;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.controller.docs.GroupInvitationQueryControllerDocs;
+import project.flipnote.group.model.GroupInvitationListRequest;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
 import project.flipnote.group.model.OutgoingGroupInvitationResponse;
 import project.flipnote.group.service.GroupInvitationService;
@@ -28,7 +28,7 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 	@GetMapping("/groups/{groupId}/invitations")
 	public ResponseEntity<PagingResponse<OutgoingGroupInvitationResponse>> getOutgoingInvitations(
 		@PathVariable("groupId") Long groupId,
-		@Valid @ModelAttribute PagingRequest req,
+		@Valid @ModelAttribute GroupInvitationListRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PagingResponse<OutgoingGroupInvitationResponse> res
@@ -39,7 +39,7 @@ public class GroupInvitationQueryController implements GroupInvitationQueryContr
 
 	@GetMapping("/group-invitations")
 	public ResponseEntity<PagingResponse<IncomingGroupInvitationResponse>> getIncomingInvitations(
-		@Valid @ModelAttribute PagingRequest req,
+		@Valid @ModelAttribute GroupInvitationListRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PagingResponse<IncomingGroupInvitationResponse> res

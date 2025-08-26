@@ -13,7 +13,7 @@ public record CardSetDetailResponse(
 	String category,
 	String hashtag,
 	String imageUrl,
-	boolean isPublicVisible,
+	boolean publicVisible,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	LocalDateTime createdAt,

@@ -31,6 +31,6 @@ public record CardSetUpdateRequest(
 
 	@Schema(hidden = true)
 	public String getHashTag() {
-		return hashtag != null && hashtag.isEmpty() ? String.join(",", hashtag) : null;
+		return hashtag != null && !hashtag.isEmpty() ? String.join(",", hashtag) : null;
 	}
 }

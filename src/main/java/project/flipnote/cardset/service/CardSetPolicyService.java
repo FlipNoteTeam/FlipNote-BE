@@ -39,7 +39,7 @@ public class CardSetPolicyService {
 	 * @author 윤정환
 	 */
 	public void validateCardSetEditable(Long userId, Long cardSetId) {
-		if (!cardSetManagerRepository.existsByIdAndCardSet_Id(userId, cardSetId)) {
+		if (!cardSetManagerRepository.existsByUser_IdAndCardSet_Id(userId, cardSetId)) {
 			throw new BizException(CardSetErrorCode.CARD_SET_NO_EDIT_PERMISSION);
 		}
 	}

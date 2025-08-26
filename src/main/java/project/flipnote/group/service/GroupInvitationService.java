@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.event.GroupInvitationCreatedEvent;
-import project.flipnote.common.model.request.PagingRequest;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
@@ -22,6 +21,7 @@ import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
 import project.flipnote.group.model.GroupInvitationCreateResponse;
+import project.flipnote.group.model.GroupInvitationListRequest;
 import project.flipnote.group.model.GroupInvitationRespondRequest;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
 import project.flipnote.group.model.OutgoingGroupInvitationResponse;
@@ -141,7 +141,7 @@ public class GroupInvitationService {
 	public PagingResponse<OutgoingGroupInvitationResponse> getOutgoingInvitations(
 		Long userId,
 		Long groupId,
-		PagingRequest req
+		GroupInvitationListRequest req
 	) {
 		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
 			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
@@ -175,7 +175,10 @@ public class GroupInvitationService {
 	 * @return 페이징된 그룹 초대 받은 목록 응답
 	 * @author 윤정환
 	 */
-	public PagingResponse<IncomingGroupInvitationResponse> getIncomingInvitations(Long userId, PagingRequest req) {
+	public PagingResponse<IncomingGroupInvitationResponse> getIncomingInvitations(
+		Long userId,
+		GroupInvitationListRequest req
+	) {
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
 		Page<GroupInvitation> invitationPage
 			= groupInvitationRepository.findAllByInviteeUserId(userId, req.getPageRequest());
