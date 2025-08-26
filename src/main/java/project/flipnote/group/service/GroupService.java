@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.model.response.CursorPagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
@@ -19,11 +20,11 @@ import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.entity.GroupRolePermission;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.model.FindGroupMemberResponse;
-import project.flipnote.group.model.FindGroupResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
 import project.flipnote.group.model.GroupDetailResponse;
 import project.flipnote.group.model.GroupInfo;
+import project.flipnote.group.model.GroupListRequest;
 import project.flipnote.group.model.GroupMemberInfo;
 import project.flipnote.group.model.GroupPutRequest;
 import project.flipnote.group.model.GroupPutResponse;
@@ -321,16 +322,14 @@ public class GroupService {
 		return FindGroupMemberResponse.from(groupMembers);
 	}
 
-	public FindGroupResponse findGroup(AuthPrinciple authPrinciple, Long lastId, String rawCategory) {
+	public CursorPagingResponse<GroupInfo> findGroup(AuthPrinciple authPrinciple, GroupListRequest req) {
 		//1. 유저 검증
 		validateUser(authPrinciple);
 
 		//2. 카테고리 변환
-		Category category = convertCategory(rawCategory);
+		Category category = convertCategory(req.getCategory());
 
-		int pageSize = SIZE;
-
-		List<GroupInfo> groups = groupRepository.findAllByCursor(lastId, category, pageSize);
+		List<GroupInfo> groups = groupRepository.findAllByCursor(req.getCursorId(), category, req.getSize());
 
 		boolean hasNext = groups.size() > SIZE;
 
@@ -340,7 +339,7 @@ public class GroupService {
 
 		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
 
-		return FindGroupResponse.from(groups, nextCursor, hasNext);
+		return CursorPagingResponse.of(groups, hasNext, nextCursor);
 	}
 
 	private Category convertCategory(String rawCategory) {
