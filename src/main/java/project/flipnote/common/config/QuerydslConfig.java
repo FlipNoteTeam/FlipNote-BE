@@ -1,4 +1,4 @@
-package project.flipnote.infra.config;
+package project.flipnote.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
