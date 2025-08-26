@@ -40,7 +40,8 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				group.id,
 				group.name,
 				group.description,
-				group.category
+				group.category,
+				group.imageUrl
 			))
 			.from(group)
 			.where(where)
