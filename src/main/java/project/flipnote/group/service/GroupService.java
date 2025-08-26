@@ -331,10 +331,10 @@ public class GroupService {
 
 		List<GroupInfo> groups = groupRepository.findAllByCursor(req.getCursorId(), category, req.getSize());
 
-		boolean hasNext = groups.size() > SIZE;
+		boolean hasNext = groups.size() > req.getSize();
 
 		if (hasNext) {
-			groups = groups.subList(0, SIZE);
+			groups = groups.subList(0, req.getSize());
 		}
 
 		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
