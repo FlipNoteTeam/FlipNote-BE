@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.flipnote.cardset.model.CardSetUpdatePayload;
 import project.flipnote.common.entity.BaseEntity;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
@@ -56,5 +57,13 @@ public class CardSet extends BaseEntity {
 		this.category = category;
 		this.hashtag = hashtag;
 		this.imageUrl = imageUrl;
+	}
+
+	public void update(CardSetUpdatePayload payload) {
+		this.name = payload.name();
+		this.publicVisible = payload.publicVisible();
+		this.category = payload.category();
+		this.hashtag = payload.hashtag();
+		this.imageUrl = payload.imageUrl();
 	}
 }

@@ -7,4 +7,6 @@ import project.flipnote.cardset.entity.CardSetManager;
 
 @Repository
 public interface CardSetManagerRepository extends JpaRepository<CardSetManager, Long> {
+
+	boolean existsByIdAndCardSet_Id(Long userId, Long cardSetId);
 }

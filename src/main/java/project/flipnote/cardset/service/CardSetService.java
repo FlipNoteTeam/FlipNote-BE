@@ -12,6 +12,8 @@ import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CardSetDetailResponse;
 import project.flipnote.cardset.model.CardSetSearchRequest;
 import project.flipnote.cardset.model.CardSetSummaryResponse;
+import project.flipnote.cardset.model.CardSetUpdatePayload;
+import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
@@ -21,6 +23,7 @@ import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -42,6 +45,7 @@ public class CardSetService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
 	private final GroupService groupService;
+	private final CardSetPolicyService  cardSetPolicyService;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -129,17 +133,34 @@ public class CardSetService {
 	 * @author 윤정환
 	 */
 	public CardSetDetailResponse getCardSet(Long userId, Long groupId, Long cardSetId) {
-		CardSet cardSet = findByIdAndGroupIdOrThrow(groupId, cardSetId);
+		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
 
-		if (!cardSet.getPublicVisible() && !groupService.existsMember(groupId, userId)) {
-			throw new BizException(CardSetErrorCode.CARD_SET_PRIVATE);
-		}
+		cardSetPolicyService.validateCardSetViewable(cardSet, userId, groupId);
 
 		return CardSetDetailResponse.from(cardSet);
 	}
 
-	private CardSet findByIdAndGroupIdOrThrow(Long groupId, Long cardSetId) {
-		return cardSetRepository.findByIdAndGroup_Id(cardSetId, groupId)
-			.orElseThrow(() -> new BizException(CardSetErrorCode.CARD_SET_NOT_FOUND));
+	/**
+	 * 카드셋 수정
+	 *
+	 * @param userId    카드셋 수정하는 회원 ID
+	 * @param groupId   카드셋을 생성한 그룹 ID
+	 * @param cardSetId 수정하려는 카드셋 ID
+	 * @param req       카드셋의 수정 내용을 담은 요청 정보
+	 * @return 수정된 카드셋 정보
+	 * @author 윤정환
+	 */
+	@Transactional
+	public CardSetDetailResponse updateCardSet(Long userId, Long groupId, Long cardSetId, CardSetUpdateRequest req) {
+		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
+
+		cardSetPolicyService.validateCardSetEditable(userId, cardSetId);
+
+		CardSetUpdatePayload updatePayload = CardSetUpdatePayload.from(req);
+		cardSet.update(updatePayload);
+
+		cardSetRepository.saveAndFlush(cardSet);
+
+		return CardSetDetailResponse.from(cardSet);
 	}
 }

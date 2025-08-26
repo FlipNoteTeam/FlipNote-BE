@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.controller.docs.GroupCardSetControllerDocs;
 import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.service.CardSetService;
@@ -48,5 +50,16 @@ public class GroupCardSetController implements GroupCardSetControllerDocs {
 		return ResponseEntity.ok(res);
 	}
 
+	@PutMapping("/{cardSetId}")
+	public ResponseEntity<CardSetDetailResponse> updateCardSet(
+		@PathVariable("groupId") Long groupId,
+		@PathVariable("cardSetId") Long cardSetId,
+		@Valid @RequestBody CardSetUpdateRequest req,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		CardSetDetailResponse res = cardSetService.updateCardSet(authPrinciple.userId(), groupId, cardSetId, req);
+
+		return ResponseEntity.ok(res);
+	}
 
 }
