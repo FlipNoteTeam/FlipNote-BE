@@ -3,7 +3,6 @@ package project.flipnote.group.repository;
 import java.util.List;
 
 import com.querydsl.core.types.Projections;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +18,7 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepositoryCustom {
 	QUserProfile userProfile = QUserProfile.userProfile;
 	QGroupMember groupMember = QGroupMember.groupMember;
 
+	@Override
 	public List<GroupMemberInfo> findGroupMembers(Long groupId) {
 		return queryFactory.select(Projections.constructor(
 				GroupMemberInfo.class,
@@ -32,5 +32,4 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepositoryCustom {
 			.where(groupMember.group.id.eq(groupId))
 			.fetch();
 	}
-
 }
