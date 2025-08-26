@@ -4,9 +4,10 @@ import java.util.List;
 
 public record FindGroupResponse(
 	List<GroupInfo> groups,
-	Long next
+	Long next,
+	Boolean hasNext
 ) {
-	public static FindGroupResponse from(List<GroupInfo> groups, Long next) {
-		return new FindGroupResponse(groups, next);
+	public static FindGroupResponse from(List<GroupInfo> groups, Long next, Boolean hasNext) {
+		return new FindGroupResponse(groups, next, hasNext);
 	}
 }

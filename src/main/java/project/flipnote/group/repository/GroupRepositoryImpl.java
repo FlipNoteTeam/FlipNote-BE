@@ -39,12 +39,13 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				GroupInfo.class,
 				group.id,
 				group.name,
-				group.description
+				group.description,
+				group.category
 			))
 			.from(group)
 			.where(where)
 			.orderBy(group.id.desc())
-			.limit(SIZE+1)
+			.limit(SIZE)
 			.fetch();
 	}
 

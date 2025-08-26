@@ -43,6 +43,8 @@ import project.flipnote.user.repository.UserProfileRepository;
 @Transactional(readOnly = true)
 public class GroupService {
 
+	final int SIZE = 10;
+
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupPermissionRepository groupPermissionRepository;
@@ -328,9 +330,11 @@ public class GroupService {
 
 		List<GroupInfo> groups = groupRepository.findAllByCursor(lastId, category);
 
-		Long nextCursor = groups.isEmpty() ? null : groups.get(groups.size() - 1).groupId();
+		boolean hasNext = groups.size() == SIZE;
 
-		return FindGroupResponse.from(groups, nextCursor);
+		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
+
+		return FindGroupResponse.from(groups, nextCursor, hasNext);
 	}
 
 	private Category convertCategory(String rawCategory) {
