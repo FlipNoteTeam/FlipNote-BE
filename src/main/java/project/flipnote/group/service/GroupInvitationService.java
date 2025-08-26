@@ -195,25 +195,8 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void acceptPendingInvitationsOnRegister(String inviteeEmail) {
-		List<GroupInvitation> invitations = groupInvitationRepository
-			.findAllByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
-
-		for (GroupInvitation invitation : invitations) {
-			if (invitation.isExpired()) {
-				continue;
-			}
-
-			try {
-				groupMemberPolicyService.addGroupMember(invitation.getInviteeUserId(), invitation.getGroup().getId());
-				invitation.respond(GroupInvitationStatus.ACCEPTED);
-			} catch (BizException ex) {
-				if (ex.getErrorCode() == GroupErrorCode.ALREADY_GROUP_MEMBER) {
-					invitation.respond(GroupInvitationStatus.ACCEPTED);
-				}
-			} catch (Exception ignored) {
-			}
-		}
+	public void convertGuestInvitationToMember(String inviteeEmail, Long inviteeUserId) {
+		groupInvitationRepository.bulkUpdateInviteeUserId(inviteeEmail, inviteeUserId);
 	}
 
 	/**

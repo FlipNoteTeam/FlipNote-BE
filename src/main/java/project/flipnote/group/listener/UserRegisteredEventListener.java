@@ -27,11 +27,11 @@ public class UserRegisteredEventListener {
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleUserRegisteredEvent(UserRegisteredEvent event) {
-		groupInvitationService.acceptPendingInvitationsOnRegister(event.email());
+		groupInvitationService.convertGuestInvitationToMember(event.email(), event.userId());
 	}
 
 	@Recover
 	public void recover(Exception ex, UserRegisteredEvent event) {
-		log.error("회원가입 후속 처리 예외 발생: email={}", event.email(), ex);
+		log.error("회원가입 후 비회원 그룹 초대 회원으로 변환 중 예외 발생: email={}, userId={}", event.email(), event.userId(), ex);
 	}
 }
