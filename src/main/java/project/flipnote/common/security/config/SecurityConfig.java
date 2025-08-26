@@ -58,13 +58,13 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
 					HttpMethod.POST,
-					"/*/users", "/*/auth/token/refresh", "/*/auth/password-resets", "/*/auth/register", "/*/auth/email-verification/**",
+					"/*/users", "/*/auth/token/refresh", "/*/auth/register",
 					"/*/images/upload"
 				).permitAll()
-				.requestMatchers(HttpMethod.PATCH, "/*/auth/password-resets").permitAll()
 				.requestMatchers(
 					HttpMethod.POST,
-					"/*/auth/login", "/*/auth/email", "/*/auth/email/confirm"
+					"/*/auth/login", "/*/auth/email-verification", "/*/auth/email-verification/request",
+					"/*/auth/password-reset", "/*/auth/password-resets/request"
 				).permitAll()
 				.requestMatchers(
 					HttpMethod.GET, "/oauth2/authorization/{provider}", "/oauth2/callback/{provider}"
