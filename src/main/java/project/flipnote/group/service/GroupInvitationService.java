@@ -25,6 +25,7 @@ import project.flipnote.group.model.GroupInvitationListRequest;
 import project.flipnote.group.model.GroupInvitationRespondRequest;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
 import project.flipnote.group.model.OutgoingGroupInvitationResponse;
+import project.flipnote.group.model.event.GuestGroupInvitationCreateEvent;
 import project.flipnote.group.repository.GroupInvitationRepository;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -269,7 +270,9 @@ public class GroupInvitationService {
 			.build();
 		groupInvitationRepository.save(invitation);
 
-		// TODO: 초대받은 비회원한테 이메일 전송
+		String groupName = groupRepository.findGroupNameById(groupId)
+			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+		eventPublisher.publishEvent(new GuestGroupInvitationCreateEvent(inviteeEmail, groupName));
 
 		return invitation.getId();
 	}
