@@ -7,4 +7,6 @@ import project.flipnote.group.model.GroupInfo;
 
 public interface GroupRepositoryCustom {
 	List<GroupInfo> findAllByCursor(Long lastId, Category category, int pageSize);
+
+	List<GroupInfo> findAllByCursorAndUserId(Long lastId, Category category, int pageSize, Long userId);
 }

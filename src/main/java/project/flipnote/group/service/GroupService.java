@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -364,5 +365,33 @@ public class GroupService {
 	 */
 	public boolean existsMember(Long groupId, Long userId) {
 		return groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, userId);
+	}
+
+	/**
+	 * 내가 가입한 그룹 전체 조회하기
+	 * 
+	 * @param authPrinciple 회원 accessToken
+	 * @param req 필터링
+	 * @return
+	 */
+	public CursorPagingResponse<GroupInfo> findMyGroup(AuthPrinciple authPrinciple, @Valid GroupListRequest req) {
+		//1. 유저 가져오기
+		UserProfile user = getUser(authPrinciple);
+
+		//2. 카테고리 변환
+		Category category = convertCategory(req.getCategory());
+
+		List<GroupInfo> groups = groupRepository.findAllByCursorAndUserId(req.getCursorId(), category, req.getSize(),
+			user.getId());
+
+		boolean hasNext = groups.size() > req.getSize();
+
+		if (hasNext) {
+			groups = groups.subList(0, req.getSize());
+		}
+
+		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
+
+		return CursorPagingResponse.of(groups, hasNext, nextCursor);
 	}
 }
