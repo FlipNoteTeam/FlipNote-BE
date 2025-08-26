@@ -15,7 +15,7 @@ public interface CardSetRepository extends JpaRepository<CardSet, Long> {
 
 	@Query("""
 		SELECT c FROM CardSet c
-		WHERE (:name IS NULL OR c.name LIKE %:name%)
+		WHERE (:name IS NULL OR c.name LIKE CONCAT('%', :name, '%'))
 		AND (:category IS NULL OR c.category = :category)
 		AND c.publicVisible = TRUE
 		""")
