@@ -1,0 +1,23 @@
+package project.flipnote.cardset.controller.docs;
+
+import org.springframework.http.ResponseEntity;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CreateCardSetRequest;
+import project.flipnote.cardset.model.CreateCardSetResponse;
+import project.flipnote.common.security.dto.AuthPrinciple;
+
+@Tag(name = "CardSet", description = "CardSet API")
+public interface GroupCardSetControllerDocs {
+
+	@Operation(summary = "카드셋 생성", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<CreateCardSetResponse> createCardSet(
+		AuthPrinciple authPrinciple, Long groupId, CreateCardSetRequest req
+	);
+
+	@Operation(summary = "카드셋 상세 조회", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<CardSetDetailResponse> getCardSet(Long groupId, Long cardSetId, AuthPrinciple authPrinciple);
+}

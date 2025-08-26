@@ -3,6 +3,7 @@ package project.flipnote.cardset.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import project.flipnote.cardset.controller.docs.GroupCardSetControllerDocs;
+import project.flipnote.cardset.model.CardSetDetailResponse;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.service.CardSetService;
@@ -19,7 +22,7 @@ import project.flipnote.common.security.dto.AuthPrinciple;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/groups/{groupId}/card-sets")
-public class GroupCardSetController {
+public class GroupCardSetController implements GroupCardSetControllerDocs {
 
 	private final CardSetService cardSetService;
 
@@ -33,4 +36,17 @@ public class GroupCardSetController {
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(res);
 	}
+
+	@GetMapping("/{cardSetId}")
+	public ResponseEntity<CardSetDetailResponse> getCardSet(
+		@PathVariable("groupId") Long groupId,
+		@PathVariable("cardSetId") Long cardSetId,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		CardSetDetailResponse res = cardSetService.getCardSet(authPrinciple.userId(), groupId, cardSetId);
+
+		return ResponseEntity.ok(res);
+	}
+
+
 }

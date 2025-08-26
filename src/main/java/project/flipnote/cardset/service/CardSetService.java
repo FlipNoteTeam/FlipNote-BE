@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.exception.CardSetErrorCode;
+import project.flipnote.cardset.model.CardSetDetailResponse;
 import project.flipnote.cardset.model.CardSetSearchRequest;
 import project.flipnote.cardset.model.CardSetSummaryResponse;
 import project.flipnote.cardset.model.CreateCardSetRequest;
@@ -23,6 +24,7 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
+import project.flipnote.group.service.GroupService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -39,6 +41,7 @@ public class CardSetService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
+	private final GroupService groupService;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -114,5 +117,29 @@ public class CardSetService {
 		Page<CardSetSummaryResponse> res = CardSetPage.map(CardSetSummaryResponse::from);
 
 		return PagingResponse.from(res);
+	}
+
+	/**
+	 * 카드셋 상세 조회
+	 *
+	 * @param userId    카드셋 상세 조회하는 회원 ID
+	 * @param groupId   카드셋을 생성한 그룹 ID
+	 * @param cardSetId 상세 조회하려는 카드셋 ID
+	 * @return 카드셋 상세 조회 정보
+	 * @author 윤정환
+	 */
+	public CardSetDetailResponse getCardSet(Long userId, Long groupId, Long cardSetId) {
+		CardSet cardSet = findByIdAndGroupIdOrThrow(groupId, cardSetId);
+
+		if (!cardSet.getPublicVisible() && !groupService.existsMember(groupId, userId)) {
+			throw new BizException(CardSetErrorCode.CARD_SET_PRIVATE);
+		}
+
+		return CardSetDetailResponse.from(cardSet);
+	}
+
+	private CardSet findByIdAndGroupIdOrThrow(Long groupId, Long cardSetId) {
+		return cardSetRepository.findByIdAndGroup_Id(cardSetId, groupId)
+			.orElseThrow(() -> new BizException(CardSetErrorCode.CARD_SET_NOT_FOUND));
 	}
 }

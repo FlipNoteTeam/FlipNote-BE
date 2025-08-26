@@ -1,5 +1,7 @@
 package project.flipnote.cardset.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,5 +26,7 @@ public interface CardSetRepository extends JpaRepository<CardSet, Long> {
 		@Param("category") Category category,
 		Pageable pageable
 	);
+
+	Optional<CardSet> findByIdAndGroup_Id(Long id, Long groupId);
 
 }

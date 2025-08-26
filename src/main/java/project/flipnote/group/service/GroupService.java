@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -61,7 +60,7 @@ public class GroupService {
 	그룹 내 유저 검증
 	 */
 	public void validateGroupInUser(UserProfile user, Long groupId) {
-		if(!groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, user.getId())) {
+		if (!groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, user.getId())) {
 			throw new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP);
 		}
 	}
@@ -304,5 +303,17 @@ public class GroupService {
 		List<GroupMemberInfo> groupMembers = findGroupMembers(groupId);
 
 		return FindGroupMemberResponse.from(groupMembers);
+	}
+
+	/**
+	 * 해당 회원에 그룹에 존재하는지 확인
+	 *
+	 * @param groupId 검증할 그룹의 ID
+	 * @param userId 검증할 회원의 ID
+	 * @return 회원이 그룹 멤버인지 여부
+	 * @author 윤정환
+	 */
+	public boolean existsMember(Long groupId, Long userId) {
+		return groupMemberRepository.existsByGroup_IdAndUser_Id(groupId, userId);
 	}
 }
