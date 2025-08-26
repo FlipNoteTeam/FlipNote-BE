@@ -235,8 +235,8 @@ public class GroupService {
 	/*
 	그룹 내 오너를 제외한 인원이 존재하는 경우 체크
 	 */
-	private boolean checkUserNotExistInGroup(UserProfile user, Long groupId) {
-		long count = groupMemberRepository.countByGroup_idAndUser_idNot(groupId, user.getId());
+	private boolean checkUserNotExistInGroup(UserProfile user, Group group) {
+		long count = groupMemberRepository.countByGroup_idAndUser_idNot(group.getId(), user.getId());
 		if (count > 0) {
 			return false;
 		}
@@ -286,9 +286,11 @@ public class GroupService {
 		}
 
 		//5. 오너를 제외한 모든 유저가 없어야 삭제 가능
-		if (!checkUserNotExistInGroup(user, groupId)) {
+		if (!checkUserNotExistInGroup(user, group)) {
 			throw new BizException(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP);
 		}
+
+		groupMemberRepository.delete(groupMember);
 
 		groupRepository.delete(group);
 
@@ -318,7 +320,7 @@ public class GroupService {
 	}
 
 	public FindGroupResponse findGroup(AuthPrinciple authPrinciple, Long lastId, String rawCategory) {
-		//1. 유저 조회
+		//1. 유저 검증
 		validateUser(authPrinciple);
 
 		//2. 카테고리 변환
