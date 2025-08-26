@@ -43,6 +43,7 @@ public class GroupInvitationService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupMemberPolicyService groupMemberPolicyService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final GroupInvitationPolicyService groupInvitationPolicyService;
 
 	/**
 	 * 그룹에 회원 혹은 비회원 초대
@@ -59,13 +60,11 @@ public class GroupInvitationService {
 		GroupInvitationCreateRequest req
 	) {
 		Long inviterUserId = authPrinciple.userId();
-		validateGroupInvitePermission(inviterUserId, groupId);
+		groupInvitationPolicyService.validateGroupInvitePermission(inviterUserId, groupId);
 
 		String inviterUserEmail = authPrinciple.email();
 		String inviteeEmail = req.email();
-		if (Objects.equals(inviterUserEmail, inviteeEmail)) {
-			throw new BizException(GroupInvitationErrorCode.CANNOT_INVITE_SELF);
-		}
+		groupInvitationPolicyService.validateSelfInvitation(inviterUserEmail, inviteeEmail);
 
 		Long invitationId = userService.findActiveUserByEmail(inviteeEmail)
 			.map(inviteeUser -> createUserInvitation(inviterUserId, groupId, inviteeUser))
@@ -84,7 +83,7 @@ public class GroupInvitationService {
 	 */
 	@Transactional
 	public void deleteGroupInvitation(Long userId, Long groupId, Long invitationId) {
-		validateGroupInvitePermission(userId, groupId);
+		groupInvitationPolicyService.validateGroupInvitePermission(userId, groupId);
 
 		GroupInvitation invitation = groupInvitationRepository
 			.findByIdAndStatus(invitationId, GroupInvitationStatus.PENDING)
@@ -210,19 +209,6 @@ public class GroupInvitationService {
 				}
 			} catch (Exception ignored) {
 			}
-		}
-	}
-
-	/**
-	 * 그룹 초대 권한을 검증
-	 *
-	 * @param userId  권한을 검증할 회원 ID
-	 * @param groupId 검증할 그룹 ID
-	 * @author 윤정환
-	 */
-	private void validateGroupInvitePermission(Long userId, Long groupId) {
-		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
-			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
 		}
 	}
 
