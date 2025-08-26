@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import project.flipnote.common.model.response.CursorPageResponse;
+import project.flipnote.common.model.response.CursorPagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.notification.model.NotificationListRequest;
 import project.flipnote.notification.model.NotificationResponse;
@@ -14,7 +14,7 @@ import project.flipnote.notification.model.TokenRegisterRequest;
 public interface NotificationControllerDocs {
 
 	@Operation(summary = "알림 목록 조회")
-	ResponseEntity<CursorPageResponse<NotificationResponse>> getNotifications(
+	ResponseEntity<CursorPagingResponse<NotificationResponse>> getNotifications(
 		NotificationListRequest req,
 		AuthPrinciple authPrinciple
 	);

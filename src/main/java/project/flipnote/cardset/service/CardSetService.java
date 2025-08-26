@@ -1,25 +1,33 @@
 package project.flipnote.cardset.service;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.exception.CardSetErrorCode;
+import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CardSetSearchRequest;
+import project.flipnote.cardset.model.CardSetSummaryResponse;
+import project.flipnote.cardset.model.CardSetUpdatePayload;
+import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
+import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
-import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
+import project.flipnote.group.service.GroupService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -36,6 +44,8 @@ public class CardSetService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
+	private final GroupService groupService;
+	private final CardSetPolicyService  cardSetPolicyService;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -61,7 +71,7 @@ public class CardSetService {
 
 		//그룹 정보 찾기
 		Group group = findGroup(groupId);
-		
+
 		//그룹 내 유저 있는지 확인
 		if (!existGroupMember(group, user)) {
 			throw new BizException(CardSetErrorCode.GROUP_MEMBER_NOT_FOUND);
@@ -91,7 +101,66 @@ public class CardSetService {
 
 		cardSetManagerRepository.save(cardSetManager);
 
-
 		return CreateCardSetResponse.from(cardSet.getId());
+	}
+
+	/**
+	 * 카드셋 목록을 페이지 단위로 조회
+	 *
+	 * @param req 조회 조건 및 페이징 정보를 포함한 요청 DTO
+	 * @return 페이지 단위로 조회된 카드셋 목록
+	 * @author 윤정환
+	 */
+	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
+
+		// TODO: Projection 및 카운트 쿼리 튜닝 필요, 좋아요 수 및 즐겨찾기 수 등 다양한 정렬 조건 추가 필요
+		Page<CardSet> CardSetPage = cardSetRepository.findByNameContainingAndCategory(
+			req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
+		);
+
+		Page<CardSetSummaryResponse> res = CardSetPage.map(CardSetSummaryResponse::from);
+
+		return PagingResponse.from(res);
+	}
+
+	/**
+	 * 카드셋 상세 조회
+	 *
+	 * @param userId    카드셋 상세 조회하는 회원 ID
+	 * @param groupId   카드셋을 생성한 그룹 ID
+	 * @param cardSetId 상세 조회하려는 카드셋 ID
+	 * @return 카드셋 상세 조회 정보
+	 * @author 윤정환
+	 */
+	public CardSetDetailResponse getCardSet(Long userId, Long groupId, Long cardSetId) {
+		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
+
+		cardSetPolicyService.validateCardSetViewable(cardSet, userId, groupId);
+
+		return CardSetDetailResponse.from(cardSet);
+	}
+
+	/**
+	 * 카드셋 수정
+	 *
+	 * @param userId    카드셋 수정하는 회원 ID
+	 * @param groupId   카드셋을 생성한 그룹 ID
+	 * @param cardSetId 수정하려는 카드셋 ID
+	 * @param req       카드셋의 수정 내용을 담은 요청 정보
+	 * @return 수정된 카드셋 정보
+	 * @author 윤정환
+	 */
+	@Transactional
+	public CardSetDetailResponse updateCardSet(Long userId, Long groupId, Long cardSetId, CardSetUpdateRequest req) {
+		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
+
+		cardSetPolicyService.validateCardSetEditable(userId, cardSetId);
+
+		CardSetUpdatePayload updatePayload = CardSetUpdatePayload.from(req);
+		cardSet.update(updatePayload);
+
+		cardSetRepository.saveAndFlush(cardSet);
+
+		return CardSetDetailResponse.from(cardSet);
 	}
 }
