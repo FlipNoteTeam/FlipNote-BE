@@ -17,6 +17,7 @@ public interface CardSetRepository extends JpaRepository<CardSet, Long> {
 		SELECT c FROM CardSet c
 		WHERE (:name IS NULL OR c.name LIKE %:name%)
 		AND (:category IS NULL OR c.category = :category)
+		AND c.publicVisible = TRUE
 		""")
 	Page<CardSet> findByNameContainingAndCategory(
 		@Param("name") String name,
