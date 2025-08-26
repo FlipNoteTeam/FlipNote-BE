@@ -63,9 +63,8 @@ public class NotificationService {
 	 * @author 윤정환
 	 */
 	public CursorPageResponse<NotificationResponse> getNotifications(Long userId, NotificationListRequest req) {
-		Pageable pageable = PageRequest.of(0, req.getSize() + 1, Sort.by("id").descending());
 		List<Notification> notifications = notificationRepository.findNotificationsByReceiverIdAndCursor(
-			userId, req.getCursorId(), req.getGroupId(), req.getRead(), pageable
+			userId, req.getCursorId(), req.getGroupId(), req.getRead(), req.getPageRequest()
 		);
 
 		boolean hasNext = notifications.size() > req.getSize();

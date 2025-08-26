@@ -6,14 +6,14 @@ import java.util.Objects;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.event.GroupInvitationCreatedEvent;
-import project.flipnote.common.model.response.PageResponse;
+import project.flipnote.common.model.request.PagingRequest;
+import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -135,20 +135,22 @@ public class GroupInvitationService {
 	 *
 	 * @param userId  초대 보낸 목록을 조회하는 회원 ID
 	 * @param groupId 초대한 그룹 ID
-	 * @param page    페이지 번호
-	 * @param size    페이지 크기
+	 * @param req    페이징을 위한 정보
 	 * @return 페이징된 그룹 초대 보낸 목록 응답
 	 * @author 윤정환
 	 */
-	public PageResponse<OutgoingGroupInvitationResponse> getOutgoingInvitations(Long userId, Long groupId, int page,
-		int size) {
+	public PagingResponse<OutgoingGroupInvitationResponse> getOutgoingInvitations(
+		Long userId,
+		Long groupId,
+		PagingRequest req
+	) {
 		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
 			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
 		}
 
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
-		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByGroup_Id(groupId, pageRequest);
+		Page<GroupInvitation> invitationPage
+			= groupInvitationRepository.findAllByGroup_Id(groupId, req.getPageRequest());
 
 		List<Long> inviteeUserIds = invitationPage.getContent()
 			.stream()
@@ -163,25 +165,24 @@ public class GroupInvitationService {
 			)
 		);
 
-		return PageResponse.from(res);
+		return PagingResponse.from(res);
 	}
 
 	/**
 	 * 그룹 초대 받은 목록을 페이징하여 조회
 	 *
 	 * @param userId 초대 받은 목록을 조회하는 회원 ID
-	 * @param page   페이지 번호
-	 * @param size   페이지 크기
+	 * @param req    페이징을 위한 정보
 	 * @return 페이징된 그룹 초대 받은 목록 응답
 	 * @author 윤정환
 	 */
-	public PageResponse<IncomingGroupInvitationResponse> getIncomingInvitations(Long userId, int page, int size) {
+	public PagingResponse<IncomingGroupInvitationResponse> getIncomingInvitations(Long userId, PagingRequest req) {
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
-		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByInviteeUserId(userId, pageRequest);
+		Page<GroupInvitation> invitationPage
+			= groupInvitationRepository.findAllByInviteeUserId(userId, req.getPageRequest());
 
 		Page<IncomingGroupInvitationResponse> res = invitationPage.map(IncomingGroupInvitationResponse::from);
-		return PageResponse.from(res);
+		return PagingResponse.from(res);
 	}
 
 	/**
@@ -207,7 +208,8 @@ public class GroupInvitationService {
 				if (ex.getErrorCode() == GroupErrorCode.ALREADY_GROUP_MEMBER) {
 					invitation.respond(GroupInvitationStatus.ACCEPTED);
 				}
-			} catch (Exception ignored) { }
+			} catch (Exception ignored) {
+			}
 		}
 	}
 

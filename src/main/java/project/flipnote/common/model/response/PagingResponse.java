@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-public record PageResponse<T>(
+public record PagingResponse<T>(
 	List<T> content,
 	int page,
 	int size,
@@ -16,8 +16,8 @@ public record PageResponse<T>(
 	boolean hasPrevious
 ) {
 
-	public static <T> PageResponse<T> from(Page<T> page) {
-		return new PageResponse<>(
+	public static <T> PagingResponse<T> from(Page<T> page) {
+		return new PagingResponse<>(
 			page.getContent(),
 			page.getNumber(),
 			page.getSize(),
