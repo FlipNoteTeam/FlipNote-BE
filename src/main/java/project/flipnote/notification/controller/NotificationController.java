@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import project.flipnote.common.model.response.CursorPageResponse;
+import project.flipnote.common.model.response.CursorPagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.notification.controller.docs.NotificationControllerDocs;
 import project.flipnote.notification.model.NotificationListRequest;
@@ -29,11 +29,11 @@ public class NotificationController implements NotificationControllerDocs {
 	private final NotificationService notificationService;
 
 	@GetMapping
-	public ResponseEntity<CursorPageResponse<NotificationResponse>> getNotifications(
+	public ResponseEntity<CursorPagingResponse<NotificationResponse>> getNotifications(
 		@Valid @ModelAttribute NotificationListRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		CursorPageResponse<NotificationResponse> res
+		CursorPagingResponse<NotificationResponse> res
 			= notificationService.getNotifications(authPrinciple.userId(), req);
 
 		return ResponseEntity.ok(res);

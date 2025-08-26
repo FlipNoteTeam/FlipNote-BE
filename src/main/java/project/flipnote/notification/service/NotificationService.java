@@ -11,9 +11,6 @@ import java.util.Optional;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +21,7 @@ import com.google.firebase.messaging.SendResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
-import project.flipnote.common.model.response.CursorPageResponse;
+import project.flipnote.common.model.response.CursorPagingResponse;
 import project.flipnote.group.service.GroupService;
 import project.flipnote.infra.firebase.FcmErrorCode;
 import project.flipnote.infra.firebase.FirebaseService;
@@ -62,7 +59,7 @@ public class NotificationService {
 	 * @return 커서 기반 페이징된 알림 목록
 	 * @author 윤정환
 	 */
-	public CursorPageResponse<NotificationResponse> getNotifications(Long userId, NotificationListRequest req) {
+	public CursorPagingResponse<NotificationResponse> getNotifications(Long userId, NotificationListRequest req) {
 		List<Notification> notifications = notificationRepository.findNotificationsByReceiverIdAndCursor(
 			userId, req.getCursorId(), req.getGroupId(), req.getRead(), req.getPageRequest()
 		);
@@ -81,7 +78,7 @@ public class NotificationService {
 			}))
 			.toList();
 
-		return CursorPageResponse.of(content, hasNext, nextCursor);
+		return CursorPagingResponse.of(content, hasNext, nextCursor);
 	}
 
 	/**
