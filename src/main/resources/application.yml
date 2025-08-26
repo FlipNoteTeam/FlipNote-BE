@@ -60,18 +60,6 @@ app:
   encryption:
     key: ${APP_ENCRYPTION_KEY}
 
-cloud:
-  aws:
-    region: ${S3_BUCKET_REGION}
-    credentials:
-      access-key: ${S3_ACCESS_KEY}
-      secret-key: ${S3_SECRET_KEY}
-    stack:
-      auto: false
-  s3:
-    bucket: ${S3_BUCKET_NAME}
-
-
   client:
     url: ${APP_CLIENT_URL:https://flipnote.site}
     paths:
@@ -94,6 +82,17 @@ cloud:
         scope:
           - email
           - profile
+
+cloud:
+  aws:
+    region: ${S3_BUCKET_REGION}
+    credentials:
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+    stack:
+      auto: false
+  s3:
+    bucket: ${S3_BUCKET_NAME}
 
 springdoc:
   server:

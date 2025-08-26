@@ -10,15 +10,17 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import project.flipnote.common.model.event.UserRegisteredEvent;
-import project.flipnote.group.service.GroupInvitationService;
+import project.flipnote.common.config.ClientProperties;
+import project.flipnote.group.model.event.GuestGroupInvitationCreateEvent;
+import project.flipnote.infra.email.EmailService;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class UserRegisteredEventListener {
+public class GuestGroupInvitationEventListener {
 
-	private final GroupInvitationService groupInvitationService;
+	private final EmailService emailService;
+	private final ClientProperties clientProperties;
 
 	@Async
 	@Retryable(
@@ -26,12 +28,12 @@ public class UserRegisteredEventListener {
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void handleUserRegisteredEvent(UserRegisteredEvent event) {
-		groupInvitationService.convertGuestInvitationToMember(event.email(), event.userId());
+	public void handleGuestGroupInvitationCreateEvent(GuestGroupInvitationCreateEvent event) {
+		emailService.sendGuestGroupInvitation(event.email(), event.groupName(), clientProperties.getUrl());
 	}
 
 	@Recover
-	public void recover(Exception ex, UserRegisteredEvent event) {
-		log.error("회원가입 후 비회원 그룹 초대 회원으로 변환 중 예외 발생: email={}, userId={}", event.email(), event.userId(), ex);
+	public void recover(Exception ex, GuestGroupInvitationCreateEvent event) {
+		log.error("비회원 그룹 초대 전송 처리 예외 발생: email={}, groupName={}", event.email(), event.groupName(), ex);
 	}
 }

@@ -67,4 +67,27 @@ public class ResendEmailService implements EmailService {
 			throw new EmailSendException(e);
 		}
 	}
+
+	@Override
+	public void sendGuestGroupInvitation(String to, String groupName, String registerUrl) {
+		Context context = new Context();
+		context.setVariable("groupName", groupName);
+		context.setVariable("registerUrl", registerUrl);
+
+		String html = templateEngine.process("email/guest-group-invitation", context);
+
+		CreateEmailOptions params = CreateEmailOptions.builder()
+			.from(resendProperties.getFromEmail())
+			.to(to)
+			.subject("그룹 초대 안내")
+			.html(html)
+			.build();
+
+		try {
+			resend.emails().send(params);
+		} catch (ResendException e) {
+			log.error("비회원 그룹 초대 발송 실패: email={}", to, e);
+			throw new EmailSendException(e);
+		}
+	}
 }

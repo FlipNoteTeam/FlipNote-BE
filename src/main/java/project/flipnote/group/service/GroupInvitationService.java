@@ -6,14 +6,13 @@ import java.util.Objects;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.event.GroupInvitationCreatedEvent;
-import project.flipnote.common.model.response.PageResponse;
+import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.GroupInvitation;
 import project.flipnote.group.entity.GroupInvitationStatus;
@@ -22,9 +21,11 @@ import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.exception.GroupInvitationErrorCode;
 import project.flipnote.group.model.GroupInvitationCreateRequest;
 import project.flipnote.group.model.GroupInvitationCreateResponse;
+import project.flipnote.group.model.GroupInvitationListRequest;
 import project.flipnote.group.model.GroupInvitationRespondRequest;
 import project.flipnote.group.model.IncomingGroupInvitationResponse;
 import project.flipnote.group.model.OutgoingGroupInvitationResponse;
+import project.flipnote.group.model.event.GuestGroupInvitationCreateEvent;
 import project.flipnote.group.repository.GroupInvitationRepository;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
@@ -43,6 +44,7 @@ public class GroupInvitationService {
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupMemberPolicyService groupMemberPolicyService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final GroupInvitationPolicyService groupInvitationPolicyService;
 
 	/**
 	 * 그룹에 회원 혹은 비회원 초대
@@ -59,13 +61,11 @@ public class GroupInvitationService {
 		GroupInvitationCreateRequest req
 	) {
 		Long inviterUserId = authPrinciple.userId();
-		validateGroupInvitePermission(inviterUserId, groupId);
+		groupInvitationPolicyService.validateGroupInvitePermission(inviterUserId, groupId);
 
 		String inviterUserEmail = authPrinciple.email();
 		String inviteeEmail = req.email();
-		if (Objects.equals(inviterUserEmail, inviteeEmail)) {
-			throw new BizException(GroupInvitationErrorCode.CANNOT_INVITE_SELF);
-		}
+		groupInvitationPolicyService.validateSelfInvitation(inviterUserEmail, inviteeEmail);
 
 		Long invitationId = userService.findActiveUserByEmail(inviteeEmail)
 			.map(inviteeUser -> createUserInvitation(inviterUserId, groupId, inviteeUser))
@@ -84,7 +84,7 @@ public class GroupInvitationService {
 	 */
 	@Transactional
 	public void deleteGroupInvitation(Long userId, Long groupId, Long invitationId) {
-		validateGroupInvitePermission(userId, groupId);
+		groupInvitationPolicyService.validateGroupInvitePermission(userId, groupId);
 
 		GroupInvitation invitation = groupInvitationRepository
 			.findByIdAndStatus(invitationId, GroupInvitationStatus.PENDING)
@@ -135,20 +135,22 @@ public class GroupInvitationService {
 	 *
 	 * @param userId  초대 보낸 목록을 조회하는 회원 ID
 	 * @param groupId 초대한 그룹 ID
-	 * @param page    페이지 번호
-	 * @param size    페이지 크기
+	 * @param req    페이징을 위한 정보
 	 * @return 페이징된 그룹 초대 보낸 목록 응답
 	 * @author 윤정환
 	 */
-	public PageResponse<OutgoingGroupInvitationResponse> getOutgoingInvitations(Long userId, Long groupId, int page,
-		int size) {
+	public PagingResponse<OutgoingGroupInvitationResponse> getOutgoingInvitations(
+		Long userId,
+		Long groupId,
+		GroupInvitationListRequest req
+	) {
 		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
 			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
 		}
 
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
-		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByGroup_Id(groupId, pageRequest);
+		Page<GroupInvitation> invitationPage
+			= groupInvitationRepository.findAllByGroup_Id(groupId, req.getPageRequest());
 
 		List<Long> inviteeUserIds = invitationPage.getContent()
 			.stream()
@@ -163,25 +165,27 @@ public class GroupInvitationService {
 			)
 		);
 
-		return PageResponse.from(res);
+		return PagingResponse.from(res);
 	}
 
 	/**
 	 * 그룹 초대 받은 목록을 페이징하여 조회
 	 *
 	 * @param userId 초대 받은 목록을 조회하는 회원 ID
-	 * @param page   페이지 번호
-	 * @param size   페이지 크기
+	 * @param req    페이징을 위한 정보
 	 * @return 페이징된 그룹 초대 받은 목록 응답
 	 * @author 윤정환
 	 */
-	public PageResponse<IncomingGroupInvitationResponse> getIncomingInvitations(Long userId, int page, int size) {
+	public PagingResponse<IncomingGroupInvitationResponse> getIncomingInvitations(
+		Long userId,
+		GroupInvitationListRequest req
+	) {
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요
-		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<GroupInvitation> invitationPage = groupInvitationRepository.findAllByInviteeUserId(userId, pageRequest);
+		Page<GroupInvitation> invitationPage
+			= groupInvitationRepository.findAllByInviteeUserId(userId, req.getPageRequest());
 
 		Page<IncomingGroupInvitationResponse> res = invitationPage.map(IncomingGroupInvitationResponse::from);
-		return PageResponse.from(res);
+		return PagingResponse.from(res);
 	}
 
 	/**
@@ -191,37 +195,8 @@ public class GroupInvitationService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public void acceptPendingInvitationsOnRegister(String inviteeEmail) {
-		List<GroupInvitation> invitations = groupInvitationRepository
-			.findAllByInviteeEmailAndStatus(inviteeEmail, GroupInvitationStatus.PENDING);
-
-		for (GroupInvitation invitation : invitations) {
-			if (invitation.isExpired()) {
-				continue;
-			}
-
-			try {
-				groupMemberPolicyService.addGroupMember(invitation.getInviteeUserId(), invitation.getGroup().getId());
-				invitation.respond(GroupInvitationStatus.ACCEPTED);
-			} catch (BizException ex) {
-				if (ex.getErrorCode() == GroupErrorCode.ALREADY_GROUP_MEMBER) {
-					invitation.respond(GroupInvitationStatus.ACCEPTED);
-				}
-			} catch (Exception ignored) { }
-		}
-	}
-
-	/**
-	 * 그룹 초대 권한을 검증
-	 *
-	 * @param userId  권한을 검증할 회원 ID
-	 * @param groupId 검증할 그룹 ID
-	 * @author 윤정환
-	 */
-	private void validateGroupInvitePermission(Long userId, Long groupId) {
-		if (!groupService.hasPermission(groupId, userId, GroupPermissionStatus.INVITE)) {
-			throw new BizException(GroupInvitationErrorCode.NO_INVITATION_PERMISSION);
-		}
+	public void convertGuestInvitationToMember(String inviteeEmail, Long inviteeUserId) {
+		groupInvitationRepository.bulkUpdateInviteeUserId(inviteeEmail, inviteeUserId);
 	}
 
 	/**
@@ -278,7 +253,9 @@ public class GroupInvitationService {
 			.build();
 		groupInvitationRepository.save(invitation);
 
-		// TODO: 초대받은 비회원한테 이메일 전송
+		String groupName = groupRepository.findGroupNameById(groupId)
+			.orElseThrow(() -> new BizException(GroupErrorCode.GROUP_NOT_FOUND));
+		eventPublisher.publishEvent(new GuestGroupInvitationCreateEvent(inviteeEmail, groupName));
 
 		return invitation.getId();
 	}
