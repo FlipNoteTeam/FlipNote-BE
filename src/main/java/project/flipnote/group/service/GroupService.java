@@ -332,15 +332,7 @@ public class GroupService {
 
 		List<GroupInfo> groups = groupRepository.findAllByCursor(req.getCursorId(), category, req.getSize());
 
-		boolean hasNext = groups.size() > req.getSize();
-
-		if (hasNext) {
-			groups = groups.subList(0, req.getSize());
-		}
-
-		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
-
-		return CursorPagingResponse.of(groups, hasNext, nextCursor);
+		return createGroupInfoCursorPagingResponse(req, groups);
 	}
 
 	private Category convertCategory(String rawCategory) {
@@ -374,7 +366,7 @@ public class GroupService {
 	 * @param req 필터링
 	 * @return
 	 */
-	public CursorPagingResponse<GroupInfo> findMyGroup(AuthPrinciple authPrinciple, @Valid GroupListRequest req) {
+	public CursorPagingResponse<GroupInfo> findMyGroup(AuthPrinciple authPrinciple, GroupListRequest req) {
 		//1. 유저 가져오기
 		UserProfile user = getUser(authPrinciple);
 
@@ -384,6 +376,12 @@ public class GroupService {
 		List<GroupInfo> groups = groupRepository.findAllByCursorAndUserId(req.getCursorId(), category, req.getSize(),
 			user.getId());
 
+		return createGroupInfoCursorPagingResponse(req, groups);
+	}
+
+	//리스트 조회시 response 생성
+	private CursorPagingResponse<GroupInfo> createGroupInfoCursorPagingResponse(GroupListRequest req,
+		List<GroupInfo> groups) {
 		boolean hasNext = groups.size() > req.getSize();
 
 		if (hasNext) {
