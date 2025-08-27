@@ -13,4 +13,7 @@ public interface LikeControllerDocs {
 
 	@Operation(summary = "좋아요 추가", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<Void> addLike(LikeTypeRequest likeType, Long targetId, AuthPrinciple authPrinciple);
+
+	@Operation(summary = "좋아요 취소", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<Void> removeLike(LikeTypeRequest likeType, Long targetId, AuthPrinciple authPrinciple);
 }

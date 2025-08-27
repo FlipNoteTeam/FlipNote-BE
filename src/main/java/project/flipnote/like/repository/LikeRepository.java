@@ -1,5 +1,7 @@
 package project.flipnote.like.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import project.flipnote.like.entity.Like;
@@ -7,4 +9,6 @@ import project.flipnote.common.entity.LikeType;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
 	boolean existsByTypeAndTargetIdAndUserId(LikeType likeType, Long targetId, Long userId);
+
+	Optional<Like> findByTypeAndTargetIdAndUserId(LikeType likeType, Long targetId, Long userId);
 }

@@ -12,7 +12,8 @@ public enum LikeErrorCode implements ErrorCode {
 
 	INVALID_LIKE_TYPE(HttpStatus.BAD_REQUEST, "LIKE_001", "유효하지 않은 좋아요 타입입니다."),
 	LIKE_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE_002", "좋아요 대상이 존재하지 않습니다."),
-	ALREADY_LIKED(HttpStatus.CONFLICT, "LIKE_003", "이미 좋아요를 눌렀습니다.");
+	ALREADY_LIKED(HttpStatus.CONFLICT, "LIKE_003", "이미 좋아요를 눌렀습니다."),
+	LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "LIKE_004", "좋아요가 존재하지 않습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

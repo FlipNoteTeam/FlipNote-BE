@@ -12,4 +12,9 @@ public interface CardSetMetadataRepository extends JpaRepository<CardSetMetadata
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("UPDATE CardSetMetadata m SET m.likeCount = m.likeCount + 1 WHERE m.id = :cardSetId")
 	void incrementLikeCount(@Param("cardSetId") Long cardSetId);
+
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("UPDATE CardSetMetadata m SET m.likeCount = m.likeCount - 1 WHERE m.id = :cardSetId")
+	void decrementLikeCount(@Param("cardSetId") Long cardSetId);
 }

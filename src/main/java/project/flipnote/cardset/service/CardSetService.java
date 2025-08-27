@@ -190,4 +190,15 @@ public class CardSetService {
 	public void incrementLikeCount(Long cardSetId) {
 		cardSetMetadataRepository.incrementLikeCount(cardSetId);
 	}
+
+	/**
+	 * 카드셋 좋아요 수를 1 감소
+	 *
+	 * @param cardSetId 좋아요 수를 감소시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void decrementLikeCount(Long cardSetId) {
+		cardSetMetadataRepository.decrementLikeCount(cardSetId);
+	}
 }
