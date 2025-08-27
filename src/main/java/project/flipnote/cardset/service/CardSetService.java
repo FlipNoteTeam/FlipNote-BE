@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
+import project.flipnote.cardset.entity.CardSetMetadata;
 import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CardSetDetailResponse;
 import project.flipnote.cardset.model.CardSetSearchRequest;
@@ -17,17 +18,16 @@ import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
+import project.flipnote.cardset.repository.CardSetMetadataRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
-import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
-import project.flipnote.group.service.GroupService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -44,8 +44,8 @@ public class CardSetService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
-	private final GroupService groupService;
-	private final CardSetPolicyService  cardSetPolicyService;
+	private final CardSetPolicyService cardSetPolicyService;
+	private final CardSetMetadataRepository cardSetMetadataRepository;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -92,6 +92,11 @@ public class CardSetService {
 			.build();
 
 		cardSetRepository.save(cardSet);
+
+		CardSetMetadata metadata = CardSetMetadata.builder()
+			.id(cardSet.getId())
+			.build();
+		cardSetMetadataRepository.save(metadata);
 
 		//카드셋 매니저도 저장
 		CardSetManager cardSetManager = CardSetManager.builder()
@@ -162,5 +167,27 @@ public class CardSetService {
 		cardSetRepository.saveAndFlush(cardSet);
 
 		return CardSetDetailResponse.from(cardSet);
+	}
+
+	/**
+	 * 카드셋 존재 여부 확인
+	 *
+	 * @param cardSetId 존재하는지 확인할 카드셋 ID
+	 * @return 카드셋 존재 여부
+	 * @author 윤정환
+	 */
+	public boolean existsById(Long cardSetId) {
+		return cardSetRepository.existsById(cardSetId);
+	}
+
+	/**
+	 * 카드셋 좋아요 수를 1 증가
+	 *
+	 * @param cardSetId 좋아요 수를 증가시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void incrementLikeCount(Long cardSetId) {
+		cardSetMetadataRepository.incrementLikeCount(cardSetId);
 	}
 }
