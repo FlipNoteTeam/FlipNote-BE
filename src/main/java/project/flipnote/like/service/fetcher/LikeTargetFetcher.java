@@ -7,5 +7,6 @@ import project.flipnote.like.model.LikeTargetResponse;
 
 public interface LikeTargetFetcher<T extends LikeTargetResponse> {
 	LikeType getLikeType();
+
 	List<T> fetchByIds(List<Long> ids);
 }
