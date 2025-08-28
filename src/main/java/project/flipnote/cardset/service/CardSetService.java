@@ -1,5 +1,7 @@
 package project.flipnote.cardset.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -200,5 +202,20 @@ public class CardSetService {
 	@Transactional
 	public void decrementLikeCount(Long cardSetId) {
 		cardSetMetadataRepository.decrementLikeCount(cardSetId);
+	}
+
+	/**
+	 * 카드셋 ID 목록에 해당하는 카드셋 목록 조회
+	 *
+	 * @param targetIds 조회할 카드셋 ID 목록
+	 * @return 조회된 카드셋 목록
+	 * @author 윤정환
+	 */
+	@Transactional
+	public List<CardSetSummaryResponse> getCardSetsByIds(List<Long> targetIds) {
+		// TODO: MSA로 전환시 전용 DTO로 변경 필요
+		return cardSetRepository.findAllById(targetIds).stream()
+			.map(CardSetSummaryResponse::from)
+			.toList();
 	}
 }
