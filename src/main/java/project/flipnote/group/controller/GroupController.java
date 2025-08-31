@@ -94,4 +94,15 @@ public class GroupController {
 
 		return ResponseEntity.ok(res);
 	}
+	
+	//내 그룹 전체 조회
+	@GetMapping("/me")
+	public ResponseEntity<CursorPagingResponse<GroupInfo>> findMyGroup(
+		@AuthenticationPrincipal AuthPrinciple authPrinciple,
+		@Valid @ModelAttribute GroupListRequest req
+	) {
+		CursorPagingResponse<GroupInfo> res = groupService.findMyGroup(authPrinciple, req);
+
+		return ResponseEntity.ok(res);
+	}
 }
