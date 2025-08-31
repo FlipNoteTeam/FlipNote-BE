@@ -70,9 +70,10 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				group.category,
 				group.imageUrl
 			))
-			.from(group)
+			.from(groupMember)
 			.join(groupMember.group, group)
-			.where(groupMember.group.id.eq(group.id).and(groupMember.user.id.eq(userId)).and(where))
+			.on(groupMember.user.id.eq(userId))
+			.where(where)
 			.orderBy(group.id.desc())
 			.limit(pageSize+1)
 			.fetch();
