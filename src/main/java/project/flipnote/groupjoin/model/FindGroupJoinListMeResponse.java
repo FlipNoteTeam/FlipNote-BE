@@ -5,9 +5,9 @@ import java.util.List;
 import project.flipnote.groupjoin.entity.GroupJoin;
 
 public record FindGroupJoinListMeResponse(
-	List<GroupJoin> groupJoins
+	List<MyGroupJoinInfo> groupJoins
 ) {
-	public static FindGroupJoinListMeResponse from(List<GroupJoin> groupJoins) {
+	public static FindGroupJoinListMeResponse from(List<MyGroupJoinInfo> groupJoins) {
 		return new FindGroupJoinListMeResponse(groupJoins);
 	}
 }

@@ -10,10 +10,6 @@ import project.flipnote.groupjoin.entity.GroupJoin;
 import project.flipnote.user.entity.UserProfile;
 
 @Repository
-public interface GroupJoinRepository extends JpaRepository<GroupJoin, Long> {
-	List<GroupJoin> findAllByGroup(Group group);
-
-	List<GroupJoin> findAllByUser(UserProfile userProfile);
-
+public interface GroupJoinRepository extends JpaRepository<GroupJoin, Long>, GroupJoinRepositoryCustom {
 	boolean existsByGroup_idAndUser_id(Long groupId, Long userId);
 }
