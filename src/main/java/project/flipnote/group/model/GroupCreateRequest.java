@@ -1,5 +1,7 @@
 package project.flipnote.group.model;
 
+import org.hibernate.validator.constraints.URL;
+
 import jakarta.validation.constraints.*;
 import project.flipnote.group.entity.Category;
 
@@ -22,8 +24,11 @@ public record GroupCreateRequest(
 	Boolean publicVisible,
 
 	@NotNull(message = "최대 인원 수를 입력해주세요.")
+	@Min(value = 1, message = "최대 인원 수는 1명 이상이어야 합니다.")
+	@Max(value = 100, message = "최대 인원 수는 100명을 초과할 수 없습니다.")
 	Integer maxMember,
 
+	@URL(message = "이미지 URL 형식이 올바르지 않습니다.")
 	String image
 ) {
 }
