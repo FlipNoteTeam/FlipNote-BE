@@ -19,11 +19,10 @@ public class CardSetMetadata {
 	private Long id;
 
 	@Column(nullable = false)
-	private Integer likeCount;
+	private int likeCount;
 
 	@Builder
 	public CardSetMetadata(Long id) {
 		this.id = id;
-		this.likeCount = 0;
 	}
 }

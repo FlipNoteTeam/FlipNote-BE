@@ -1,5 +1,6 @@
 package project.flipnote.cardset.listener;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -24,6 +25,7 @@ public class CardSetUnlikeEventHandler {
 	@Async
 	@Retryable(
 		maxAttempts = 3,
+		retryFor = DataAccessException.class,
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

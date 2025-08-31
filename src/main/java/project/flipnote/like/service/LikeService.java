@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +65,12 @@ public class LikeService {
 			.targetId(targetId)
 			.userId(userId)
 			.build();
-		likeRepository.save(like);
+
+		try {
+			likeRepository.save(like);
+		} catch (DataIntegrityViolationException e) {
+			throw new BizException(LikeErrorCode.ALREADY_LIKED);
+		}
 
 		eventPublisher.publishEvent(new LikeEvent(likeType, targetId, userId));
 	}
@@ -115,10 +121,7 @@ public class LikeService {
 			throw new BizException(LikeErrorCode.INVALID_LIKE_TYPE);
 		}
 
-		List<T> targets = fetcher.fetchByIds(targetIds);
-		Map<Long, T> targetMap = targets.stream()
-			.collect(Collectors.toMap(LikeTargetResponse::getId, Function.identity()));
-
+		Map<Long, T> targetMap = fetcher.fetchByIds(targetIds);
 		Page<LikeResponse<T>> content = likePage
 			.map(like -> new LikeResponse<>(targetMap.get(like.getTargetId()), likedAtMap.get(like.getTargetId())));
 

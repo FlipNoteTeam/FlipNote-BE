@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +23,12 @@ import project.flipnote.common.entity.LikeType;
 	name = "likes",
 	indexes = {
 		@Index(name = "idx_type_target_user", columnList = "type, target_id, user_id")
+	},
+	uniqueConstraints = {
+		@UniqueConstraint(
+			name = "uk_type_target_user",
+			columnNames = {"type", "target_id", "user_id"}
+		)
 	}
 )
 @Entity

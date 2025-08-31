@@ -52,7 +52,7 @@ public class LikeController implements LikeControllerDocs {
 
 	@GetMapping("/{type}")
 	public ResponseEntity<PagingResponse<LikeResponse<LikeTargetResponse>>> getLikes(
-		@PathVariable("type") LikeTypeRequest likeType,
+		@PathVariable(name = "type") LikeTypeRequest likeType,
 		@Valid @ModelAttribute LikeSearchRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
