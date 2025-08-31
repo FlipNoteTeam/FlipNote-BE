@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.model.response.CursorPagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.group.controller.docs.GroupControllerDocs;
 import project.flipnote.group.model.FindGroupMemberResponse;
 import project.flipnote.group.model.GroupCreateRequest;
 import project.flipnote.group.model.GroupCreateResponse;
@@ -31,7 +32,7 @@ import project.flipnote.group.service.GroupService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/groups")
-public class GroupController {
+public class GroupController implements GroupControllerDocs {
 	private final GroupService groupService;
 
 	//그룹 생성 API

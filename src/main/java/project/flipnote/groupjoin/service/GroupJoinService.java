@@ -27,11 +27,13 @@ import project.flipnote.groupjoin.entity.GroupJoin;
 import project.flipnote.groupjoin.entity.GroupJoinStatus;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.groupjoin.model.FindGroupJoinListMeResponse;
+import project.flipnote.groupjoin.model.GroupJoinInfo;
 import project.flipnote.groupjoin.model.GroupJoinListResponse;
 import project.flipnote.groupjoin.model.GroupJoinRequest;
 import project.flipnote.groupjoin.model.GroupJoinRespondRequest;
 import project.flipnote.groupjoin.model.GroupJoinRespondResponse;
 import project.flipnote.groupjoin.model.GroupJoinResponse;
+import project.flipnote.groupjoin.model.MyGroupJoinInfo;
 import project.flipnote.groupjoin.repository.GroupJoinRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
@@ -84,7 +86,7 @@ public class GroupJoinService {
 
 	//그룹 내 권한 정보 조회
 	private Boolean hasPermission(Group group, UserProfile userProfile) {
-		GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, userProfile).orElseThrow(
+		GroupMember groupMember = groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(), userProfile.getId()).orElseThrow(
 			() -> new BizException(GroupJoinErrorCode.USER_NOT_IN_GROUP)
 		);
 
@@ -98,8 +100,13 @@ public class GroupJoinService {
 	}
 
 	//그룹 내 모든 가입신청 요청 조회
-	private List<GroupJoin> findGroupJoins(Group group) {
-		return groupJoinRepository.findAllByGroup(group);
+	private List<GroupJoinInfo> findGroupJoins(Group group) {
+		return groupJoinRepository.findByGroup(group.getId());
+	}
+
+	//내가 가입한 가입신청 조회
+	private List<MyGroupJoinInfo> findMyGroupJoins(UserProfile user) {
+		return groupJoinRepository.findByUser(user.getId());
 	}
 
 	//가입 신청 조회
@@ -192,7 +199,7 @@ public class GroupJoinService {
 		}
 
 		//그룹 내 가입 신청 리스트 조회
-		List<GroupJoin> groupJoins = findGroupJoins(group);
+		List<GroupJoinInfo> groupJoins = findGroupJoins(group);
 
 		//반환
 		return GroupJoinListResponse.from(groupJoins);
@@ -279,7 +286,7 @@ public class GroupJoinService {
 		UserProfile user = findUser(authPrinciple);
 
 		//유저별 그룹 신청 리스트 조회
-		List<GroupJoin> groupJoins = groupJoinRepository.findAllByUser(user);
+		List<MyGroupJoinInfo> groupJoins = groupJoinRepository.findByUser(user.getId());
 
 		return FindGroupJoinListMeResponse.from(groupJoins);
 	}

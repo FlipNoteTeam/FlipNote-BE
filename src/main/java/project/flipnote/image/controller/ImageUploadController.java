@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.image.controller.docs.ImageUploadControllerDocs;
 import project.flipnote.image.model.ImageUploadRequestDto;
 import project.flipnote.image.model.ImageUploadResponseDto;
 import project.flipnote.image.service.ImageUploadService;
@@ -17,8 +18,7 @@ import project.flipnote.image.service.ImageUploadService;
 @RestController
 @RequestMapping("/v1/images")
 @RequiredArgsConstructor
-public class ImageUploadController {
-
+public class ImageUploadController implements ImageUploadControllerDocs {
 	private final ImageUploadService fileService;
 
 	//파일 업로드 API

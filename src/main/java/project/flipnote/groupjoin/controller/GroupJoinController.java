@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.groupjoin.controller.docs.GroupJoinControllerDocs;
 import project.flipnote.groupjoin.model.*;
 import project.flipnote.groupjoin.service.GroupJoinService;
 
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor
-public class GroupJoinController {
+public class GroupJoinController implements GroupJoinControllerDocs {
 
 	private final GroupJoinService groupJoinService;
 
