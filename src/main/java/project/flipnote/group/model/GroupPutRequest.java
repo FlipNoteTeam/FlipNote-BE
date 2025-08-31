@@ -6,24 +6,24 @@ import jakarta.validation.constraints.Size;
 import project.flipnote.group.entity.Category;
 
 public record GroupPutRequest(
-	@NotBlank
-	@Size(max = 50)
+	@NotBlank(message = "그룹 이름을 입력해주세요.")
+	@Size(max = 50, message = "그룹 이름은 최대 50자까지 입력할 수 있습니다.")
 	String name,
 
-	@NotNull
+	@NotNull(message = "그룹 카테고리를 선택해야 합니다.")
 	Category category,
 
-	@NotBlank
-	@Size(max = 150)
+	@NotBlank(message = "그룹 설명을 입력해주세요.")
+	@Size(max = 150, message = "그룹 설명은 최대 150자까지 입력할 수 있습니다.")
 	String description,
 
-	@NotNull
+	@NotNull(message = "가입 승인 필요 여부를 선택해주세요.")
 	Boolean applicationRequired,
 
-	@NotNull
+	@NotNull(message = "공개 여부를 선택해주세요.")
 	Boolean publicVisible,
 
-	@NotNull
+	@NotNull(message = "최대 인원 수를 입력해주세요.")
 	Integer maxMember,
 
 	String image
