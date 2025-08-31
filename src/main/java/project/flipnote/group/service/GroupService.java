@@ -2,7 +2,10 @@ package project.flipnote.group.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,6 +111,34 @@ public class GroupService {
 		);
 	}
 
+	private List<GroupPermission> getOrCreateGroupPermissions() {
+		List<GroupPermission> all = groupPermissionRepository.findAll();
+
+		if (all.size() == GroupPermissionStatus.values().length) {
+			return all;
+		}
+
+		Set<GroupPermissionStatus> existing = all.stream()
+			.map(GroupPermission::getName)
+			.collect(Collectors.toSet());
+
+		List<GroupPermission> missing = Arrays.stream(GroupPermissionStatus.values())
+			.filter(s -> !existing.contains(s))
+			.map(s -> GroupPermission.builder().name(s).build())
+			.toList();
+
+		if (!missing.isEmpty()) {
+			try {
+				groupPermissionRepository.saveAll(missing);
+			} catch (DataIntegrityViolationException ignore) {
+				// 다른 트랜잭션이 먼저 넣은 경우: 무시하고 재조회
+			}
+			all = groupPermissionRepository.findAll();
+		}
+		return all;
+	}
+
+
 	/*
 	그룹 생성
 	 */
@@ -150,7 +181,7 @@ public class GroupService {
 	최초 그룹 권한 설정
 	 */
 	private void initializeGroupPermissions(Group group) {
-		List<GroupPermission> groupPermissions = groupPermissionRepository.findAll();
+		List<GroupPermission> groupPermissions = getOrCreateGroupPermissions();
 
 		List<GroupRolePermission> groupRolePermissions = Arrays.stream(GroupMemberRole.values())
 			.flatMap(role -> groupPermissions.stream()
