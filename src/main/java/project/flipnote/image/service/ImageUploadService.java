@@ -6,12 +6,16 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
+import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageStatus;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.model.ImageUploadResponseDto;
+import project.flipnote.image.repository.ImageRepository;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -30,6 +34,7 @@ public class ImageUploadService {
 	@Value("${cloud.s3.bucket}")
 	private String bucket;
 
+	private final ImageRepository imageRepository;
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
 	private static final int EXPIRE_MINUTES = 5;
@@ -48,6 +53,7 @@ public class ImageUploadService {
 	}
 
 	// presigned URL 생성
+	@Transactional
 	public ImageUploadResponseDto getPresignedUrl(String fileName) {
 
 		// S3에 동일한 파일명이 이미 존재하는지 확인
@@ -70,7 +76,21 @@ public class ImageUploadService {
 
 		URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
+		Image image = Image.builder()
+			.url(presignedUrl.toString())
+			.build();
+
+		imageRepository.save(image);
+
 		return ImageUploadResponseDto.from(presignedUrl);
+	}
+
+	public void changeUrlStatus(String url, ImageStatus status) {
+		Image image = imageRepository.findByUrl(url).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+
+		image.changeStatus(status);
 	}
 
 	// 파일 존재 여부 확인
