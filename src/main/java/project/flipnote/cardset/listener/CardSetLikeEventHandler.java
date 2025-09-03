@@ -12,8 +12,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.service.CardSetService;
-import project.flipnote.common.entity.LikeType;
 import project.flipnote.common.model.event.LikeEvent;
+import project.flipnote.common.model.event.LikeEventTargetType;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class CardSetLikeEventHandler {
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleLikeEvent(LikeEvent event) {
-		if (event.likeType() != LikeType.CARD_SET) {
+		if (event.targetType() != LikeEventTargetType.CARD_SET) {
 			return;
 		}
 
@@ -40,8 +40,8 @@ public class CardSetLikeEventHandler {
 	@Recover
 	public void recover(Exception ex, LikeEvent event) {
 		log.error(
-			"좋아요 수 반영 처리 중 예외 발생 : likeType={}, targetId={}, userId={}",
-			event.likeType(), event.targetId(), event.userId(), ex
+			"좋아요 수 반영 처리 중 예외 발생 : targetType={}, targetId={}, userId={}",
+			event.targetType(), event.targetId(), event.userId(), ex
 		);
 	}
 }

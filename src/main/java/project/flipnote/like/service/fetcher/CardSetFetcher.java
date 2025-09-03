@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.service.CardSetService;
-import project.flipnote.common.entity.LikeType;
+import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.model.CardSetLikeResponse;
 import project.flipnote.like.model.LikeTargetResponse;
 
@@ -20,8 +20,8 @@ public class CardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse> {
 	private final CardSetService cardSetService;
 
 	@Override
-	public LikeType getLikeType() {
-		return LikeType.CARD_SET;
+	public LikeTargetType getTargetType() {
+		return LikeTargetType.CARD_SET;
 	}
 
 	@Override

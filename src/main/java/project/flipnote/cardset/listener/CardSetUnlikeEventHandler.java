@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.service.CardSetService;
-import project.flipnote.common.entity.LikeType;
+import project.flipnote.common.model.event.LikeEventTargetType;
 import project.flipnote.common.model.event.UnlikeEvent;
 
 @Slf4j
@@ -30,7 +30,7 @@ public class CardSetUnlikeEventHandler {
 	)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleUnlikeEvent(UnlikeEvent event) {
-		if (event.likeType() != LikeType.CARD_SET) {
+		if (event.targetType() != LikeEventTargetType.CARD_SET) {
 			return;
 		}
 
@@ -40,8 +40,8 @@ public class CardSetUnlikeEventHandler {
 	@Recover
 	public void recover(Exception ex, UnlikeEvent event) {
 		log.error(
-			"좋아요 취소 수 반영 처리 중 예외 발생 : likeType={}, targetId={}, userId={}",
-			event.likeType(), event.targetId(), event.userId(), ex
+			"좋아요 취소 수 반영 처리 중 예외 발생 : targetType={}, targetId={}, userId={}",
+			event.targetType(), event.targetId(), event.userId(), ex
 		);
 	}
 }

@@ -15,7 +15,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.flipnote.common.entity.BaseEntity;
-import project.flipnote.common.entity.LikeType;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -40,7 +39,7 @@ public class Like extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private LikeType type;
+	private LikeTargetType targetType;
 
 	@Column(nullable = false)
 	private Long targetId;
@@ -49,8 +48,8 @@ public class Like extends BaseEntity {
 	private Long userId;
 
 	@Builder
-	public Like(LikeType type, Long targetId, Long userId) {
-		this.type = type;
+	public Like(LikeTargetType targetType, Long targetId, Long userId) {
+		this.targetType = targetType;
 		this.targetId = targetId;
 		this.userId = userId;
 	}

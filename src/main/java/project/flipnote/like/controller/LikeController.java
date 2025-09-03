@@ -18,7 +18,7 @@ import project.flipnote.like.controller.docs.LikeControllerDocs;
 import project.flipnote.like.model.LikeResponse;
 import project.flipnote.like.model.LikeSearchRequest;
 import project.flipnote.like.model.LikeTargetResponse;
-import project.flipnote.like.model.LikeTypeRequest;
+import project.flipnote.like.model.LikeTargetTypeRequest;
 import project.flipnote.like.service.LikeService;
 
 @RequiredArgsConstructor
@@ -28,36 +28,36 @@ public class LikeController implements LikeControllerDocs {
 
 	private final LikeService likeService;
 
-	@PostMapping("/{type}/{targetId}")
+	@PostMapping("/{targetType}/{targetId}")
 	public ResponseEntity<Void> addLike(
-		@PathVariable("type") LikeTypeRequest likeType,
+		@PathVariable("targetType") LikeTargetTypeRequest targetType,
 		@PathVariable("targetId") Long targetId,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		likeService.addLike(authPrinciple.userId(), likeType.toDomain(), targetId);
+		likeService.addLike(authPrinciple.userId(), targetType.toDomainType(), targetId);
 
 		return ResponseEntity.ok().build();
 	}
 
-	@DeleteMapping("/{type}/{targetId}")
+	@DeleteMapping("/{targetType}/{targetId}")
 	public ResponseEntity<Void> removeLike(
-		@PathVariable("type") LikeTypeRequest likeType,
+		@PathVariable("targetType") LikeTargetTypeRequest targetType,
 		@PathVariable("targetId") Long targetId,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
-		likeService.removeLike(authPrinciple.userId(), likeType.toDomain(), targetId);
+		likeService.removeLike(authPrinciple.userId(), targetType.toDomainType(), targetId);
 
 		return ResponseEntity.ok().build();
 	}
 
-	@GetMapping("/{type}")
+	@GetMapping("/{targetType}")
 	public ResponseEntity<PagingResponse<LikeResponse<LikeTargetResponse>>> getLikes(
-		@PathVariable(name = "type") LikeTypeRequest likeType,
+		@PathVariable(name = "targetType") LikeTargetTypeRequest targetType,
 		@Valid @ModelAttribute LikeSearchRequest req,
 		@AuthenticationPrincipal AuthPrinciple authPrinciple
 	) {
 		PagingResponse<LikeResponse<LikeTargetResponse>> res
-			= likeService.getLikes(authPrinciple.userId(), likeType.toDomain(), req);
+			= likeService.getLikes(authPrinciple.userId(), targetType.toDomainType(), req);
 
 		return ResponseEntity.ok(res);
 	}
