@@ -1,4 +1,4 @@
-package project.flipnote.like.entity;
+package project.flipnote.bookmark.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,22 +19,22 @@ import project.flipnote.common.entity.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-	name = "likes",
+	name = "bookmarks",
 	indexes = {
 		@Index(
-			name = "idx_likes_targettype_targetid_userid",
+			name = "idx_bookmarks_targettype_targetid_userid",
 			columnList = "target_type, target_id, user_id"
 		)
 	},
 	uniqueConstraints = {
 		@UniqueConstraint(
-			name = "uk_likes_targettype_targetid_userid",
+			name = "uk_bookmarks_targettype_targetid_userid",
 			columnNames = {"target_type", "target_id", "user_id"}
 		)
 	}
 )
 @Entity
-public class Like extends BaseEntity {
+public class Bookmark extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +42,7 @@ public class Like extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private LikeTargetType targetType;
+	private BookmarkTargetType targetType;
 
 	@Column(nullable = false)
 	private Long targetId;
@@ -51,7 +51,7 @@ public class Like extends BaseEntity {
 	private Long userId;
 
 	@Builder
-	public Like(LikeTargetType targetType, Long targetId, Long userId) {
+	public Bookmark(BookmarkTargetType targetType, Long targetId, Long userId) {
 		this.targetType = targetType;
 		this.targetId = targetId;
 		this.userId = userId;

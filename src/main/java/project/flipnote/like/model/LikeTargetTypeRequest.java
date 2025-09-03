@@ -6,9 +6,8 @@ public enum LikeTargetTypeRequest {
 	card_set;
 
 	public LikeTargetType toDomainType() {
-		switch (this) {
-			case card_set: return LikeTargetType.CARD_SET;
-			default: throw new IllegalArgumentException("Invalid LikeTargetTypeRequest");
-		}
+		return switch (this) {
+			case card_set -> LikeTargetType.CARD_SET;
+		};
 	}
 }

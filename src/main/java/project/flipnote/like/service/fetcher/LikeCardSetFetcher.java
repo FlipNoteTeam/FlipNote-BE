@@ -15,7 +15,7 @@ import project.flipnote.like.model.LikeTargetResponse;
 
 @RequiredArgsConstructor
 @Component
-public class CardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse> {
+public class LikeCardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse> {
 
 	private final CardSetService cardSetService;
 
