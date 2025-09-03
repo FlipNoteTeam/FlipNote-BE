@@ -42,7 +42,7 @@ public class BookmarkService {
 	 */
 	@Transactional
 	public IdResponse addBookmark(Long userId, BookmarkTargetType targetType, Long targetId) {
-		bookmarkPolicyService.validateBookmarkNotExists(targetType, targetId, userId);
+		bookmarkPolicyService.validateBookmarkNotExists(targetType, userId, targetId);
 		bookmarkPolicyService.validateTargetExists(targetType, targetId);
 
 		Bookmark bookmark = Bookmark.builder()
@@ -71,7 +71,7 @@ public class BookmarkService {
 	 */
 	@Transactional
 	public IdResponse deleteBookmark(Long userId, BookmarkTargetType targetType, Long targetId) {
-		Bookmark bookmark = bookmarkRepository.findByTargetTypeAndTargetIdAndUserId(targetType, targetId, userId)
+		Bookmark bookmark = bookmarkRepository.findByTargetTypeAndUserIdAndTargetId(targetType, userId, targetId)
 			.orElseThrow(() -> new BizException(BookmarkErrorCode.BOOKMARK_NOT_EXISTS));
 
 		bookmarkRepository.delete(bookmark);

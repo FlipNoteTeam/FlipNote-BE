@@ -10,9 +10,9 @@ import project.flipnote.bookmark.entity.Bookmark;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
-	boolean existsByTargetTypeAndTargetIdAndUserId(BookmarkTargetType targetType, Long targetId, Long userId);
+	boolean existsByTargetTypeAndUserIdAndTargetId(BookmarkTargetType targetType, Long userId, Long targetId);
 
-	Optional<Bookmark> findByTargetTypeAndTargetIdAndUserId(BookmarkTargetType targetType, Long targetId, Long userId);
+	Optional<Bookmark> findByTargetTypeAndUserIdAndTargetId(BookmarkTargetType targetType, Long userId, Long targetId);
 
 	Page<Bookmark> findAllByTargetTypeAndUserId(BookmarkTargetType targetType, Long userId, Pageable pageable);
 }

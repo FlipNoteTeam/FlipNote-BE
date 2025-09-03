@@ -22,8 +22,8 @@ public class BookmarkPolicyService {
 		}
 	}
 
-	public void validateBookmarkNotExists(BookmarkTargetType targetType, Long targetId, Long userId) {
-		if (bookmarkRepository.existsByTargetTypeAndTargetIdAndUserId(targetType, targetId, userId)) {
+	public void validateBookmarkNotExists(BookmarkTargetType targetType, Long userId, Long targetId) {
+		if (bookmarkRepository.existsByTargetTypeAndUserIdAndTargetId(targetType, userId, targetId)) {
 			throw new BizException(BookmarkErrorCode.BOOKMARK_ALREADY_EXISTS);
 		}
 	}

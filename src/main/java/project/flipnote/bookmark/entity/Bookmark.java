@@ -22,14 +22,14 @@ import project.flipnote.common.entity.BaseEntity;
 	name = "bookmarks",
 	indexes = {
 		@Index(
-			name = "idx_bookmarks_targettype_targetid_userid",
-			columnList = "target_type, target_id, user_id"
+			name = "idx_bookmarks_targettype_userid_targetid",
+			columnList = "target_type, user_id, target_id"
 		)
 	},
 	uniqueConstraints = {
 		@UniqueConstraint(
-			name = "uk_bookmarks_targettype_targetid_userid",
-			columnNames = {"target_type", "target_id", "user_id"}
+			name = "uk_bookmarks_targettype_userid_targetid",
+			columnNames = {"target_type", "user_id", "target_id"}
 		)
 	}
 )
