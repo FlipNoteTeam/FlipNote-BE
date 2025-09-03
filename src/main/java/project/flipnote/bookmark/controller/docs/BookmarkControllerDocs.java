@@ -14,4 +14,11 @@ public interface BookmarkControllerDocs {
 
 	@Operation(summary = "즐겨찾기 추가", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<IdResponse> addBookmark(BookmarkTargetType targetType, Long targetId, AuthPrinciple authPrinciple);
+
+	@Operation(summary = "즐겨찾기 제거", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<IdResponse> deleteBookmark(
+		BookmarkTargetType targetType,
+		Long targetId,
+		AuthPrinciple authPrinciple
+	);
 }

@@ -26,7 +26,7 @@ public class BookmarkService {
 	 * @param userId 즐겨찾기 추가 요청한 사용자 ID
 	 * @param targetType 즐겨찾기 대상 타입
 	 * @param targetId 즐겨찾기 대상 ID
-	 * @return 생성된 즐겨찾기 엔티티의 ID를 담은 응답
+	 * @return 생성된 즐겨찾기 대상의 ID를 담은 응답
 	 * @author 윤정환
 	 */
 	@Transactional
@@ -45,6 +45,25 @@ public class BookmarkService {
 		} catch (DataIntegrityViolationException e) {
 			throw new BizException(BookmarkErrorCode.BOOKMARK_ALREADY_EXISTS);
 		}
+
+		return IdResponse.from(bookmark.getId());
+	}
+
+	/**
+	 * 즐겨찾기 제거
+	 *
+	 * @param userId 즐겨찾기 제거 요청한 회원 ID
+	 * @param targetType 즐겨찾기 대상 타입
+	 * @param targetId 즐겨찾기 대상 ID
+	 * @return 삭제된 즐겨찾기 대상의 ID를 담은 응답
+	 * @author 윤정환
+	 */
+	@Transactional
+	public IdResponse deleteBookmark(Long userId, BookmarkTargetType targetType, Long targetId) {
+		Bookmark bookmark = bookmarkRepository.findByTargetTypeAndTargetIdAndUserId(targetType, targetId, userId)
+			.orElseThrow(() -> new BizException(BookmarkErrorCode.BOOKMARK_NOT_EXISTS));
+
+		bookmarkRepository.delete(bookmark);
 
 		return IdResponse.from(bookmark.getId());
 	}
