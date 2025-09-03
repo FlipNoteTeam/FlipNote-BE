@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
 import project.flipnote.bookmark.exception.BookmarkErrorCode;
+import project.flipnote.bookmark.model.BookmarkTargetResponse;
 import project.flipnote.bookmark.repository.BookmarkRepository;
 import project.flipnote.common.exception.BizException;
 
@@ -13,7 +14,7 @@ import project.flipnote.common.exception.BizException;
 public class BookmarkPolicyService {
 
 	private final BookmarkRepository bookmarkRepository;
-	private final BookmarkTargetFetchService bookmarkTargetFetchService;
+	private final BookmarkTargetFetchService<BookmarkTargetResponse> bookmarkTargetFetchService;
 
 	public void validateTargetExists(BookmarkTargetType targetType, Long targetId) {
 		if (!bookmarkTargetFetchService.existsByTypeAndId(targetType, targetId)) {

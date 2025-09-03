@@ -1,9 +1,15 @@
 package project.flipnote.bookmark.service.fetcher;
 
-import project.flipnote.bookmark.entity.BookmarkTargetType;
+import java.util.Map;
+import java.util.Set;
 
-public interface BookmarkTargetFetcher {
+import project.flipnote.bookmark.entity.BookmarkTargetType;
+import project.flipnote.bookmark.model.BookmarkTargetResponse;
+
+public interface BookmarkTargetFetcher<T extends BookmarkTargetResponse> {
 	BookmarkTargetType getTargetType();
 
 	boolean existsById(Long targetId);
+
+	Map<Long, T> fetchByIds(Set<Long> ids);
 }

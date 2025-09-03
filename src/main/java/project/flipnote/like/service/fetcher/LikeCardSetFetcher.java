@@ -1,7 +1,7 @@
 package project.flipnote.like.service.fetcher;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,7 +25,7 @@ public class LikeCardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse
 	}
 
 	@Override
-	public Map<Long, CardSetLikeResponse> fetchByIds(List<Long> ids) {
+	public Map<Long, CardSetLikeResponse> fetchByIds(Set<Long> ids) {
 		return cardSetService.getCardSetsByIds(ids).stream()
 			.map(CardSetLikeResponse::from)
 			.collect(Collectors.toMap(LikeTargetResponse::getId, Function.identity()));

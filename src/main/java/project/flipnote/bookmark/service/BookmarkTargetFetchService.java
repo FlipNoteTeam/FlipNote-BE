@@ -2,6 +2,7 @@ package project.flipnote.bookmark.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -11,16 +12,17 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
 import project.flipnote.bookmark.exception.BookmarkErrorCode;
+import project.flipnote.bookmark.model.BookmarkTargetResponse;
 import project.flipnote.bookmark.service.fetcher.BookmarkTargetFetcher;
 import project.flipnote.common.exception.BizException;
 
 @RequiredArgsConstructor
 @Service
-public class BookmarkTargetFetchService {
+public class BookmarkTargetFetchService<T extends BookmarkTargetResponse> {
 
-	private final List<BookmarkTargetFetcher> fetchers;
+	private final List<BookmarkTargetFetcher<T>> fetchers;
 
-	private Map<BookmarkTargetType, BookmarkTargetFetcher> fetcherMap;
+	private Map<BookmarkTargetType, BookmarkTargetFetcher<T>> fetcherMap;
 
 	@PostConstruct
 	public void init() {
@@ -29,11 +31,26 @@ public class BookmarkTargetFetchService {
 	}
 
 	public boolean existsByTypeAndId(BookmarkTargetType targetType, Long targetId) {
-		BookmarkTargetFetcher targetFetcher = fetcherMap.get(targetType);
-		if (targetFetcher == null) {
+		BookmarkTargetFetcher<T> targetFetcher = getFetcher(targetType);
+
+		return targetFetcher.existsById(targetId);
+	}
+
+	public Map<Long, T> fetchByTypeAndIds(
+		BookmarkTargetType targetType,
+		Set<Long> targetIds
+	) {
+		BookmarkTargetFetcher<T> targetFetcher = getFetcher(targetType);
+
+		return targetFetcher.fetchByIds(targetIds);
+	}
+
+	private BookmarkTargetFetcher<T> getFetcher(BookmarkTargetType targetType) {
+		BookmarkTargetFetcher<T> fetcher = fetcherMap.get(targetType);
+		if (fetcher == null) {
 			throw new BizException(BookmarkErrorCode.BOOKMARK_FETCHER_NOT_FOUND);
 		}
 
-		return targetFetcher.existsById(targetId);
+		return fetcher;
 	}
 }

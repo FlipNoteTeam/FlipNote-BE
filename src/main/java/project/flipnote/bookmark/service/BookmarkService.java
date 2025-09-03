@@ -1,6 +1,12 @@
 package project.flipnote.bookmark.service;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -8,9 +14,13 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.bookmark.entity.Bookmark;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
 import project.flipnote.bookmark.exception.BookmarkErrorCode;
+import project.flipnote.bookmark.model.BookmarkResponse;
+import project.flipnote.bookmark.model.BookmarkSearchRequest;
+import project.flipnote.bookmark.model.BookmarkTargetResponse;
 import project.flipnote.bookmark.repository.BookmarkRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.response.IdResponse;
+import project.flipnote.common.model.response.PagingResponse;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -19,6 +29,7 @@ public class BookmarkService {
 
 	private final BookmarkPolicyService bookmarkPolicyService;
 	private final BookmarkRepository bookmarkRepository;
+	private final BookmarkTargetFetchService<BookmarkTargetResponse> bookmarkTargetFetchService;
 
 	/**
 	 * 즐겨찾기 추가
@@ -66,5 +77,38 @@ public class BookmarkService {
 		bookmarkRepository.delete(bookmark);
 
 		return IdResponse.from(bookmark.getId());
+	}
+
+	/**
+	 * 즐겨찾기 목록 조회
+	 *
+	 * @param userId 즐겨찾기 목록 조회하는 회원 ID
+	 * @param targetType 즐겨찾기 목록 대상 타입
+	 * @param req 페이징 및 검색 조건이 포함된 요청 정보
+	 * @return 페이징된 즐겨찾기 목록
+	 * @author 윤정환
+	 */
+	public PagingResponse<BookmarkResponse<BookmarkTargetResponse>> getBookmarks(
+		Long userId,
+		BookmarkTargetType targetType,
+		BookmarkSearchRequest req
+	) {
+		Page<Bookmark> bookmarkPage
+			= bookmarkRepository.findAllByTargetTypeAndUserId(targetType, userId, req.getPageRequest());
+		Map<Long, LocalDateTime> likedAtMap = bookmarkPage.stream()
+			.collect(Collectors.toMap(Bookmark::getTargetId, Bookmark::getCreatedAt));
+		Set<Long> targetIds = likedAtMap.keySet();
+
+		Map<Long, BookmarkTargetResponse> targetMap
+			= bookmarkTargetFetchService.fetchByTypeAndIds(targetType, targetIds);
+		Page<BookmarkResponse<BookmarkTargetResponse>> content
+			= bookmarkPage.map(bookmark ->
+			new BookmarkResponse<>(
+				targetMap.get(bookmark.getTargetId()),
+				likedAtMap.get(bookmark.getTargetId())
+			)
+		);
+
+		return PagingResponse.from(content);
 	}
 }
