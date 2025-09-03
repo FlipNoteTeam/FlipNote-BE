@@ -1,5 +1,7 @@
 package project.flipnote.cardset.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
+import project.flipnote.cardset.entity.CardSetMetadata;
 import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CardSetDetailResponse;
 import project.flipnote.cardset.model.CardSetSearchRequest;
@@ -17,17 +20,16 @@ import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
+import project.flipnote.cardset.repository.CardSetMetadataRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.Group;
-import project.flipnote.group.entity.GroupPermissionStatus;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
-import project.flipnote.group.service.GroupService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -44,8 +46,8 @@ public class CardSetService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
-	private final GroupService groupService;
-	private final CardSetPolicyService  cardSetPolicyService;
+	private final CardSetPolicyService cardSetPolicyService;
+	private final CardSetMetadataRepository cardSetMetadataRepository;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -93,6 +95,11 @@ public class CardSetService {
 
 		cardSetRepository.save(cardSet);
 
+		CardSetMetadata metadata = CardSetMetadata.builder()
+			.id(cardSet.getId())
+			.build();
+		cardSetMetadataRepository.save(metadata);
+
 		//카드셋 매니저도 저장
 		CardSetManager cardSetManager = CardSetManager.builder()
 			.user(user)
@@ -114,11 +121,11 @@ public class CardSetService {
 	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
 
 		// TODO: Projection 및 카운트 쿼리 튜닝 필요, 좋아요 수 및 즐겨찾기 수 등 다양한 정렬 조건 추가 필요
-		Page<CardSet> CardSetPage = cardSetRepository.findByNameContainingAndCategory(
+		Page<CardSet> cardSetPage = cardSetRepository.findByNameContainingAndCategory(
 			req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
 		);
 
-		Page<CardSetSummaryResponse> res = CardSetPage.map(CardSetSummaryResponse::from);
+		Page<CardSetSummaryResponse> res = cardSetPage.map(CardSetSummaryResponse::from);
 
 		return PagingResponse.from(res);
 	}
@@ -162,5 +169,53 @@ public class CardSetService {
 		cardSetRepository.saveAndFlush(cardSet);
 
 		return CardSetDetailResponse.from(cardSet);
+	}
+
+	/**
+	 * 카드셋 존재 여부 확인
+	 *
+	 * @param cardSetId 존재하는지 확인할 카드셋 ID
+	 * @return 카드셋 존재 여부
+	 * @author 윤정환
+	 */
+	public boolean existsById(Long cardSetId) {
+		return cardSetRepository.existsById(cardSetId);
+	}
+
+	/**
+	 * 카드셋 좋아요 수를 1 증가
+	 *
+	 * @param cardSetId 좋아요 수를 증가시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void incrementLikeCount(Long cardSetId) {
+		cardSetMetadataRepository.incrementLikeCount(cardSetId);
+	}
+
+	/**
+	 * 카드셋 좋아요 수를 1 감소
+	 *
+	 * @param cardSetId 좋아요 수를 감소시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void decrementLikeCount(Long cardSetId) {
+		cardSetMetadataRepository.decrementLikeCount(cardSetId);
+	}
+
+	/**
+	 * 카드셋 ID 목록에 해당하는 카드셋 목록 조회
+	 *
+	 * @param targetIds 조회할 카드셋 ID 목록
+	 * @return 조회된 카드셋 목록
+	 * @author 윤정환
+	 */
+	@Transactional
+	public List<CardSetSummaryResponse> getCardSetsByIds(List<Long> targetIds) {
+		// TODO: MSA로 전환시 전용 DTO로 변경 필요
+		return cardSetRepository.findAllById(targetIds).stream()
+			.map(CardSetSummaryResponse::from)
+			.toList();
 	}
 }

@@ -3,6 +3,7 @@ package project.flipnote.common.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -24,6 +25,7 @@ public class S3Config {
     /*
     리전과 자격 증명한 객체 생성
      */
+    @Profile("!test")
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
@@ -36,6 +38,7 @@ public class S3Config {
             .build();
     }
 
+    @Profile("!test")
     @Bean
     public S3Presigner s3Presigner() {
         return S3Presigner.builder()
@@ -47,5 +50,4 @@ public class S3Config {
             )
             .build();
     }
-
 }

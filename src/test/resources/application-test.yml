@@ -29,3 +29,12 @@ app:
 
   encryption:
     key: 49015f426db2b8477d5251fd3de971ae
+
+cloud:
+  aws:
+    region: dummy_bucket_region
+    credentials:
+      access-key: dummy_access_key
+      secret-key: dummy_secret_key
+  s3:
+    bucket: dummy_bucket
