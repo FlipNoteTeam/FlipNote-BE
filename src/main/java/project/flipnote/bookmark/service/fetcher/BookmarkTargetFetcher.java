@@ -11,5 +11,5 @@ public interface BookmarkTargetFetcher<T extends BookmarkTargetResponse> {
 
 	boolean isTargetViewable(Long targetId, Long userId);
 
-	Map<Long, T> fetchByIds(Set<Long> ids);
+	Map<Long, T> fetchByIds(Set<Long> targetIds, Long userId);
 }

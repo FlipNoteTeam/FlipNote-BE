@@ -100,7 +100,7 @@ public class BookmarkService {
 		Set<Long> targetIds = likedAtMap.keySet();
 
 		Map<Long, BookmarkTargetResponse> targetMap
-			= bookmarkTargetFetchService.fetchByTypeAndIds(targetType, targetIds);
+			= bookmarkTargetFetchService.fetchByTypeAndIds(targetType, targetIds, userId);
 		Page<BookmarkResponse<BookmarkTargetResponse>> content
 			= bookmarkPage.map(bookmark ->
 			new BookmarkResponse<>(

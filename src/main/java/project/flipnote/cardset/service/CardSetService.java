@@ -233,4 +233,21 @@ public class CardSetService {
 			.map(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
 			.orElse(false);
 	}
+
+	/**
+	 * 카드셋 ID 목록에 해당하는 카드셋 목록 조회
+	 *
+	 * @param targetIds 조회할 카드셋 ID 목록
+	 * @param userId 	카드셋 목록을 조회하는 회원 ID
+	 * @return 조회된 카드셋 목록
+	 * @author 윤정환
+	 */
+	@Transactional
+	public List<CardSetSummaryResponse> findViewableCardSetsByIds(Set<Long> targetIds, Long userId) {
+		// TODO: MSA로 전환시 전용 DTO로 변경 필요
+		return cardSetRepository.findAllById(targetIds).stream()
+			.filter(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
+			.map(CardSetSummaryResponse::from)
+			.toList();
+	}
 }
