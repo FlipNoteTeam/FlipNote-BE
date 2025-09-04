@@ -9,7 +9,7 @@ import project.flipnote.bookmark.model.BookmarkTargetResponse;
 public interface BookmarkTargetFetcher<T extends BookmarkTargetResponse> {
 	BookmarkTargetType getTargetType();
 
-	boolean existsById(Long targetId);
+	boolean isTargetViewable(Long targetId, Long userId);
 
 	Map<Long, T> fetchByIds(Set<Long> ids);
 }

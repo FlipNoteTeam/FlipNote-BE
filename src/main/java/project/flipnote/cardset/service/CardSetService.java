@@ -143,7 +143,7 @@ public class CardSetService {
 	public CardSetDetailResponse getCardSet(Long userId, Long groupId, Long cardSetId) {
 		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
 
-		cardSetPolicyService.validateCardSetViewable(cardSet, userId, groupId);
+		cardSetPolicyService.validateCardSetViewable(cardSet, userId);
 
 		return CardSetDetailResponse.from(cardSet);
 	}
@@ -218,5 +218,19 @@ public class CardSetService {
 		return cardSetRepository.findAllById(targetIds).stream()
 			.map(CardSetSummaryResponse::from)
 			.toList();
+	}
+
+	/**
+	 * 사용자가 특정 카드셋에 접근할 수 있는지 여부를 확인
+	 *
+	 * @param cardSetId 확인할 카드셋의 ID
+	 * @param userId 	접근 권한을 확인할 사용자의 ID
+	 * @return 접근 가능 여부
+	 * @author 윤정환
+	 */
+	public boolean isCardSetViewable(Long cardSetId, Long userId) {
+		return cardSetRepository.findById(cardSetId)
+			.map(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
+			.orElse(false);
 	}
 }

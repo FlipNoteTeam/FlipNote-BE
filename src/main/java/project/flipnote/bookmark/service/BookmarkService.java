@@ -43,7 +43,7 @@ public class BookmarkService {
 	@Transactional
 	public IdResponse addBookmark(Long userId, BookmarkTargetType targetType, Long targetId) {
 		bookmarkPolicyService.validateBookmarkNotExists(targetType, userId, targetId);
-		bookmarkPolicyService.validateTargetExists(targetType, targetId);
+		bookmarkPolicyService.validateTargetViewable(targetType, targetId, userId);
 
 		Bookmark bookmark = Bookmark.builder()
 			.targetType(targetType)

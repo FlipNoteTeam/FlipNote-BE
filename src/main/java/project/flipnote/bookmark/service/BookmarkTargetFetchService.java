@@ -30,10 +30,10 @@ public class BookmarkTargetFetchService<T extends BookmarkTargetResponse> {
 			.collect(Collectors.toMap(BookmarkTargetFetcher::getTargetType, Function.identity()));
 	}
 
-	public boolean existsByTypeAndId(BookmarkTargetType targetType, Long targetId) {
+	public boolean isTargetViewable(BookmarkTargetType targetType, Long targetId, Long userId) {
 		BookmarkTargetFetcher<T> targetFetcher = getFetcher(targetType);
 
-		return targetFetcher.existsById(targetId);
+		return targetFetcher.isTargetViewable(targetId, userId);
 	}
 
 	public Map<Long, T> fetchByTypeAndIds(

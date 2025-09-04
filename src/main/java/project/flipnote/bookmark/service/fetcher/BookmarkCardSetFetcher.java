@@ -24,8 +24,8 @@ public class BookmarkCardSetFetcher implements BookmarkTargetFetcher<CardSetBook
 	}
 
 	@Override
-	public boolean existsById(Long targetId) {
-		return cardSetService.existsById(targetId);
+	public boolean isTargetViewable(Long targetId, Long userId) {
+		return cardSetService.isCardSetViewable(targetId, userId);
 	}
 
 	@Override
