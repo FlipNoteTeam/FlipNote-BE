@@ -1,5 +1,6 @@
 package project.flipnote.image.service;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.Date;
@@ -34,6 +35,9 @@ public class ImageUploadService {
 	@Value("${cloud.s3.bucket}")
 	private String bucket;
 
+	@Value("${cloud.aws.region}")
+	private String region;
+
 	private final ImageRepository imageRepository;
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
@@ -58,7 +62,16 @@ public class ImageUploadService {
 
 		// S3에 동일한 파일명이 이미 존재하는지 확인
 		if (objectExists(fileName)) {
-			throw new BizException(ImageErrorCode.CONFLICT_IMAGE);
+
+			String existingUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + fileName;
+
+			try {
+				URL url = new URL(existingUrl);
+
+				return ImageUploadResponseDto.from(url, true);
+			} catch (MalformedURLException e) {
+				throw new BizException(ImageErrorCode.INVALID_URL);
+			}
 		}
 
 		// PutObjectRequest 정의
@@ -76,13 +89,15 @@ public class ImageUploadService {
 
 		URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
+		String saveUrl = presignedUrl.toString().split("\\?")[0];
+
 		Image image = Image.builder()
-			.url(presignedUrl.toString())
+			.url(saveUrl)
 			.build();
 
 		imageRepository.save(image);
 
-		return ImageUploadResponseDto.from(presignedUrl);
+		return ImageUploadResponseDto.from(presignedUrl, false);
 	}
 
 	public void changeUrlStatus(String url, ImageStatus status) {
