@@ -27,7 +27,7 @@ public class PagingRequest {
 	@Schema(hidden = true)
 	public PageRequest getPageRequest() {
 		if (sortBy == null || sortBy.isEmpty()) {
-			return PageRequest.of(page - 1, size + 1);
+			return PageRequest.of(page - 1, size);
 		} else {
 			Sort.Direction direction;
 			try {
@@ -36,7 +36,7 @@ public class PagingRequest {
 				direction = Sort.Direction.DESC;
 			}
 
-			return PageRequest.of(page - 1, size + 1, Sort.by(direction, sortBy));
+			return PageRequest.of(page - 1, size, Sort.by(direction, sortBy));
 		}
 	}
 }

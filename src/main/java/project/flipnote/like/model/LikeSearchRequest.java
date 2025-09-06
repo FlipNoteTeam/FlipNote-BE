@@ -13,6 +13,6 @@ public class LikeSearchRequest extends PagingRequest {
 
 	@Override
 	public PageRequest getPageRequest() {
-		return PageRequest.of(getPage() - 1, getSize() + 1, Sort.by(Sort.Direction.DESC, "id"));
+		return PageRequest.of(getPage() - 1, getSize(), Sort.by(Sort.Direction.DESC, "id"));
 	}
 }

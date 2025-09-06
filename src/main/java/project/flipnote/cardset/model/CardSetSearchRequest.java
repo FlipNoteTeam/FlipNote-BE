@@ -30,6 +30,6 @@ public class CardSetSearchRequest extends PagingRequest {
 			direction = Sort.Direction.DESC;
 		}
 
-		return PageRequest.of(getPage() - 1, getSize() + 1, Sort.by(direction, effectiveSortBy));
+		return PageRequest.of(getPage() - 1, getSize(), Sort.by(direction, effectiveSortBy));
 	}
 }

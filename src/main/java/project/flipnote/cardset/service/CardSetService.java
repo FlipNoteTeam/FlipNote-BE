@@ -1,6 +1,7 @@
 package project.flipnote.cardset.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -212,7 +213,7 @@ public class CardSetService {
 	 * @author 윤정환
 	 */
 	@Transactional
-	public List<CardSetSummaryResponse> getCardSetsByIds(List<Long> targetIds) {
+	public List<CardSetSummaryResponse> getCardSetsByIds(Set<Long> targetIds) {
 		// TODO: MSA로 전환시 전용 DTO로 변경 필요
 		return cardSetRepository.findAllById(targetIds).stream()
 			.map(CardSetSummaryResponse::from)

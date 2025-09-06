@@ -3,6 +3,7 @@ package project.flipnote.like.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -111,9 +112,7 @@ public class LikeService {
 		Page<Like> likePage = likeRepository.findByTargetTypeAndUserId(targetType, userId, req.getPageRequest());
 		Map<Long, LocalDateTime> likedAtMap = likePage.stream()
 			.collect(Collectors.toMap(Like::getTargetId, Like::getCreatedAt));
-		List<Long> targetIds = likePage.stream()
-			.map(Like::getTargetId)
-			.toList();
+		Set<Long> targetIds = likedAtMap.keySet();
 
 		// TODO: 제네릭이 아닌 타입 별로 엔드포인트를 따로 만드는게 좋으려나 고민중, 현재 방법을 유지하면서 더 나은 구조 알고싶음...
 		LikeTargetFetcher<T> fetcher = (LikeTargetFetcher<T>)fetcherMap.get(targetType);
