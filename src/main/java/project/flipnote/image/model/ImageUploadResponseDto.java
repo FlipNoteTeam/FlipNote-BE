@@ -3,10 +3,10 @@ package project.flipnote.image.model;
 import java.net.URL;
 
 public record ImageUploadResponseDto(
-	URL url,
-	Boolean isExist
+	String url,
+	Long imageRefId
 ) {
-	public static ImageUploadResponseDto from(URL url, Boolean isExist) {
-		return new ImageUploadResponseDto(url, isExist);
+	public static ImageUploadResponseDto from(String url, Long imageRefId) {
+		return new ImageUploadResponseDto(url, imageRefId);
 	}
 }

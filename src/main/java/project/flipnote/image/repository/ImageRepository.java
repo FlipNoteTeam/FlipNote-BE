@@ -9,5 +9,5 @@ import project.flipnote.image.entity.Image;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
-	Optional<Image> findByUrl(String url);
+	Optional<Image> findByHash(String fileName);
 }

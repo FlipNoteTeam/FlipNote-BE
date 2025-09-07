@@ -15,42 +15,37 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.flipnote.common.entity.BaseEntity;
+import project.flipnote.common.entity.SoftDeletableEntity;
 
 @Getter
 @Entity
 @Table(name = "images")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Image {
+public class Image extends SoftDeletableEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private String url;
+	//md5 키값
+	@Column(nullable = false, unique = true, length = 32)
+	private String hash;
 
 	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	private ImageStatus status = ImageStatus.PENDING;
+	private String s3Key;
 
-	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	private ImageType type;
+	private String mimeType;
 
-	@Column(nullable = false)
-	private Long ownerId;
+	private Long sizeBytes;
 
 	@Version
 	private Long version;
 
 	@Builder
-	private Image(String url, ImageStatus status, ImageType type, Long ownerId) {
-		this.url = url;
-		this.status = status;
-		this.type = type;
-		this.ownerId = ownerId;
-	}
-
-	public void changeStatus(ImageStatus status) {
-		this.status = status;
+	private Image(String hash, String s3Key, String mimeType, Long sizeBytes) {
+		this.hash = hash;
+		this.s3Key = s3Key;
+		this.mimeType = mimeType;
+		this.sizeBytes = sizeBytes;
 	}
 }

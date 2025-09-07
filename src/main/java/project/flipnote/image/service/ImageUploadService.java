@@ -4,15 +4,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ImageStatus;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.model.ImageUploadResponseDto;
@@ -28,6 +31,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageUploadService {
@@ -38,6 +42,7 @@ public class ImageUploadService {
 	@Value("${cloud.aws.region}")
 	private String region;
 
+	private final ImageRefService imageRefService;
 	private final ImageRepository imageRepository;
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
@@ -60,18 +65,22 @@ public class ImageUploadService {
 	@Transactional
 	public ImageUploadResponseDto getPresignedUrl(String fileName) {
 
-		// S3에 동일한 파일명이 이미 존재하는지 확인
-		if (objectExists(fileName)) {
+		String hash = fileName.split("\\.")[0];
 
-			String existingUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + fileName;
+		log.info(hash);
 
-			try {
-				URL url = new URL(existingUrl);
+		// DB에 동일한 파일명이 이미 존재하는지 확인
+		Optional<Image> existImage = imageRepository.findByHash(hash);
+		if(existImage.isPresent()) {
+			ImageRef imageRef = ImageRef.builder()
+				.image(existImage.get())
+				.build();
 
-				return ImageUploadResponseDto.from(url, true);
-			} catch (MalformedURLException e) {
-				throw new BizException(ImageErrorCode.INVALID_URL);
-			}
+			imageRefService.save(imageRef);
+
+			String url = generateUrl(existImage.get().getS3Key());
+
+			return ImageUploadResponseDto.from(url, imageRef.getId());
 		}
 
 		// PutObjectRequest 정의
@@ -81,7 +90,7 @@ public class ImageUploadService {
 			.contentType(getContentType(fileName))
 			.build();
 
-		// Presign 요청 생성 (5분 유효)
+		// Presigned 요청 생성 (5분 유효)
 		PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
 			.signatureDuration(Duration.ofMinutes(EXPIRE_MINUTES))
 			.putObjectRequest(putObjectRequest)
@@ -92,20 +101,33 @@ public class ImageUploadService {
 		String saveUrl = presignedUrl.toString().split("\\?")[0];
 
 		Image image = Image.builder()
-			.url(saveUrl)
+			.hash(hash)
+			.s3Key(fileName)
 			.build();
 
 		imageRepository.save(image);
 
-		return ImageUploadResponseDto.from(presignedUrl, false);
+		ImageRef imageRef = ImageRef.builder()
+			.image(image)
+			.build();
+
+		imageRefService.save(imageRef);
+
+		String url = generateUrl(hash);
+
+		return ImageUploadResponseDto.from(url, imageRef.getId());
 	}
 
-	public void changeUrlStatus(String url, ImageStatus status) {
-		Image image = imageRepository.findByUrl(url).orElseThrow(
+	public void changeUrlStatus(String key, ImageStatus status) {
+		Image image = imageRepository.findByHash(key).orElseThrow(
 			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
 		);
 
-		image.changeStatus(status);
+		// image.changeStatus(status);
+	}
+
+	public String generateUrl(String key) {
+		return  "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
 	}
 
 	// 파일 존재 여부 확인
