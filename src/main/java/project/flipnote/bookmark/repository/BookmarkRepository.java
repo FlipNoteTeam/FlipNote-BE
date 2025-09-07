@@ -1,6 +1,7 @@
 package project.flipnote.bookmark.repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,4 +16,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 	Optional<Bookmark> findByTargetTypeAndUserIdAndTargetId(BookmarkTargetType targetType, Long userId, Long targetId);
 
 	Page<Bookmark> findAllByTargetTypeAndUserId(BookmarkTargetType targetType, Long userId, Pageable pageable);
+
+	int deleteByTargetTypeAndUserIdAndTargetIdIn(BookmarkTargetType targetType, Long userId, Set<Long> targetIds);
 }

@@ -250,4 +250,15 @@ public class CardSetService {
 			.map(CardSetSummaryResponse::from)
 			.toList();
 	}
+
+	/**
+	 * 해당 그룹의 비공개인 카드셋의 ID들을 조회
+	 *
+	 * @param groupId 조회할 그룹의 ID
+	 * @return 그룹에 속한 비공개 카드셋 ID의 집합
+	 * @author 윤정환
+	 */
+	public Set<Long> findPrivateCardSetIds(Long groupId) {
+		return cardSetRepository.findAllByGroup_IdAndPublicVisibleFalse(groupId);
+	}
 }
