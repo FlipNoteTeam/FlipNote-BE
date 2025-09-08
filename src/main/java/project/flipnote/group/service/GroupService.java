@@ -38,6 +38,7 @@ import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.image.entity.ImageStatus;
+import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.service.ImageUploadService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
@@ -51,6 +52,7 @@ import project.flipnote.user.repository.UserProfileRepository;
 public class GroupService {
 
 	private static final int SIZE = 10;
+	private static final ReferenceType REFERENCE_TYPE = ReferenceType.GROUP;
 
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
@@ -163,7 +165,7 @@ public class GroupService {
 		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
-		imageUploadService.changeUrlStatus(group.getImageUrl(), ImageStatus.USAGE);
+		imageUploadService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, group.getId());
 
 		return GroupCreateResponse.from(group.getId());
 	}

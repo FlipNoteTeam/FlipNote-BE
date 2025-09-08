@@ -1,5 +1,5 @@
 package project.flipnote.image.entity;
 
-public enum ImageType {
+public enum ReferenceType {
 	GROUP, USER
 }

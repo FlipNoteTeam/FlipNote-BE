@@ -2,7 +2,7 @@ package project.flipnote.image.model;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import project.flipnote.image.entity.ImageType;
+import project.flipnote.image.entity.ReferenceType;
 
 public record ImageUploadRequestDto(
 	@Pattern(
@@ -12,6 +12,6 @@ public record ImageUploadRequestDto(
 	@NotNull(message = "파일 이름을 입력해주세요.")
 	String fileName,
 
-	ImageType type
+	ReferenceType type
 ) {
 }

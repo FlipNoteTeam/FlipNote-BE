@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -21,11 +22,15 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Table(name = "image_references")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ImageRef extends SoftDeletableEntity {
-	@Id @GeneratedValue
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Enumerated(EnumType.STRING)
-	private ImageType imageType;
+	private ReferenceType  referenceType;
+
+	@Column
+	private Long referenceId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "image_id", nullable = false)
@@ -33,16 +38,17 @@ public class ImageRef extends SoftDeletableEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private ImageStatus status = ImageStatus.USAGE;
+	private ImageStatus status = ImageStatus.PENDING;
 
 	@Builder
 	private ImageRef(Image image) {
 		this.image = image;
 	}
 
-	public void updateTypeAndStatus(ImageType imageType, ImageStatus status) {
-		this.imageType = imageType;
-		this.status = status;
+	public void activateFor(ReferenceType referenceType, Long referenceId) {
+		this.referenceType = referenceType;
+		this.referenceId = referenceId;
+		this.status = ImageStatus.USING;
 	}
 
 	public void updateStatus(ImageStatus status) {

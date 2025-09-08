@@ -48,4 +48,9 @@ public class Image extends SoftDeletableEntity {
 		this.mimeType = mimeType;
 		this.sizeBytes = sizeBytes;
 	}
+
+	public void updateMetadata(String mimeType, Long sizeBytes) {
+		this.mimeType = mimeType;
+		this.sizeBytes = sizeBytes;
+	}
 }
