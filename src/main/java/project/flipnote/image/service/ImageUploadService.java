@@ -122,13 +122,14 @@ public class ImageUploadService {
 		);
 
 		//이미지 사용중으로 변경
-		imageRef.activateFor(type, referenceId);
+		imageRefService.imageActivate(imageRef, type, referenceId);
 
+		//이미지 조회
 		Image image = imageRepository.findById(imageRef.getImage().getId()).orElseThrow(
 			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
 		);
 
-		// 4. S3에서 메타데이터 가져오기
+		//S3에서 메타데이터 가져오기
 		HeadObjectResponse headResponse = s3Client.headObject(
 			HeadObjectRequest.builder()
 				.bucket(bucket)
@@ -136,16 +137,17 @@ public class ImageUploadService {
 				.build()
 		);
 
+		//메타 데이터 저장
 		String mimeType = headResponse.contentType();      // ex) "image/jpeg"
 		Long sizeBytes = headResponse.contentLength();     // 파일 크기 (byte 단위)
 
 		image.updateMetadata(mimeType, sizeBytes);
 
 		imageRepository.save(image);
-
 	}
 
-	public URL generateUrl(String key) {
+	//키를 통한 이미지 url 생성
+	private URL generateUrl(String key) {
 		try {
 			URL url = new URL("https://" + bucket + ".s3." + region + ".amazonaws.com/" + key);
 			return  url;
@@ -156,21 +158,13 @@ public class ImageUploadService {
 	}
 
 	// 파일 존재 여부 확인
-	private boolean objectExists(String fileName) {
-		try {
-			s3Client.headObject(
-				HeadObjectRequest.builder()
-					.bucket(bucket)
-					.key(fileName)
-					.build()
-			);
-			return true;
-		} catch (S3Exception e) {
-			// 404면 존재하지 않음
-			if (e.statusCode() == 404) {
-				return false;
-			}
-			throw new BizException(ImageErrorCode.S3_SERVICE_ERROR);
-		}
+	public URL getURLByReferenceId(ReferenceType type, Long referenceId) {
+		Image image = imageRepository.findImageByReferenceId(type, referenceId).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+
+		URL url = generateUrl(image.getS3Key());
+
+		return url;
 	}
 }

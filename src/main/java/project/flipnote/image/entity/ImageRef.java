@@ -1,5 +1,8 @@
 package project.flipnote.image.entity;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,6 +24,8 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Entity
 @Table(name = "image_references")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE image_references SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class ImageRef extends SoftDeletableEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

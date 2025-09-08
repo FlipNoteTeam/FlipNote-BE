@@ -1,6 +1,8 @@
 package project.flipnote.image.entity;
 
 import org.checkerframework.checker.units.qual.C;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,6 +24,8 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Entity
 @Table(name = "images")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE images SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class Image extends SoftDeletableEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
