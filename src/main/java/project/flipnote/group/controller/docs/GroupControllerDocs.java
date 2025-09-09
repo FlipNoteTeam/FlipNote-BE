@@ -59,7 +59,6 @@ public interface GroupControllerDocs {
                   "applicationRequired": true,
                   "publicVisible": true,
                   "maxMember": 20,
-                  "image": "https://cdn.example.com/group/cover.jpg",
                   "imageRefId": 1
                 }
                 """)

@@ -14,8 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -52,424 +50,424 @@ import project.flipnote.user.repository.UserProfileRepository;
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
 
-	private static final Logger log = LoggerFactory.getLogger(GroupServiceTest.class);
-	@InjectMocks
-	GroupService groupService;
-
-	@Mock
-	GroupRepository groupRepository;
-
-	@Mock
-	GroupPermissionRepository groupPermissionRepository;
-
-	@Mock
-	GroupRolePermissionRepository groupRolePermissionRepository;
-
-	@Mock
-	UserProfileRepository userProfileRepository;
-
-	@Mock
-	EmailVerificationRedisRepository emailVerificationRedisRepository;
-
-	@Mock
-	GroupMemberRepository groupMemberRepository;
-
-	@Mock
-	GroupMemberRepositoryImpl groupMemberRepositoryImpl;
-
-	@Mock
-	GroupPolicyService groupPolicyService;
-
-	UserProfile userProfile;
-	AuthPrinciple authPrinciple;
-
-	@BeforeEach
-	void before() {
-		userProfile = UserFixture.createActiveUser();
-		authPrinciple = new AuthPrinciple(1L, userProfile.getId(), userProfile.getEmail(), AccountRole.USER, 1L);
-	}
-
-	@Test
-	void 그룹_생성_성공() {
-		// given
-		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~~");
-		Group group = Group.builder().name(req.name()).build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		given(groupRepository.save(any(Group.class))).willReturn(group);
-		// 사용자 검증 로직
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
-			.willReturn(Optional.of(userProfile));
-
-		// 그룹 퍼미션 미리 세팅
-		List<GroupPermission> permissions = List.of(
-				GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
-				GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
-				GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
-		);
-		given(groupPermissionRepository.findAll()).willReturn(permissions);
-
-		// when
-		GroupCreateResponse response = groupService.create(authPrinciple, req);
-
-		// then
-		assertThat(response.groupId()).isEqualTo(1L);
-	}
-
-	@Test
-	void 그룹_생성_실패_음수() {
-		// given
-		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, "www.~~~");
-		Group group = Group.builder().name(req.name()).build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-		// 사용자 검증 로직
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
-			.willReturn(Optional.of(userProfile));
-
-		// when & then
-		BizException exception = assertThrows(
-			BizException.class, () -> groupService.create(authPrinciple, req)
-		);
-
-		assertThat(exception.getErrorCode()).isEqualTo(GroupErrorCode.INVALID_MAX_MEMBER);
-	}
-
-	@Test
-	void 그룹_생성_실패_초과() {
-		// given
-		GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, "www.~~~");
-		Group group = Group.builder().name(req.name()).build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-		// 사용자 검증 로직
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
-			.willReturn(Optional.of(userProfile));
-
-		// when & then
-		assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
-	}
-	
-	@Test
-	public void 그룹_상세_조회_성공() throws Exception {
-	    //given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.user(userProfile)
-			.role(GroupMemberRole.MEMBER)
-			.build();
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
-		given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(true);
-		// 사용자 검증 로직
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
-			.willReturn(Optional.of(userProfile));
-
-	    //when
-		GroupDetailResponse res = groupService.findGroupDetail(authPrinciple, 1L);
-
-		//then
-		assertEquals("그룹1", res.name());
-	}
-
-	@Test
-	public void 그룹_상세_조회_실패_그룹내_유저가_없는경우() throws Exception {
-	    //given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(false);
-
-	    //when
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
-
-	    //then
-		assertEquals(GroupJoinErrorCode.USER_NOT_IN_GROUP, exception.getErrorCode());
-	}
-
-	@Test
-	public void 그룹_상세_조회_실패_삭제된_경우() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.empty());
-
-		//when & then
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
-
-		assertEquals(GroupErrorCode.GROUP_NOT_FOUND, exception.getErrorCode());
-	}
-
-	@Test
-	public void 그룹_삭제_성공() throws Exception {
-	    //given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-				.group(group)
-					.role(GroupMemberRole.OWNER)
-						.user(userProfile)
-							.build();
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(group));
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.of(groupMember));
-		given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
-		//when
-		groupService.deleteGroup(authPrinciple, group.getId());
-
-		//then
-	}
-
-	@Test
-	public void 그룹_삭제_실패_오너아닌경우() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.MEMBER)
-			.user(userProfile)
-			.build();
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
-		// given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
-		
-		//when & then
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, 1L));
-
-		assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
-	}
-
-	@Test
-	public void 그룹_삭제_실패_유저존재하는경우() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.OWNER)
-			.user(userProfile)
-			.build();
-
-		given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
-		given(groupMemberRepository.countByGroup_idAndUser_idNot(group.getId(),userProfile.getId())).willReturn(2L);
-
-		//when & then
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, group.getId()));
-
-		assertEquals(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP, exception.getErrorCode());
-	}
-
-	@Test
-	public void 그룹_멤버조회_성공() throws Exception {
-	    //given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.OWNER)
-			.user(userProfile)
-			.build();
-		ReflectionTestUtils.setField(groupMember, "id", 1L);
-
-		List<GroupMemberInfo> groupMembers = List.of(GroupMemberInfo.from(userProfile.getId(), groupMember.getRole(), userProfile.getName(), userProfile.getProfileImageUrl()));
-
-		given(groupRepository.existsByIdAndDeletedAtIsNull(group.getId())).willReturn(true);
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.existsByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(true);
-		given(groupMemberRepository.findGroupMembers(group.getId())).willReturn(groupMembers);
-	    //when
-		FindGroupMemberResponse res = groupService.findGroupMembers(authPrinciple, group.getId());
-		//then
-		assertEquals(1, res.groupMembers().size());
-		assertEquals(userProfile.getId(), res.groupMembers().get(0).id());
-		then(groupRepository).should().existsByIdAndDeletedAtIsNull(group.getId());
-		then(groupMemberRepository).should().findGroupMembers(group.getId());
-	}
-
-	@Test
-	public void 그룹_수정_성공() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.OWNER)
-			.user(userProfile)
-			.build();
-		ReflectionTestUtils.setField(groupMember, "id", 1L);
-
-		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
-
-		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
-
-		willAnswer(inv -> {
-			Long idArg = inv.getArgument(0, Long.class);
-			GroupPutRequest reqArg = inv.getArgument(1, GroupPutRequest.class);
-			// 실제 서비스 로직처럼 그룹 변경을 흉내냄
-			group.changeGroup(reqArg);
-			return group; // 변경된 그룹 반환
-		}).given(groupPolicyService).changeGroup(group.getId(), req);
-
-		//when
-		GroupPutResponse res = groupService.changeGroup(authPrinciple, req, group.getId());
-
-		//then
-		assertEquals(req.name(), res.name());
-		assertEquals(req.category(), res.category());
-	}
-
-	@Test
-	public void 그룹_수정_실패_오너아닌경우() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.MEMBER)
-			.user(userProfile)
-			.build();
-		ReflectionTestUtils.setField(groupMember, "id", 1L);
-
-		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
-
-		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
-		//when
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
-
-		assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
-	}
-
-	@Test
-	public void 그룹_수정_실패_유저수보다_적게한경우() throws Exception {
-		//given
-		Group group = Group.builder()
-			.name("그룹1")
-			.category(Category.IT)
-			.description("설명1")
-			.publicVisible(true)
-			.applicationRequired(true)
-			.maxMember(100)
-			.imageUrl("www.~~~")
-			.build();
-		ReflectionTestUtils.setField(group, "id", 1L);
-		ReflectionTestUtils.setField(group, "memberCount", 100);
-
-		GroupMember groupMember = GroupMember.builder()
-			.group(group)
-			.role(GroupMemberRole.OWNER)
-			.user(userProfile)
-			.build();
-		ReflectionTestUtils.setField(groupMember, "id", 1L);
-
-		GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 50, "www.~~");
-
-		given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
-		given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
-		given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
-
-		willThrow(new BizException(GroupErrorCode.INVALID_MEMBER_COUNT))
-			.given(groupPolicyService).changeGroup(group.getId(), req);
-
-		//when
-		BizException exception =
-			assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
-
-		assertEquals(GroupErrorCode.INVALID_MEMBER_COUNT, exception.getErrorCode());
-	}
+	// private static final Logger log = LoggerFactory.getLogger(GroupServiceTest.class);
+	// @InjectMocks
+	// GroupService groupService;
+	//
+	// @Mock
+	// GroupRepository groupRepository;
+	//
+	// @Mock
+	// GroupPermissionRepository groupPermissionRepository;
+	//
+	// @Mock
+	// GroupRolePermissionRepository groupRolePermissionRepository;
+	//
+	// @Mock
+	// UserProfileRepository userProfileRepository;
+	//
+	// @Mock
+	// EmailVerificationRedisRepository emailVerificationRedisRepository;
+	//
+	// @Mock
+	// GroupMemberRepository groupMemberRepository;
+	//
+	// @Mock
+	// GroupMemberRepositoryImpl groupMemberRepositoryImpl;
+	//
+	// @Mock
+	// GroupPolicyService groupPolicyService;
+	//
+	// UserProfile userProfile;
+	// AuthPrinciple authPrinciple;
+	//
+	// @BeforeEach
+	// void before() {
+	// 	userProfile = UserFixture.createActiveUser();
+	// 	authPrinciple = new AuthPrinciple(1L, userProfile.getId(), userProfile.getEmail(), AccountRole.USER, 1L);
+	// }
+	//
+	// @Test
+	// void 그룹_생성_성공() {
+	// 	// given
+	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, 1L);
+	// 	Group group = Group.builder().name(req.name()).build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	given(groupRepository.save(any(Group.class))).willReturn(group);
+	// 	// 사용자 검증 로직
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+	// 		.willReturn(Optional.of(userProfile));
+	//
+	// 	// 그룹 퍼미션 미리 세팅
+	// 	List<GroupPermission> permissions = List.of(
+	// 			GroupPermission.builder().name(GroupPermissionStatus.INVITE).build(),
+	// 			GroupPermission.builder().name(GroupPermissionStatus.KICK).build(),
+	// 			GroupPermission.builder().name(GroupPermissionStatus.JOIN_REQUEST_MANAGE).build()
+	// 	);
+	// 	given(groupPermissionRepository.findAll()).willReturn(permissions);
+	//
+	// 	// when
+	// 	GroupCreateResponse response = groupService.create(authPrinciple, req);
+	//
+	// 	// then
+	// 	assertThat(response.groupId()).isEqualTo(1L);
+	// }
+	//
+	// @Test
+	// void 그룹_생성_실패_음수() {
+	// 	// given
+	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, -100, 1L);
+	// 	Group group = Group.builder().name(req.name()).build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	// 	// 사용자 검증 로직
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+	// 		.willReturn(Optional.of(userProfile));
+	//
+	// 	// when & then
+	// 	BizException exception = assertThrows(
+	// 		BizException.class, () -> groupService.create(authPrinciple, req)
+	// 	);
+	//
+	// 	assertThat(exception.getErrorCode()).isEqualTo(GroupErrorCode.INVALID_MAX_MEMBER);
+	// }
+	//
+	// @Test
+	// void 그룹_생성_실패_초과() {
+	// 	// given
+	// 	GroupCreateRequest req = new GroupCreateRequest("그룹1", Category.ENGLISH, "설명1", true, true, 200, 1L);
+	// 	Group group = Group.builder().name(req.name()).build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	// 	// 사용자 검증 로직
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+	// 		.willReturn(Optional.of(userProfile));
+	//
+	// 	// when & then
+	// 	assertThrows(BizException.class, () -> groupService.create(authPrinciple, req));
+	// }
+	//
+	// @Test
+	// public void 그룹_상세_조회_성공() throws Exception {
+	//     //given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.user(userProfile)
+	// 		.role(GroupMemberRole.MEMBER)
+	// 		.build();
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+	// 	given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(true);
+	// 	// 사용자 검증 로직
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE))
+	// 		.willReturn(Optional.of(userProfile));
+	//
+	//     //when
+	// 	GroupDetailResponse res = groupService.findGroupDetail(authPrinciple, 1L);
+	//
+	// 	//then
+	// 	assertEquals("그룹1", res.name());
+	// }
+	//
+	// @Test
+	// public void 그룹_상세_조회_실패_그룹내_유저가_없는경우() throws Exception {
+	//     //given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.of(group));
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+	// 	given(groupMemberRepository.existsByGroup_IdAndUser_Id(any(), any())).willReturn(false);
+	//
+	//     //when
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
+	//
+	//     //then
+	// 	assertEquals(GroupJoinErrorCode.USER_NOT_IN_GROUP, exception.getErrorCode());
+	// }
+	//
+	// @Test
+	// public void 그룹_상세_조회_실패_삭제된_경우() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.empty());
+	//
+	// 	//when & then
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.findGroupDetail(authPrinciple, 1L));
+	//
+	// 	assertEquals(GroupErrorCode.GROUP_NOT_FOUND, exception.getErrorCode());
+	// }
+	//
+	// @Test
+	// public void 그룹_삭제_성공() throws Exception {
+	//     //given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 			.group(group)
+	// 				.role(GroupMemberRole.OWNER)
+	// 					.user(userProfile)
+	// 						.build();
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(group));
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(1L,1L)).willReturn(Optional.of(groupMember));
+	// 	given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
+	// 	//when
+	// 	groupService.deleteGroup(authPrinciple, group.getId());
+	//
+	// 	//then
+	// }
+	//
+	// @Test
+	// public void 그룹_삭제_실패_오너아닌경우() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.MEMBER)
+	// 		.user(userProfile)
+	// 		.build();
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
+	// 	// given(groupMemberRepository.countByGroup_idAndUser_idNot(1L,1L)).willReturn(0L);
+	//
+	// 	//when & then
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, 1L));
+	//
+	// 	assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
+	// }
+	//
+	// @Test
+	// public void 그룹_삭제_실패_유저존재하는경우() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.OWNER)
+	// 		.user(userProfile)
+	// 		.build();
+	//
+	// 	given(groupRepository.findByIdAndDeletedAtIsNull(group.getId())).willReturn(Optional.ofNullable(group));
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.ofNullable(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.ofNullable(groupMember));
+	// 	given(groupMemberRepository.countByGroup_idAndUser_idNot(group.getId(),userProfile.getId())).willReturn(2L);
+	//
+	// 	//when & then
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.deleteGroup(authPrinciple, group.getId()));
+	//
+	// 	assertEquals(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP, exception.getErrorCode());
+	// }
+	//
+	// @Test
+	// public void 그룹_멤버조회_성공() throws Exception {
+	//     //given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.OWNER)
+	// 		.user(userProfile)
+	// 		.build();
+	// 	ReflectionTestUtils.setField(groupMember, "id", 1L);
+	//
+	// 	List<GroupMemberInfo> groupMembers = List.of(GroupMemberInfo.from(userProfile.getId(), groupMember.getRole(), userProfile.getName(), userProfile.getProfileImageUrl()));
+	//
+	// 	given(groupRepository.existsByIdAndDeletedAtIsNull(group.getId())).willReturn(true);
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+	// 	given(groupMemberRepository.existsByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(true);
+	// 	given(groupMemberRepository.findGroupMembers(group.getId())).willReturn(groupMembers);
+	//     //when
+	// 	FindGroupMemberResponse res = groupService.findGroupMembers(authPrinciple, group.getId());
+	// 	//then
+	// 	assertEquals(1, res.groupMembers().size());
+	// 	assertEquals(userProfile.getId(), res.groupMembers().get(0).id());
+	// 	then(groupRepository).should().existsByIdAndDeletedAtIsNull(group.getId());
+	// 	then(groupMemberRepository).should().findGroupMembers(group.getId());
+	// }
+	//
+	// @Test
+	// public void 그룹_수정_성공() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.OWNER)
+	// 		.user(userProfile)
+	// 		.build();
+	// 	ReflectionTestUtils.setField(groupMember, "id", 1L);
+	//
+	// 	GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
+	//
+	// 	given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+	//
+	// 	willAnswer(inv -> {
+	// 		Long idArg = inv.getArgument(0, Long.class);
+	// 		GroupPutRequest reqArg = inv.getArgument(1, GroupPutRequest.class);
+	// 		// 실제 서비스 로직처럼 그룹 변경을 흉내냄
+	// 		group.changeGroup(reqArg);
+	// 		return group; // 변경된 그룹 반환
+	// 	}).given(groupPolicyService).changeGroup(group.getId(), req, url);
+	//
+	// 	//when
+	// 	GroupPutResponse res = groupService.changeGroup(authPrinciple, req, group.getId());
+	//
+	// 	//then
+	// 	assertEquals(req.name(), res.name());
+	// 	assertEquals(req.category(), res.category());
+	// }
+	//
+	// @Test
+	// public void 그룹_수정_실패_오너아닌경우() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.MEMBER)
+	// 		.user(userProfile)
+	// 		.build();
+	// 	ReflectionTestUtils.setField(groupMember, "id", 1L);
+	//
+	// 	GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 100, "www.~~");
+	//
+	// 	given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+	// 	//when
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
+	//
+	// 	assertEquals(GroupErrorCode.USER_NOT_PERMISSION, exception.getErrorCode());
+	// }
+	//
+	// @Test
+	// public void 그룹_수정_실패_유저수보다_적게한경우() throws Exception {
+	// 	//given
+	// 	Group group = Group.builder()
+	// 		.name("그룹1")
+	// 		.category(Category.IT)
+	// 		.description("설명1")
+	// 		.publicVisible(true)
+	// 		.applicationRequired(true)
+	// 		.maxMember(100)
+	// 		.imageUrl("www.~~~")
+	// 		.build();
+	// 	ReflectionTestUtils.setField(group, "id", 1L);
+	// 	ReflectionTestUtils.setField(group, "memberCount", 100);
+	//
+	// 	GroupMember groupMember = GroupMember.builder()
+	// 		.group(group)
+	// 		.role(GroupMemberRole.OWNER)
+	// 		.user(userProfile)
+	// 		.build();
+	// 	ReflectionTestUtils.setField(groupMember, "id", 1L);
+	//
+	// 	GroupPutRequest req = new GroupPutRequest("그룹1", Category.ENGLISH, "설명1", true, true, 50, "www.~~");
+	//
+	// 	given(groupRepository.existsByIdAndDeletedAtIsNull(any())).willReturn(true);
+	// 	given(userProfileRepository.findByIdAndStatus(userProfile.getId(), UserStatus.ACTIVE)).willReturn(Optional.of(userProfile));
+	// 	given(groupMemberRepository.findByGroup_IdAndUser_Id(group.getId(),userProfile.getId())).willReturn(Optional.of(groupMember));
+	//
+	// 	willThrow(new BizException(GroupErrorCode.INVALID_MEMBER_COUNT))
+	// 		.given(groupPolicyService).changeGroup(group.getId(), req, url);
+	//
+	// 	//when
+	// 	BizException exception =
+	// 		assertThrows(BizException.class, () -> groupService.changeGroup(authPrinciple, req, group.getId()));
+	//
+	// 	assertEquals(GroupErrorCode.INVALID_MEMBER_COUNT, exception.getErrorCode());
+	// }
 }

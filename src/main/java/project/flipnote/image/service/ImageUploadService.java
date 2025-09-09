@@ -3,18 +3,19 @@ package project.flipnote.image.service;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.image.entity.Image;
 import project.flipnote.image.entity.ImageRef;
-import project.flipnote.image.entity.ImageStatus;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.model.ImageUploadResponseDto;
@@ -23,7 +24,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -109,8 +109,6 @@ public class ImageUploadService {
 
 		imageRefService.save(imageRef);
 
-		// String url = generateUrl(hash);
-
 		return ImageUploadResponseDto.from(presignedUrl, imageRef.getId());
 	}
 
@@ -122,32 +120,34 @@ public class ImageUploadService {
 		);
 
 		//이미지 사용중으로 변경
-		imageRefService.imageActivate(imageRef, type, referenceId);
+		imageRefService.imageActivate(imageRef.getId(), type, referenceId);
 
 		//이미지 조회
 		Image image = imageRepository.findById(imageRef.getImage().getId()).orElseThrow(
 			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
 		);
 
-		//S3에서 메타데이터 가져오기
-		HeadObjectResponse headResponse = s3Client.headObject(
-			HeadObjectRequest.builder()
-				.bucket(bucket)
-				.key(image.getS3Key()) // 저장된 파일명 (Key)
-				.build()
-		);
+		if (!StringUtils.hasText(image.getMimeType())) {
+			//S3에서 메타데이터 가져오기
+			HeadObjectResponse headResponse = s3Client.headObject(
+				HeadObjectRequest.builder()
+					.bucket(bucket)
+					.key(image.getS3Key()) // 저장된 파일명 (Key)
+					.build()
+			);
 
-		//메타 데이터 저장
-		String mimeType = headResponse.contentType();      // ex) "image/jpeg"
-		Long sizeBytes = headResponse.contentLength();     // 파일 크기 (byte 단위)
+			//메타 데이터 저장
+			String mimeType = headResponse.contentType();      // ex) "image/jpeg"
+			Long sizeBytes = headResponse.contentLength();     // 파일 크기 (byte 단위)
 
-		image.updateMetadata(mimeType, sizeBytes);
+			image.updateMetadata(mimeType, sizeBytes);
 
-		imageRepository.save(image);
+			imageRepository.save(image);
+		}
 	}
 
 	//키를 통한 이미지 url 생성
-	private URL generateUrl(String key) {
+	public URL generateUrl(String key) {
 		try {
 			URL url = new URL("https://" + bucket + ".s3." + region + ".amazonaws.com/" + key);
 			return  url;
@@ -157,14 +157,31 @@ public class ImageUploadService {
 		}
 	}
 
-	// 파일 존재 여부 확인
-	public URL getURLByReferenceId(ReferenceType type, Long referenceId) {
+
+	public String getURLByReferenceId(ReferenceType type, Long referenceId) {
 		Image image = imageRepository.findImageByReferenceId(type, referenceId).orElseThrow(
 			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
 		);
 
 		URL url = generateUrl(image.getS3Key());
 
-		return url;
+
+
+		return url.toString();
+	}
+
+	public String changeImage(ReferenceType type, Long referenceId, Long imageRefId) {
+
+		ImageRef imageRef = imageRefService.findByTypeAndReferenceId(type, referenceId);
+
+		if (imageRef.getId().equals(imageRefId)) {
+			return getURLByReferenceId(type, referenceId);
+		}
+
+		imageRefService.delete(imageRef);
+
+		imageRefService.imageActivate(imageRefId, ReferenceType.GROUP, referenceId);
+
+		return getURLByReferenceId(ReferenceType.GROUP, referenceId);
 	}
 }

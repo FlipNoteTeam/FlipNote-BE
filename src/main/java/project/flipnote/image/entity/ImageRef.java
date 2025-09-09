@@ -24,7 +24,7 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Entity
 @Table(name = "image_references")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE image_references SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE image_references SET deleted_at = CURRENT_TIMESTAMP, status='DELETED' WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class ImageRef extends SoftDeletableEntity {
 	@Id
