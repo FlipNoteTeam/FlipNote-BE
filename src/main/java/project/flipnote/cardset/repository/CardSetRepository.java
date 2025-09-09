@@ -30,5 +30,10 @@ public interface CardSetRepository extends JpaRepository<CardSet, Long> {
 
 	Optional<CardSet> findByIdAndGroup_Id(Long id, Long groupId);
 
-	Set<Long> findAllByGroup_IdAndPublicVisibleFalse(Long groupId);
+	@Query("""
+		SELECT c.id FROM CardSet c
+		WHERE c.group.id = :groupId
+		AND c.publicVisible = false
+		""")
+	Set<Long> findPrivateIdsByGroupId(@Param("groupId") Long groupId);
 }

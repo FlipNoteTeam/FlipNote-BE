@@ -259,6 +259,6 @@ public class CardSetService {
 	 * @author 윤정환
 	 */
 	public Set<Long> findPrivateCardSetIds(Long groupId) {
-		return cardSetRepository.findAllByGroup_IdAndPublicVisibleFalse(groupId);
+		return cardSetRepository.findPrivateIdsByGroupId(groupId);
 	}
 }

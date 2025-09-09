@@ -124,6 +124,9 @@ public class BookmarkService {
 	@Transactional
 	public void removePrivateCardSetBookmarks(Long groupId, Long userId) {
 		Set<Long> privateCardSetIds = cardSetService.findPrivateCardSetIds(groupId);
+		if (privateCardSetIds == null || privateCardSetIds.isEmpty()) {
+			return;
+		}
 
 		bookmarkRepository.deleteByTargetTypeAndUserIdAndTargetIdIn(BookmarkTargetType.CARD_SET, userId, privateCardSetIds);
 	}

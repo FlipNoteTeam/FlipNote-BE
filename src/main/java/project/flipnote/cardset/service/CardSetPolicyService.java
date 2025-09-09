@@ -66,6 +66,13 @@ public class CardSetPolicyService {
 	 * @author 윤정환
 	 */
 	public boolean isCardSetViewable(CardSet cardSet, Long userId) {
+		if (cardSet == null || userId == null) {
+			return false;
+		}
+		if (cardSet.getGroup() == null || cardSet.getGroup().getId() == null) {
+			return false;
+		}
+
 		return cardSet.getPublicVisible() || groupService.existsMember(cardSet.getGroup().getId(), userId);
 	}
 }
