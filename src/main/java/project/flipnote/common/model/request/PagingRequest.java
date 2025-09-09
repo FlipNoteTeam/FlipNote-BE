@@ -29,14 +29,22 @@ public class PagingRequest {
 		if (sortBy == null || sortBy.isEmpty()) {
 			return PageRequest.of(page - 1, size);
 		} else {
-			Sort.Direction direction;
-			try {
-				direction = Sort.Direction.fromString(order);
-			} catch (IllegalArgumentException e) {
-				direction = Sort.Direction.DESC;
-			}
-
-			return PageRequest.of(page - 1, size, Sort.by(direction, sortBy));
+			return PageRequest.of(page - 1, size, Sort.by(getOrder(), sortBy));
 		}
+	}
+
+	public Sort.Direction getOrder() {
+		Sort.Direction direction;
+		try {
+			direction = Sort.Direction.fromString(order);
+		} catch (IllegalArgumentException e) {
+			direction = Sort.Direction.DESC;
+		}
+
+		return direction;
+	}
+
+	public String getSortBy() {
+		return sortBy.toUpperCase();
 	}
 }

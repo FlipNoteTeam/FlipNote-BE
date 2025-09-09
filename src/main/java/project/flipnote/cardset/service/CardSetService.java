@@ -120,10 +120,9 @@ public class CardSetService {
 	 * @author 윤정환
 	 */
 	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
-
-		// TODO: Projection 및 카운트 쿼리 튜닝 필요, 좋아요 수 및 즐겨찾기 수 등 다양한 정렬 조건 추가 필요
+		// TODO: Projection 튜닝 필요
 		Page<CardSet> cardSetPage = cardSetRepository.findByNameContainingAndCategory(
-			req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
+				req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
 		);
 
 		Page<CardSetSummaryResponse> res = cardSetPage.map(CardSetSummaryResponse::from);
