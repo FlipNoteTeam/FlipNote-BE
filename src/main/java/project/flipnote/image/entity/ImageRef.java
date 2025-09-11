@@ -18,15 +18,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.flipnote.common.entity.SoftDeletableEntity;
+import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @Entity
 @Table(name = "image_references")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE image_references SET deleted_at = CURRENT_TIMESTAMP, status='DELETED' WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
-public class ImageRef extends SoftDeletableEntity {
+public class ImageRef extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
