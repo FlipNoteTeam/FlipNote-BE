@@ -99,4 +99,8 @@ springdoc:
     url: http://localhost:8080
 
 firebase:
-  config-path: ${FIREBASE_CONFIG_PATH:firebase-service-account.json}
+
+
+image-clean:
+  batch-size: 300
+  orphan-grace-minutes: 10
