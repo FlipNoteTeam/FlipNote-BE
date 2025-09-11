@@ -358,6 +358,9 @@ public class GroupService {
 			throw new BizException(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP);
 		}
 
+		//이미지 참조 삭제
+		imageRefService.deleteByReferenceAndId(REFERENCE_TYPE, groupId);
+
 		groupMemberRepository.delete(groupMember);
 
 		groupRepository.delete(group);

@@ -43,4 +43,12 @@ public class ImageRefService {
 	public void delete(ImageRef imageRef) {
 		imageRefRepository.delete(imageRef);
 	}
+
+	public void deleteByReferenceAndId(ReferenceType type, Long id) {
+		ImageRef imageRef = imageRefRepository.findByReferenceTypeAndReferenceId(type, id).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+
+		delete(imageRef);
+	}
 }
