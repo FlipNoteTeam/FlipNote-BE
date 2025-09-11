@@ -165,8 +165,6 @@ public class ImageUploadService {
 
 		URL url = generateUrl(image.getS3Key());
 
-
-
 		return url.toString();
 	}
 

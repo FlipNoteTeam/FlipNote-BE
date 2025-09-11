@@ -9,6 +9,8 @@ import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
 
 @Repository
-public interface ImageRefRepository extends JpaRepository<ImageRef, Long> {
+public interface ImageRefRepository extends JpaRepository<ImageRef, Long>, ImageRefRepositoryCustom {
 	Optional<ImageRef> findByReferenceTypeAndReferenceId(ReferenceType type, Long referenceId);
+
+	boolean existsByImage_Id(Long imageId);
 }
