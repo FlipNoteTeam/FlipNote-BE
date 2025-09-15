@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,7 +23,7 @@ import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @Entity
-@Table(name = "image_references")
+@Table(name = "image_references", uniqueConstraints = @UniqueConstraint(name="uk_image_ref_ref_type_id", columnNames={"reference_type","reference_id"}))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ImageRef extends BaseEntity {
 	@Id
