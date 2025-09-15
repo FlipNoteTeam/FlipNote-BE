@@ -111,7 +111,7 @@ public interface GroupControllerDocs {
                   "applicationRequired": false,
                   "publicVisible": true,
                   "maxMember": 30,
-                  "image": "https://cdn.example.com/group/cover_v2.png"
+                  "imageRefId": 1
                 }
                 """)
 			)

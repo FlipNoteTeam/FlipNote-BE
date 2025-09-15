@@ -1,5 +1,7 @@
 package project.flipnote.user.entity;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -25,6 +27,9 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Entity
 public class UserProfile extends SoftDeletableEntity {
 
+	@Value("${image.default.user}")
+	private String defaultUserImage;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -38,7 +43,7 @@ public class UserProfile extends SoftDeletableEntity {
 	@Column(nullable = false)
 	private String nickname;
 
-	private String profileImageUrl;
+	private String profileImageUrl = defaultUserImage;
 
 	@Convert(converter = AesCryptoConverter.class)
 	@Column(unique = true, length = 1024)

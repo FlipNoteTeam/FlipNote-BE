@@ -5,10 +5,11 @@ import project.flipnote.user.entity.UserProfile;
 public record UserInfoResponse(
 	Long userId,
 	String nickname,
-	String profileImageUrl
+	String profileImageUrl,
+	Long imageRefId
 ) {
 
-	public static UserInfoResponse from(UserProfile user) {
-		return new UserInfoResponse(user.getId(), user.getNickname(), user.getProfileImageUrl());
+	public static UserInfoResponse from(UserProfile user, Long imageRefId) {
+		return new UserInfoResponse(user.getId(), user.getNickname(), user.getProfileImageUrl(), imageRefId);
 	}
 }

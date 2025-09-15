@@ -14,6 +14,7 @@ public record MyInfoResponse(
 	String phone,
 	Boolean smsAgree,
 	String profileImageUrl,
+	Long imageRefId,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	LocalDateTime createdAt,
@@ -22,7 +23,7 @@ public record MyInfoResponse(
 	LocalDateTime modifiedAt
 ) {
 
-	public static MyInfoResponse from(UserProfile user) {
+	public static MyInfoResponse from(UserProfile user, Long imageRedId) {
 		return new MyInfoResponse(
 			user.getId(),
 			user.getEmail(),
@@ -31,6 +32,7 @@ public record MyInfoResponse(
 			user.getPhone(),
 			user.isSmsAgree(),
 			user.getProfileImageUrl(),
+			imageRedId,
 			user.getCreatedAt(),
 			user.getModifiedAt()
 		);

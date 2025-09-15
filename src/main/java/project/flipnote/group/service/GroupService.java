@@ -6,11 +6,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -40,11 +40,10 @@ import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.image.entity.Image;
 import project.flipnote.image.entity.ImageRef;
-import project.flipnote.image.entity.ImageStatus;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.service.ImageRefService;
-import project.flipnote.image.service.ImageUploadService;
+import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -59,13 +58,16 @@ public class GroupService {
 	private static final int SIZE = 10;
 	private static final ReferenceType REFERENCE_TYPE = ReferenceType.GROUP;
 
+	@Value("${image.default.group}")
+	private String defaultGroupImage;
+
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final GroupPermissionRepository groupPermissionRepository;
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final UserProfileRepository userProfileRepository;
 	private final GroupPolicyService groupPolicyService;
-	private final ImageUploadService imageUploadService;
+	private final ImageService imageService;
 	private final ImageRefService imageRefService;
 
 	/*
@@ -164,13 +166,20 @@ public class GroupService {
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
-		ImageRef refId = imageRefService.findById(req.imageRefId()).orElseThrow(
-			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
-		);
+		String url = defaultGroupImage;
+		Optional<ImageRef> imageRef = Optional.empty();
 
-		Image image = refId.getImage();
+		if(req.imageRefId()!=null) {
+			imageRef = imageRefService.findById(req.imageRefId());
+		}
 
-		String url = imageUploadService.generateUrl(image.getS3Key()).toString();
+		if(imageRef.isPresent()) {
+			Image image = imageRef.get().getImage();
+			if(imageRef.get().getReferenceId()!=null) {
+				throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
+			}
+			url = imageService.generateUrl(image.getS3Key()).toString();
+		}
 
 		//3. 그룹 생성
 		Group group = createGroup(req, url);
@@ -181,9 +190,10 @@ public class GroupService {
 		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
-		// 이미지 활성화
-		imageUploadService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, group.getId());
-
+		if(imageRef.isPresent()) {
+			// 이미지 활성화
+			imageService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, group.getId());
+		}
 		return GroupCreateResponse.from(group.getId());
 	}
 
@@ -292,8 +302,14 @@ public class GroupService {
 			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
 		}
 
+		Long imageRefId = null;
+
 		//이미지 변경
-		String url = imageUploadService.changeImage(ReferenceType.GROUP, groupId, req.imageRefId());
+		if(req.imageRefId()!=null) {
+			imageRefId = req.imageRefId();
+		}
+
+		String url = imageService.changeImage(ReferenceType.GROUP, groupId, imageRefId);
 
 		//그룹 수정
 		Group changeGroup = groupPolicyService.changeGroup(groupId, req, url);
@@ -333,7 +349,11 @@ public class GroupService {
 		//3. 그룹 내 유저 조회
 		validateGroupInUser(user, groupId);
 
-		return GroupDetailResponse.from(group);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, groupId);
+
+		Long imageRefId = imageRef.isPresent() ? imageRef.get().getId() : null;
+
+		return GroupDetailResponse.from(group, imageRefId);
 	}
 
 	//그룹 삭제 메서드

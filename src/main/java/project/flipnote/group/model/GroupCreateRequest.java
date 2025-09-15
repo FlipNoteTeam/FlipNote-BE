@@ -28,7 +28,7 @@ public record GroupCreateRequest(
 	@Max(value = 100, message = "최대 인원 수는 100명을 초과할 수 없습니다.")
 	Integer maxMember,
 
-	@NotNull(message = "이미지 참조 id를 입력해주세요.")
+	// @NotNull(message = "이미지 참조 id를 입력해주세요.")
 	Long imageRefId
 ) {
 }

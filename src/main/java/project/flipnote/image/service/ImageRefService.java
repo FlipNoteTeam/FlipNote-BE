@@ -24,10 +24,8 @@ public class ImageRefService {
 		return imageRefRepository.findById(id);
 	}
 
-	public ImageRef findByTypeAndReferenceId(ReferenceType type, Long referenceId) {
-		return imageRefRepository.findByReferenceTypeAndReferenceId(type, referenceId).orElseThrow(
-			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
-		);
+	public Optional<ImageRef> findByTypeAndReferenceId(ReferenceType type, Long referenceId) {
+		return imageRefRepository.findByReferenceTypeAndReferenceId(type, referenceId);
 	}
 
 	public void imageActivate(Long imageRefId, ReferenceType type, Long referenceId) {
@@ -45,10 +43,10 @@ public class ImageRefService {
 	}
 
 	public void deleteByReferenceAndId(ReferenceType type, Long id) {
-		ImageRef imageRef = imageRefRepository.findByReferenceTypeAndReferenceId(type, id).orElseThrow(
-			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
-		);
+		Optional<ImageRef> imageRef = imageRefRepository.findByReferenceTypeAndReferenceId(type, id);
 
-		delete(imageRef);
+		if(imageRef.isPresent()) {
+			delete(imageRef.get());
+		}
 	}
 }

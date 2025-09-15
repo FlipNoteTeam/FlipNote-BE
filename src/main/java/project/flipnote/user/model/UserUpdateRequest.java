@@ -16,7 +16,7 @@ public record UserUpdateRequest(
 	@NotNull
 	Boolean smsAgree,
 
-	String profileImageUrl
+	Long imageRefId
 ) {
 
 	public String getNormalizedPhone() {

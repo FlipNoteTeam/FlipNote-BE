@@ -25,9 +25,7 @@ public record UserRegisterRequest(
 	Boolean smsAgree,
 
 	@ValidPhone
-	String phone,
-
-	String profileImageUrl
+	String phone
 ) {
 
 	public String getNormalizedPhone() {
@@ -35,6 +33,6 @@ public record UserRegisterRequest(
 	}
 
 	public UserCreateCommand toCommand() {
-		return new UserCreateCommand(email, name, nickname, smsAgree, getNormalizedPhone(), profileImageUrl);
+		return new UserCreateCommand(email, name, nickname, smsAgree, getNormalizedPhone());
 	}
 }

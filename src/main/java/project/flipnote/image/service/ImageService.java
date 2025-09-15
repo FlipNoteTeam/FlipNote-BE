@@ -3,7 +3,6 @@ package project.flipnote.image.service;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -30,13 +29,19 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ImageUploadService {
+public class ImageService {
 
 	@Value("${cloud.s3.bucket}")
 	private String bucket;
 
 	@Value("${cloud.aws.region}")
 	private String region;
+
+	@Value("${image.default.group}")
+	private String defaultGroupImage;
+
+	@Value("${image.default.user}")
+	private String defaultUserImage;
 
 	private final ImageRefService imageRefService;
 	private final ImageRepository imageRepository;
@@ -168,18 +173,34 @@ public class ImageUploadService {
 		return url.toString();
 	}
 
+	private String getDefaultUrl(ReferenceType type) {
+		return switch (type) {
+			case GROUP -> defaultGroupImage;
+			case USER  -> defaultUserImage;
+			default    -> throw new BizException(ImageErrorCode.INVALID_URL);
+		};
+	}
+
 	public String changeImage(ReferenceType type, Long referenceId, Long imageRefId) {
 
-		ImageRef imageRef = imageRefService.findByTypeAndReferenceId(type, referenceId);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(type, referenceId);
 
-		if (imageRef.getId().equals(imageRefId)) {
-			return getURLByReferenceId(type, referenceId);
+		if(imageRefId==null) {
+			if(imageRef.isPresent()) {
+				imageRefService.delete(imageRef.get());
+			}
+			return getDefaultUrl(type);
 		}
 
-		imageRefService.delete(imageRef);
+		if(imageRef.isPresent()) {
+			if (imageRef.get().getId().equals(imageRefId)) {
+				return getURLByReferenceId(type, referenceId);
+			}
+			imageRefService.delete(imageRef.get());
+		}
 
-		imageRefService.imageActivate(imageRefId, ReferenceType.GROUP, referenceId);
+		imageRefService.imageActivate(imageRefId, type, referenceId);
 
-		return getURLByReferenceId(ReferenceType.GROUP, referenceId);
+		return getURLByReferenceId(type, referenceId);
 	}
 }

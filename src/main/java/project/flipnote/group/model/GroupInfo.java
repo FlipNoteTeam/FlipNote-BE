@@ -7,8 +7,9 @@ public record GroupInfo(
 	String name,
 	String description,
 	Category category,
-	String imageUrl) {
-	public static GroupInfo from(Long groupId, String name, String description, Category category, String imageUrl) {
-		return new GroupInfo(groupId, name, description, category, imageUrl);
+	String imageUrl,
+	Long imageRefId) {
+	public static GroupInfo from(Long groupId, String name, String description, Category category, String imageUrl, Long imageRefId) {
+		return new GroupInfo(groupId, name, description, category, imageUrl, imageRefId);
 	}
 }
