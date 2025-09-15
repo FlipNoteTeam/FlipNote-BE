@@ -8,7 +8,7 @@ import project.flipnote.group.entity.Category;
 
 public interface CardSetRepositoryCustom {
 
-	Page<CardSet> findByNameContainingAndCategory(
+	Page<CardSet> searchByNameContainingAndCategory(
 		String name,
 		Category category,
 		Pageable pageable

@@ -121,7 +121,7 @@ public class CardSetService {
 	 */
 	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
 		// TODO: Projection 튜닝 필요
-		Page<CardSet> cardSetPage = cardSetRepository.findByNameContainingAndCategory(
+		Page<CardSet> cardSetPage = cardSetRepository.searchByNameContainingAndCategory(
 				req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
 		);
 
