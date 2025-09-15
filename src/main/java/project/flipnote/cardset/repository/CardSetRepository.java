@@ -1,6 +1,7 @@
 package project.flipnote.cardset.repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,4 +30,10 @@ public interface CardSetRepository extends JpaRepository<CardSet, Long> {
 
 	Optional<CardSet> findByIdAndGroup_Id(Long id, Long groupId);
 
+	@Query("""
+		SELECT c.id FROM CardSet c
+		WHERE c.group.id = :groupId
+		AND c.publicVisible = false
+		""")
+	Set<Long> findPrivateIdsByGroupId(@Param("groupId") Long groupId);
 }

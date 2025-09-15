@@ -143,7 +143,7 @@ public class CardSetService {
 	public CardSetDetailResponse getCardSet(Long userId, Long groupId, Long cardSetId) {
 		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
 
-		cardSetPolicyService.validateCardSetViewable(cardSet, userId, groupId);
+		cardSetPolicyService.validateCardSetViewable(cardSet, userId);
 
 		return CardSetDetailResponse.from(cardSet);
 	}
@@ -218,5 +218,47 @@ public class CardSetService {
 		return cardSetRepository.findAllById(targetIds).stream()
 			.map(CardSetSummaryResponse::from)
 			.toList();
+	}
+
+	/**
+	 * 사용자가 특정 카드셋에 접근할 수 있는지 여부를 확인
+	 *
+	 * @param cardSetId 확인할 카드셋의 ID
+	 * @param userId 	접근 권한을 확인할 사용자의 ID
+	 * @return 접근 가능 여부
+	 * @author 윤정환
+	 */
+	public boolean isCardSetViewable(Long cardSetId, Long userId) {
+		return cardSetRepository.findById(cardSetId)
+			.map(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
+			.orElse(false);
+	}
+
+	/**
+	 * 카드셋 ID 목록에 해당하는 카드셋 목록 조회
+	 *
+	 * @param targetIds 조회할 카드셋 ID 목록
+	 * @param userId 	카드셋 목록을 조회하는 회원 ID
+	 * @return 조회된 카드셋 목록
+	 * @author 윤정환
+	 */
+	@Transactional
+	public List<CardSetSummaryResponse> findViewableCardSetsByIds(Set<Long> targetIds, Long userId) {
+		// TODO: MSA로 전환시 전용 DTO로 변경 필요
+		return cardSetRepository.findAllById(targetIds).stream()
+			.filter(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
+			.map(CardSetSummaryResponse::from)
+			.toList();
+	}
+
+	/**
+	 * 해당 그룹의 비공개인 카드셋의 ID들을 조회
+	 *
+	 * @param groupId 조회할 그룹의 ID
+	 * @return 그룹에 속한 비공개 카드셋 ID의 집합
+	 * @author 윤정환
+	 */
+	public Set<Long> findPrivateCardSetIds(Long groupId) {
+		return cardSetRepository.findPrivateIdsByGroupId(groupId);
 	}
 }

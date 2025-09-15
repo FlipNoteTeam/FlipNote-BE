@@ -16,8 +16,8 @@ public class BookmarkPolicyService {
 	private final BookmarkRepository bookmarkRepository;
 	private final BookmarkTargetFetchService<BookmarkTargetResponse> bookmarkTargetFetchService;
 
-	public void validateTargetExists(BookmarkTargetType targetType, Long targetId) {
-		if (!bookmarkTargetFetchService.existsByTypeAndId(targetType, targetId)) {
+	public void validateTargetViewable(BookmarkTargetType targetType, Long targetId, Long userId) {
+		if (!bookmarkTargetFetchService.isTargetViewable(targetType, targetId, userId)) {
 			throw new BizException(BookmarkErrorCode.BOOKMARK_TARGET_NOT_FOUND);
 		}
 	}
