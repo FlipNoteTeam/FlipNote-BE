@@ -86,7 +86,10 @@ public class UserService {
 
 		user.update(req.nickname(), phone, req.smsAgree(), url);
 
-		return UserUpdateResponse.from(user, req.imageRefId());
+		Optional<ImageRef> updatedRef = imageRefService.findByTypeAndReferenceId(type, userId);
+		Long imageRefId = updatedRef.map(ImageRef::getId).orElse(null);
+
+		return UserUpdateResponse.from(user, imageRefId);
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
