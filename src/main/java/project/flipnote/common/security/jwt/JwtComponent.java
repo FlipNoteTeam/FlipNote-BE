@@ -12,6 +12,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.entity.UserAuth;
 import project.flipnote.auth.model.TokenPair;
 import project.flipnote.auth.service.TokenVersionService;
@@ -19,12 +20,15 @@ import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.exception.CustomSecurityException;
 import project.flipnote.common.security.exception.SecurityErrorCode;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtComponent {
 
 	private final JwtProperties jwtProperties;
 	private final TokenVersionService tokenVersionService;
+	private final TokenIdGenerator tokenIdGenerator;
+
 	private SecretKey secretKey;
 
 	@PostConstruct
@@ -63,7 +67,8 @@ public class JwtComponent {
 
 		return Jwts.builder()
 			.subject(userAuth.email())
-			.id(String.valueOf(userAuth.authId()))
+			.id(tokenIdGenerator.generate())
+			.claim(JwtConstants.AUTH_ID, userAuth.authId())
 			.claim(JwtConstants.USER_ID, userAuth.userId())
 			.claim(JwtConstants.ROLE, userAuth.role().name())
 			.claim(JwtConstants.TOKEN_VERSION, userAuth.tokenVersion())
