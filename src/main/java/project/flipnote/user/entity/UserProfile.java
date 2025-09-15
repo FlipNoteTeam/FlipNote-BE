@@ -27,9 +27,6 @@ import project.flipnote.common.entity.SoftDeletableEntity;
 @Entity
 public class UserProfile extends SoftDeletableEntity {
 
-	@Value("${image.default.user}")
-	private String defaultUserImage;
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -43,7 +40,7 @@ public class UserProfile extends SoftDeletableEntity {
 	@Column(nullable = false)
 	private String nickname;
 
-	private String profileImageUrl = defaultUserImage;
+	private String profileImageUrl;
 
 	@Convert(converter = AesCryptoConverter.class)
 	@Column(unique = true, length = 1024)

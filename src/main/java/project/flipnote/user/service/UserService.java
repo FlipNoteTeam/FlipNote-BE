@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,8 @@ public class UserService {
 
 	private final static ReferenceType type = ReferenceType.USER;
 
+	@Value("${image.default.user}")
+	private String defaultUserImage;
 
 	@Transactional
 	public Long createUser(UserCreateCommand command) {
@@ -52,6 +55,7 @@ public class UserService {
 			.nickname(command.nickname())
 			.phone(command.phone())
 			.smsAgree(command.smsAgree())
+			.profileImageUrl(defaultUserImage)
 			.build();
 
 		UserProfile savedUser = userProfileRepository.save(user);
