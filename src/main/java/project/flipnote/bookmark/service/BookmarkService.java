@@ -18,6 +18,7 @@ import project.flipnote.bookmark.model.BookmarkResponse;
 import project.flipnote.bookmark.model.BookmarkSearchRequest;
 import project.flipnote.bookmark.model.BookmarkTargetResponse;
 import project.flipnote.bookmark.repository.BookmarkRepository;
+import project.flipnote.cardset.service.CardSetService;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.response.IdResponse;
 import project.flipnote.common.model.response.PagingResponse;
@@ -30,6 +31,7 @@ public class BookmarkService {
 	private final BookmarkPolicyService bookmarkPolicyService;
 	private final BookmarkRepository bookmarkRepository;
 	private final BookmarkTargetFetchService<BookmarkTargetResponse> bookmarkTargetFetchService;
+	private final CardSetService cardSetService;
 
 	/**
 	 * 즐겨찾기 추가
@@ -43,7 +45,7 @@ public class BookmarkService {
 	@Transactional
 	public IdResponse addBookmark(Long userId, BookmarkTargetType targetType, Long targetId) {
 		bookmarkPolicyService.validateBookmarkNotExists(targetType, userId, targetId);
-		bookmarkPolicyService.validateTargetExists(targetType, targetId);
+		bookmarkPolicyService.validateTargetViewable(targetType, targetId, userId);
 
 		Bookmark bookmark = Bookmark.builder()
 			.targetType(targetType)
@@ -100,7 +102,7 @@ public class BookmarkService {
 		Set<Long> targetIds = likedAtMap.keySet();
 
 		Map<Long, BookmarkTargetResponse> targetMap
-			= bookmarkTargetFetchService.fetchByTypeAndIds(targetType, targetIds);
+			= bookmarkTargetFetchService.fetchByTypeAndIds(targetType, targetIds, userId);
 		Page<BookmarkResponse<BookmarkTargetResponse>> content
 			= bookmarkPage.map(bookmark ->
 			new BookmarkResponse<>(
@@ -110,5 +112,22 @@ public class BookmarkService {
 		);
 
 		return PagingResponse.from(content);
+	}
+
+	/**
+	 * 해당 그룹의 비공개 카드셋 즐겨찾기 제거
+	 *
+	 * @param groupId 즐겨찾기를 제거할 카드셋이 속한 그룹 ID
+	 * @param userId 즐겨찾기를 제거할 사용자 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void removePrivateCardSetBookmarks(Long groupId, Long userId) {
+		Set<Long> privateCardSetIds = cardSetService.findPrivateCardSetIds(groupId);
+		if (privateCardSetIds == null || privateCardSetIds.isEmpty()) {
+			return;
+		}
+
+		bookmarkRepository.deleteByTargetTypeAndUserIdAndTargetIdIn(BookmarkTargetType.CARD_SET, userId, privateCardSetIds);
 	}
 }

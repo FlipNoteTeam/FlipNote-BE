@@ -49,12 +49,30 @@ public class CardSetPolicyService {
 	 *
 	 * @param cardSet 조회 대상 카드셋 엔티티
 	 * @param userId 조회 권한을 검증할 회원의 ID
-	 * @param groupId 카드셋이 속한 그룹의 ID
 	 * @author 윤정환
 	 */
-	public void validateCardSetViewable(CardSet cardSet, Long userId, Long groupId) {
-		if (!cardSet.getPublicVisible() && !groupService.existsMember(groupId, userId)) {
+	public void validateCardSetViewable(CardSet cardSet, Long userId) {
+		if (!isCardSetViewable(cardSet, userId)) {
 			throw new BizException(CardSetErrorCode.CARD_SET_PRIVATE);
 		}
+	}
+
+	/**
+	 * 특정 회원이 해당 카드셋을 조회할 수 있는 권한이 있는지 확인
+	 *
+	 * @param cardSet 조회 대상 카드셋 엔티티
+	 * @param userId 조회 권한을 검증할 회원의 ID
+	 * @return 카드셋 조회 가능 여부
+	 * @author 윤정환
+	 */
+	public boolean isCardSetViewable(CardSet cardSet, Long userId) {
+		if (cardSet == null || userId == null) {
+			return false;
+		}
+		if (cardSet.getGroup() == null || cardSet.getGroup().getId() == null) {
+			return false;
+		}
+
+		return cardSet.getPublicVisible() || groupService.existsMember(cardSet.getGroup().getId(), userId);
 	}
 }

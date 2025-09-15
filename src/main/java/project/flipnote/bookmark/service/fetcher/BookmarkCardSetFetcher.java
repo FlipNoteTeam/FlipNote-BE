@@ -24,13 +24,13 @@ public class BookmarkCardSetFetcher implements BookmarkTargetFetcher<CardSetBook
 	}
 
 	@Override
-	public boolean existsById(Long targetId) {
-		return cardSetService.existsById(targetId);
+	public boolean isTargetViewable(Long targetId, Long userId) {
+		return cardSetService.isCardSetViewable(targetId, userId);
 	}
 
 	@Override
-	public Map<Long, CardSetBookmarkResponse> fetchByIds(Set<Long> ids) {
-		return cardSetService.getCardSetsByIds(ids).stream()
+	public Map<Long, CardSetBookmarkResponse> fetchByIds(Set<Long> targetIds, Long userId) {
+		return cardSetService.findViewableCardSetsByIds(targetIds, userId).stream()
 			.map(CardSetBookmarkResponse::from)
 			.collect(Collectors.toMap(CardSetBookmarkResponse::getId, Function.identity()));
 	}

@@ -29,7 +29,7 @@ public record AuthPrinciple(
 	}
 
 	public static AuthPrinciple from(Claims claims) {
-		long authId = Long.parseLong(claims.getId());
+		long authId = claims.get(JwtConstants.AUTH_ID, Long.class);
 		long userId = claims.get(JwtConstants.USER_ID, Long.class);
 		AccountRole userRole = AccountRole.from(
 			claims.get(JwtConstants.ROLE, String.class)
