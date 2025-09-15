@@ -33,7 +33,7 @@ public class Image extends BaseEntity {
 	@Column(nullable = false, unique = true, length = 32)
 	private String hash;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 1024)
 	private String s3Key;
 
 	private String mimeType;
