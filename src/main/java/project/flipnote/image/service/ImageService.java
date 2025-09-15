@@ -181,6 +181,7 @@ public class ImageService {
 		};
 	}
 
+	@Transactional
 	public String changeImage(ReferenceType type, Long referenceId, Long imageRefId) {
 
 		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(type, referenceId);
