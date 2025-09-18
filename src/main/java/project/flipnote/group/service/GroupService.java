@@ -2,14 +2,15 @@ package project.flipnote.group.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -37,6 +38,12 @@ import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
+import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageRef;
+import project.flipnote.image.entity.ReferenceType;
+import project.flipnote.image.exception.ImageErrorCode;
+import project.flipnote.image.service.ImageRefService;
+import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -49,6 +56,10 @@ import project.flipnote.user.repository.UserProfileRepository;
 public class GroupService {
 
 	private static final int SIZE = 10;
+	private static final ReferenceType REFERENCE_TYPE = ReferenceType.GROUP;
+
+	@Value("${image.default.group}")
+	private String defaultGroupImage;
 
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
@@ -56,6 +67,8 @@ public class GroupService {
 	private final GroupRolePermissionRepository groupRolePermissionRepository;
 	private final UserProfileRepository userProfileRepository;
 	private final GroupPolicyService groupPolicyService;
+	private final ImageService imageService;
+	private final ImageRefService imageRefService;
 
 	/*
 	유저 정보 조회
@@ -138,9 +151,11 @@ public class GroupService {
 		return all;
 	}
 
-
-	/*
-	그룹 생성
+	/**
+	 * 그룹 생성
+	 * @param authPrinciple 회원 accessToken
+	 * @param req 그룹 생성시 필요한 내용
+	 * @return
 	 */
 	@Transactional
 	public GroupCreateResponse create(AuthPrinciple authPrinciple, GroupCreateRequest req) {
@@ -151,8 +166,23 @@ public class GroupService {
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
-		/* 3. 그룹 생성 */
-		Group group = createGroup(req);
+		String url = defaultGroupImage;
+		Optional<ImageRef> imageRef = Optional.empty();
+
+		if(req.imageRefId()!=null) {
+			imageRef = imageRefService.findById(req.imageRefId());
+		}
+
+		if(imageRef.isPresent()) {
+			Image image = imageRef.get().getImage();
+			if(imageRef.get().getReferenceId()!=null) {
+				throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
+			}
+			url = imageService.generateUrl(image.getS3Key()).toString();
+		}
+
+		//3. 그룹 생성
+		Group group = createGroup(req, url);
 
 		//4. 그룹 회원 정보 생성
 		saveGroupOwner(group, user);
@@ -160,6 +190,10 @@ public class GroupService {
 		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
+		if(imageRef.isPresent()) {
+			// 이미지 활성화
+			imageService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, group.getId());
+		}
 		return GroupCreateResponse.from(group.getId());
 	}
 
@@ -198,7 +232,7 @@ public class GroupService {
 	/*
 	그룹 생성 메서드
 	 */
-	private Group createGroup(GroupCreateRequest req) {
+	private Group createGroup(GroupCreateRequest req, String url) {
 		Group group = Group.builder()
 			.name(req.name())
 			.category(req.category())
@@ -206,7 +240,7 @@ public class GroupService {
 			.applicationRequired(req.applicationRequired())
 			.publicVisible(req.publicVisible())
 			.maxMember(req.maxMember())
-			.imageUrl(req.image())
+			.imageUrl(url)
 			.build();
 
 		return groupRepository.save(group);
@@ -241,30 +275,45 @@ public class GroupService {
 		}
 	}
 
-	//그룹 수정
+	/**
+	 * 그룹 수정
+	 * @param authPrinciple
+	 * @param req
+	 * @param groupId
+	 * @return
+	 */
 	@Transactional
 	public GroupPutResponse changeGroup(AuthPrinciple authPrinciple, GroupPutRequest req, Long groupId) {
 
-		//1. 유저 조회
+		//유저 조회
 		UserProfile user = getUser(authPrinciple);
 
-		//2. 인원수 검증
+		//인원수 검증
 		validateMaxMember(req.maxMember());
 
-		//3. 그룹 조회
+		//그룹 조회
 		validateGroup(groupId);
 
-		//4. 그룹 내 유저 조회
+		//그룹 내 유저 조회
 		GroupMember groupMember = getGroupMember(user, groupId);
 
-		//5. 유저 권환 조회
+		//유저 권환 조회
 		if (!groupMember.getRole().equals(GroupMemberRole.OWNER)) {
 			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
 		}
 
-		//6. 그룹 수정
-		Group changeGroup = groupPolicyService.changeGroup(groupId, req);
+		Long imageRefId = null;
 
+		//이미지 변경
+		if(req.imageRefId()!=null) {
+			imageRefId = req.imageRefId();
+		}
+
+		String url = imageService.changeImage(ReferenceType.GROUP, groupId, imageRefId);
+
+		//그룹 수정
+		Group changeGroup = groupPolicyService.changeGroup(groupId, req, url);
+		
 		return GroupPutResponse.from(changeGroup);
 	}
 	/*
@@ -300,7 +349,11 @@ public class GroupService {
 		//3. 그룹 내 유저 조회
 		validateGroupInUser(user, groupId);
 
-		return GroupDetailResponse.from(group);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, groupId);
+
+		Long imageRefId = imageRef.isPresent() ? imageRef.get().getId() : null;
+
+		return GroupDetailResponse.from(group, imageRefId);
 	}
 
 	//그룹 삭제 메서드
@@ -324,6 +377,9 @@ public class GroupService {
 		if (!checkUserNotExistInGroup(user, group)) {
 			throw new BizException(GroupErrorCode.OTHER_USER_EXIST_IN_GROUP);
 		}
+
+		//이미지 참조 삭제
+		imageRefService.deleteByReferenceAndId(REFERENCE_TYPE, groupId);
 
 		groupMemberRepository.delete(groupMember);
 

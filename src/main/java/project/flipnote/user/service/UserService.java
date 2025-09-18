@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.event.UserWithdrawnEvent;
 import project.flipnote.common.model.request.UserCreateCommand;
+import project.flipnote.image.entity.ImageRef;
+import project.flipnote.image.entity.ReferenceType;
+import project.flipnote.image.service.ImageRefService;
+import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -31,6 +36,13 @@ public class UserService {
 
 	private final UserProfileRepository userProfileRepository;
 	private final ApplicationEventPublisher eventPublisher;
+	private final ImageService imageService;
+	private final ImageRefService imageRefService;
+
+	private final static ReferenceType type = ReferenceType.USER;
+
+	@Value("${image.default.user}")
+	private String defaultUserImage;
 
 	@Transactional
 	public Long createUser(UserCreateCommand command) {
@@ -41,9 +53,9 @@ public class UserService {
 			.email(command.email())
 			.name(command.name())
 			.nickname(command.nickname())
-			.profileImageUrl(command.profileImageUrl())
 			.phone(command.phone())
 			.smsAgree(command.smsAgree())
+			.profileImageUrl(defaultUserImage)
 			.build();
 
 		UserProfile savedUser = userProfileRepository.save(user);
@@ -53,6 +65,9 @@ public class UserService {
 	@Transactional
 	public void withdraw(Long userId) {
 		UserProfile user = findActiveUserByIdOrThrow(userId);
+
+		imageRefService.deleteByReferenceAndId(type, userId);
+
 		user.withdraw();
 
 		eventPublisher.publishEvent(new UserWithdrawnEvent(userId));
@@ -67,21 +82,35 @@ public class UserService {
 			validatePhoneDuplicate(phone);
 		}
 
-		user.update(req.nickname(), phone, req.smsAgree(), req.profileImageUrl());
+		String url = imageService.changeImage(type, userId, req.imageRefId());
 
-		return UserUpdateResponse.from(user);
+		user.update(req.nickname(), phone, req.smsAgree(), url);
+
+		Optional<ImageRef> updatedRef = imageRefService.findByTypeAndReferenceId(type, userId);
+		Long imageRefId = updatedRef.map(ImageRef::getId).orElse(null);
+
+		return UserUpdateResponse.from(user, imageRefId);
 	}
 
 	public MyInfoResponse getMyInfo(Long userId) {
 		UserProfile user = findActiveUserByIdOrThrow(userId);
 
-		return MyInfoResponse.from(user);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(type, userId);
+
+		Long imageRedId = imageRef.isPresent() ? imageRef.get().getId() : null;
+
+		return MyInfoResponse.from(user, imageRedId);
 	}
 
 	public UserInfoResponse getUserInfo(Long userId) {
 		UserProfile user = findActiveUserByIdOrThrow(userId);
 
-		return UserInfoResponse.from(user);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(type, userId);
+
+		Long imageRedId = imageRef.isPresent() ? imageRef.get().getId() : null;
+
+
+		return UserInfoResponse.from(user, imageRedId);
 	}
 
 	private UserProfile findActiveUserByIdOrThrow(Long userId) {

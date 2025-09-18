@@ -1,5 +1,7 @@
 package project.flipnote.user.entity;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

@@ -32,7 +32,6 @@ public record GroupPutRequest(
 	@Max(value = 100, message = "최대 인원 수는 100명을 초과할 수 없습니다.")
 	Integer maxMember,
 
-	@URL(message = "이미지 URL 형식이 올바르지 않습니다.")
-	String image
+	Long imageRefId
 ) {
 }

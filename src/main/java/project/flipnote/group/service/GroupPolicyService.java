@@ -22,7 +22,7 @@ public class GroupPolicyService {
 	private final RedissonClient redissonClient;
 
 	@Transactional
-	public Group changeGroup(Long groupId, GroupPutRequest req) {
+	public Group changeGroup(Long groupId, GroupPutRequest req, String url) {
 		String lockKey = "group_lock:" + groupId;
 		RLock lock = redissonClient.getLock(lockKey);
 
@@ -38,7 +38,7 @@ public class GroupPolicyService {
 
 			lockedGroup.validateMaxMemberUpdatable(req.maxMember());
 
-			lockedGroup.changeGroup(req);
+			lockedGroup.changeGroup(req, url);
 
 			return lockedGroup;
 

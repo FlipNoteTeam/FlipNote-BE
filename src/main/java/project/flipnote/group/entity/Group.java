@@ -107,13 +107,13 @@ public class Group extends BaseEntity {
 		memberCount++;
 	}
 
-	public void changeGroup(GroupPutRequest req) {
+	public void changeGroup(GroupPutRequest req, String url) {
 		this.name = req.name();
 		this.category = req.category();
 		this.description = req.description();
 		this.applicationRequired = req.applicationRequired();
 		this.publicVisible = req.publicVisible();
 		this.maxMember = req.maxMember();
-		this.imageUrl = req.image();
+		this.imageUrl = url;
 	}
 }

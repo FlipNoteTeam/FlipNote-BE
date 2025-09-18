@@ -12,6 +12,8 @@ import project.flipnote.group.entity.Category;
 import project.flipnote.group.entity.QGroup;
 import project.flipnote.group.entity.QGroupMember;
 import project.flipnote.group.model.GroupInfo;
+import project.flipnote.image.entity.QImageRef;
+import project.flipnote.image.entity.ReferenceType;
 
 @RequiredArgsConstructor
 public class GroupRepositoryImpl implements GroupRepositoryCustom {
@@ -20,6 +22,7 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 
 	QGroup group = QGroup.group;
 	QGroupMember groupMember = QGroupMember.groupMember;
+	QImageRef imageRef = QImageRef.imageRef;
 
 	@Override
 	public List<GroupInfo> findAllByCursor(Long lastId, Category category, int pageSize) {
@@ -40,10 +43,14 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				group.name,
 				group.description,
 				group.category,
-				group.imageUrl
+				group.imageUrl,
+				imageRef.id
 			))
 			.from(group)
 			.where(where)
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.GROUP)
+				.and(imageRef.referenceId.eq(group.id)))
 			.orderBy(group.id.desc())
 			.limit(pageSize+1)
 			.fetch();
@@ -68,12 +75,16 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				group.name,
 				group.description,
 				group.category,
-				group.imageUrl
+				group.imageUrl,
+				imageRef.id
 			))
 			.from(groupMember)
 			.join(groupMember.group, group)
 			.on(groupMember.user.id.eq(userId))
 			.where(where)
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.GROUP)
+				.and(imageRef.referenceId.eq(group.id)))
 			.orderBy(group.id.desc())
 			.limit(pageSize+1)
 			.fetch();

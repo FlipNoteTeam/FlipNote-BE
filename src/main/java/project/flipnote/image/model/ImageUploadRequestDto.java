@@ -2,6 +2,7 @@ package project.flipnote.image.model;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import project.flipnote.image.entity.ReferenceType;
 
 public record ImageUploadRequestDto(
 	@Pattern(
@@ -9,6 +10,8 @@ public record ImageUploadRequestDto(
 		message = "파일 이름은 32자리 MD5 해시와 jpg/jpeg/png/gif 확장자 형식이어야 합니다."
 	)
 	@NotNull(message = "파일 이름을 입력해주세요.")
-	String fileName
+	String fileName,
+
+	ReferenceType type
 ) {
 }

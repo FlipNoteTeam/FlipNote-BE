@@ -1,34 +1,21 @@
 package project.flipnote.image.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.net.URL;
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-
-import project.flipnote.auth.entity.AccountRole;
-import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.image.exception.ImageErrorCode;
-import project.flipnote.image.model.ImageUploadResponseDto;
 import project.flipnote.user.entity.UserProfile;
-import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.repository.UserProfileRepository;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @ExtendWith(MockitoExtension.class)
-class ImageUploadServiceTest {
+class ImageServiceTest {
 	@InjectMocks
-	ImageUploadService imageUploadService;
+	ImageService imageService;
 	
 	@Mock
 	UserProfileRepository userRepository;
@@ -44,7 +31,7 @@ class ImageUploadServiceTest {
 
 	@BeforeEach
 	void before() {
-		ReflectionTestUtils.setField(imageUploadService, "bucket", bucket);
+		ReflectionTestUtils.setField(imageService, "bucket", bucket);
 	}
 	
 	// @Test

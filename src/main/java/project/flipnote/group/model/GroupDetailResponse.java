@@ -19,13 +19,15 @@ public record GroupDetailResponse(
 
 	Integer maxMember,
 
+	Long imageRefId,
+
 	String imageUrl,
 
 	LocalDateTime createdAt,
 
 	LocalDateTime modifiedAt
 ) {
-	public static GroupDetailResponse from(Group group) {
+	public static GroupDetailResponse from(Group group, Long imageRefId) {
 		return new GroupDetailResponse(
 			group.getName(),
 			group.getCategory(),
@@ -33,6 +35,7 @@ public record GroupDetailResponse(
 			group.getApplicationRequired(),
 			group.getPublicVisible(),
 			group.getMaxMember(),
+			imageRefId,
 			group.getImageUrl(),
 			group.getCreatedAt(),
 			group.getModifiedAt()

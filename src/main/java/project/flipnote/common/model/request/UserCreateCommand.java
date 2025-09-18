@@ -5,8 +5,7 @@ public record UserCreateCommand(
 	String name,
 	String nickname,
 	Boolean smsAgree,
-	String phone,
-	String profileImageUrl
+	String phone
 ) {
 
 }
