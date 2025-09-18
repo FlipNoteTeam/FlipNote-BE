@@ -45,7 +45,6 @@ public class CardSet extends BaseEntity {
 
 	private String hashtag;
 
-	@Column(nullable = false)
 	private String imageUrl;
 
 	@Builder
