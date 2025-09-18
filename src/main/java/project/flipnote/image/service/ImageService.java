@@ -192,6 +192,15 @@ public class ImageService {
 
 		}
 
+		// 신규 imageRef가 이미 다른 대상에 묶여있는지 선검증
+		ImageRef targetRef = imageRefService.findById(imageRefId).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+		if (targetRef.getReferenceId() != null &&
+			!(type.equals(targetRef.getReferenceType()) && referenceId.equals(targetRef.getReferenceId()))) {
+			throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
+		}
+
 		if(imageRef.isPresent()) {
 			if (imageRef.get().getId().equals(imageRefId)) {
 				String url = getURLByReferenceId(type, referenceId);
