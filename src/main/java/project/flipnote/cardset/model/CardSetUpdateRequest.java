@@ -25,8 +25,7 @@ public record CardSetUpdateRequest(
 	@NotNull
 	List<String> hashtag,
 
-	@URL
-	String image
+	Long imageRefId
 ) {
 
 	@Schema(hidden = true)

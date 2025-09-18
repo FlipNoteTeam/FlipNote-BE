@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.common.model.event.UserWithdrawnEvent;
 import project.flipnote.common.model.request.UserCreateCommand;
+import project.flipnote.image.entity.ImageMeta;
 import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.service.ImageRefService;
@@ -82,9 +83,9 @@ public class UserService {
 			validatePhoneDuplicate(phone);
 		}
 
-		String url = imageService.changeImage(type, userId, req.imageRefId());
+		ImageMeta imageMeta = imageService.changeImage(type, userId, req.imageRefId());
 
-		user.update(req.nickname(), phone, req.smsAgree(), url);
+		user.update(req.nickname(), phone, req.smsAgree(), imageMeta.url());
 
 		Optional<ImageRef> updatedRef = imageRefService.findByTypeAndReferenceId(type, userId);
 		Long imageRefId = updatedRef.map(ImageRef::getId).orElse(null);

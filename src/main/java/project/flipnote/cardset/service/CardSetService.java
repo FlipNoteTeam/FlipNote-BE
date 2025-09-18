@@ -1,8 +1,10 @@
 package project.flipnote.cardset.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.entity.CardSetMetadata;
 import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CardSetInfo;
 import project.flipnote.cardset.model.CardSetSearchRequest;
 import project.flipnote.cardset.model.CardSetSummaryResponse;
 import project.flipnote.cardset.model.CardSetUpdatePayload;
@@ -31,6 +34,13 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
+import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageMeta;
+import project.flipnote.image.entity.ImageRef;
+import project.flipnote.image.entity.ReferenceType;
+import project.flipnote.image.exception.ImageErrorCode;
+import project.flipnote.image.service.ImageRefService;
+import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -49,6 +59,13 @@ public class CardSetService {
 	private final CardSetManagerRepository cardSetManagerRepository;
 	private final CardSetPolicyService cardSetPolicyService;
 	private final CardSetMetadataRepository cardSetMetadataRepository;
+	private final ImageService imageService;
+	private final ImageRefService imageRefService;
+
+	@Value("${image.default.cardSet}")
+	private String defaultCardSetImage;
+
+	private static final ReferenceType REFERENCE_TYPE = ReferenceType.CARD_SET;
 
 	private UserProfile validateUser(Long userId) {
 		return userProfileRepository.findByIdAndStatus(userId, UserStatus.ACTIVE).orElseThrow(
@@ -84,6 +101,9 @@ public class CardSetService {
 		String hashtags = (req.hashtag() != null && !req.hashtag().isEmpty())
 			? String.join(",", req.hashtag())
 			: null;
+		
+		//이미지 url 찾기
+		String url = imageService.assignImageUrl(REFERENCE_TYPE, req.imageRefId());
 
 		CardSet cardSet = CardSet.builder()
 			.name(req.name())
@@ -91,10 +111,15 @@ public class CardSetService {
 			.publicVisible(req.publicVisible())
 			.category(req.category())
 			.hashtag(hashtags)
-			.imageUrl(req.image())
+			.imageUrl(url)
 			.build();
 
 		cardSetRepository.save(cardSet);
+
+		if(req.imageRefId()!=null) {
+			// 이미지 활성화
+			imageService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, cardSet.getId());
+		}
 
 		CardSetMetadata metadata = CardSetMetadata.builder()
 			.id(cardSet.getId())
@@ -121,7 +146,7 @@ public class CardSetService {
 	 */
 	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
 		// TODO: Projection 튜닝 필요
-		Page<CardSet> cardSetPage = cardSetRepository.searchByNameContainingAndCategory(
+		Page<CardSetInfo> cardSetPage = cardSetRepository.searchByNameContainingAndCategory(
 				req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
 		);
 
@@ -144,7 +169,13 @@ public class CardSetService {
 
 		cardSetPolicyService.validateCardSetViewable(cardSet, userId);
 
-		return CardSetDetailResponse.from(cardSet);
+		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId);
+
+		Long imageRefId = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId)
+			.map(ImageRef::getId)
+			.orElse(null);
+
+		return CardSetDetailResponse.from(cardSet, imageRefId);
 	}
 
 	/**
@@ -163,12 +194,14 @@ public class CardSetService {
 
 		cardSetPolicyService.validateCardSetEditable(userId, cardSetId);
 
+		ImageMeta imageMeta = imageService.changeImage(REFERENCE_TYPE, cardSetId, req.imageRefId());
+
 		CardSetUpdatePayload updatePayload = CardSetUpdatePayload.from(req);
-		cardSet.update(updatePayload);
+		cardSet.update(updatePayload, imageMeta.url());
 
 		cardSetRepository.saveAndFlush(cardSet);
 
-		return CardSetDetailResponse.from(cardSet);
+		return CardSetDetailResponse.from(cardSet, imageMeta.imageRefId());
 	}
 
 	/**
@@ -214,7 +247,7 @@ public class CardSetService {
 	@Transactional
 	public List<CardSetSummaryResponse> getCardSetsByIds(Set<Long> targetIds) {
 		// TODO: MSA로 전환시 전용 DTO로 변경 필요
-		return cardSetRepository.findAllById(targetIds).stream()
+		return cardSetRepository.findAllByIdWithImageRefId(targetIds).stream()
 			.map(CardSetSummaryResponse::from)
 			.toList();
 	}
@@ -244,8 +277,8 @@ public class CardSetService {
 	@Transactional
 	public List<CardSetSummaryResponse> findViewableCardSetsByIds(Set<Long> targetIds, Long userId) {
 		// TODO: MSA로 전환시 전용 DTO로 변경 필요
-		return cardSetRepository.findAllById(targetIds).stream()
-			.filter(cardSet -> cardSetPolicyService.isCardSetViewable(cardSet, userId))
+		return cardSetRepository.findAllByIdWithImageRefId(targetIds).stream()
+			.filter(cardSetInfo -> cardSetPolicyService.isCardSetViewable(cardSetInfo.cardSet(), userId))
 			.map(CardSetSummaryResponse::from)
 			.toList();
 	}

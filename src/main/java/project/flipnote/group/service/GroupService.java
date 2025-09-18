@@ -39,6 +39,7 @@ import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
 import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageMeta;
 import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.exception.ImageErrorCode;
@@ -166,20 +167,8 @@ public class GroupService {
 		//2. 인원수 검증
 		validateMaxMember(req.maxMember());
 
-		String url = defaultGroupImage;
-		Optional<ImageRef> imageRef = Optional.empty();
-
-		if(req.imageRefId()!=null) {
-			imageRef = imageRefService.findById(req.imageRefId());
-		}
-
-		if(imageRef.isPresent()) {
-			Image image = imageRef.get().getImage();
-			if(imageRef.get().getReferenceId()!=null) {
-				throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
-			}
-			url = imageService.generateUrl(image.getS3Key()).toString();
-		}
+		//이미지 url 찾기
+		String url = imageService.assignImageUrl(REFERENCE_TYPE, req.imageRefId());
 
 		//3. 그룹 생성
 		Group group = createGroup(req, url);
@@ -190,7 +179,7 @@ public class GroupService {
 		//5. 그룹 내의 모든 권한 생성
 		initializeGroupPermissions(group);
 
-		if(imageRef.isPresent()) {
+		if(req.imageRefId()!=null) {
 			// 이미지 활성화
 			imageService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, group.getId());
 		}
@@ -302,19 +291,12 @@ public class GroupService {
 			throw new BizException(GroupErrorCode.USER_NOT_PERMISSION);
 		}
 
-		Long imageRefId = null;
-
-		//이미지 변경
-		if(req.imageRefId()!=null) {
-			imageRefId = req.imageRefId();
-		}
-
-		String url = imageService.changeImage(ReferenceType.GROUP, groupId, imageRefId);
+		ImageMeta imageMeta = imageService.changeImage(REFERENCE_TYPE, groupId, req.imageRefId());
 
 		//그룹 수정
-		Group changeGroup = groupPolicyService.changeGroup(groupId, req, url);
+		Group changeGroup = groupPolicyService.changeGroup(groupId, req, imageMeta.url());
 		
-		return GroupPutResponse.from(changeGroup);
+		return GroupPutResponse.from(changeGroup, imageMeta.imageRefId());
 	}
 	/*
 	그룹 내 오너를 제외한 인원이 존재하는 경우 체크

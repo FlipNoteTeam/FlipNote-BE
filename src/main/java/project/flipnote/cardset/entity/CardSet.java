@@ -58,11 +58,11 @@ public class CardSet extends BaseEntity {
 		this.imageUrl = imageUrl;
 	}
 
-	public void update(CardSetUpdatePayload payload) {
+	public void update(CardSetUpdatePayload payload, String imageUrl) {
 		this.name = payload.name();
 		this.publicVisible = payload.publicVisible();
 		this.category = payload.category();
 		this.hashtag = payload.hashtag();
-		this.imageUrl = payload.imageUrl();
+		this.imageUrl = imageUrl;
 	}
 }

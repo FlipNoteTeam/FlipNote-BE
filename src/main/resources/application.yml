@@ -109,3 +109,4 @@ image:
   default:
     user: https://flipnote-bucket.s3.ap-northeast-2.amazonaws.com/image/default/user.png
     group: https://flipnote-bucket.s3.ap-northeast-2.amazonaws.com/image/default/group.png
+    cardSet: https://flipnote-bucket.s3.ap-northeast-2.amazonaws.com/image/default/cardset.png

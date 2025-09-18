@@ -13,6 +13,7 @@ public record CardSetDetailResponse(
 	String category,
 	String hashtag,
 	String imageUrl,
+	Long imageRefId,
 	boolean publicVisible,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -22,7 +23,7 @@ public record CardSetDetailResponse(
 	LocalDateTime modifiedAt
 ) {
 
-	public static CardSetDetailResponse from(CardSet cardSet) {
+	public static CardSetDetailResponse from(CardSet cardSet, Long imageRefId) {
 		return new CardSetDetailResponse(
 			cardSet.getId(),
 			cardSet.getGroup().getId(),
@@ -30,6 +31,7 @@ public record CardSetDetailResponse(
 			cardSet.getCategory().name(),
 			cardSet.getHashtag(),
 			cardSet.getImageUrl(),
+			imageRefId,
 			cardSet.getPublicVisible(),
 			cardSet.getCreatedAt(),
 			cardSet.getModifiedAt()
