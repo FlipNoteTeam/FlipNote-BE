@@ -77,7 +77,7 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 			.where(buildCardSetSearchFilterConditions(name, category));
 
 		if (useMetadata) {
-			selectQuery.join(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
+			selectQuery.leftJoin(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
 		}
 
 		List<CardSet> content = selectQuery
