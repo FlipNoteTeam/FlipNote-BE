@@ -58,6 +58,9 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 			if (sortField == CardSetSortField.LIKE) {
 				orders.add(toOrderSpecifier(cardSetMetadata.likeCount, order));
 				useMetadata = true;
+			} else if (sortField == CardSetSortField.BOOKMARK) {
+				orders.add(toOrderSpecifier(cardSetMetadata.bookmarkCount, order));
+				useMetadata = true;
 			} else {
 				orders.add(toOrderSpecifier(cardSet.id, order));
 				hasIdSort = true;
@@ -74,7 +77,7 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 			.where(buildCardSetSearchFilterConditions(name, category));
 
 		if (useMetadata) {
-			selectQuery.join(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
+			selectQuery.leftJoin(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
 		}
 
 		List<CardSet> content = selectQuery

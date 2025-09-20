@@ -1,10 +1,12 @@
 package project.flipnote.bookmark.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ import project.flipnote.bookmark.model.BookmarkTargetResponse;
 import project.flipnote.bookmark.repository.BookmarkRepository;
 import project.flipnote.cardset.service.CardSetService;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.model.event.BookmarkAddedEvent;
+import project.flipnote.common.model.event.BookmarkRemovedEvent;
+import project.flipnote.common.model.event.BulkBookmarkRemovedEvent;
 import project.flipnote.common.model.response.IdResponse;
 import project.flipnote.common.model.response.PagingResponse;
 
@@ -32,6 +37,7 @@ public class BookmarkService {
 	private final BookmarkRepository bookmarkRepository;
 	private final BookmarkTargetFetchService<BookmarkTargetResponse> bookmarkTargetFetchService;
 	private final CardSetService cardSetService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 즐겨찾기 추가
@@ -59,6 +65,8 @@ public class BookmarkService {
 			throw new BizException(BookmarkErrorCode.BOOKMARK_ALREADY_EXISTS);
 		}
 
+		eventPublisher.publishEvent(new BookmarkAddedEvent(targetType.toEventType(), targetId, userId));
+
 		return IdResponse.from(bookmark.getId());
 	}
 
@@ -77,6 +85,8 @@ public class BookmarkService {
 			.orElseThrow(() -> new BizException(BookmarkErrorCode.BOOKMARK_NOT_EXISTS));
 
 		bookmarkRepository.delete(bookmark);
+
+		eventPublisher.publishEvent(new BookmarkRemovedEvent(targetType.toEventType(), targetId, userId));
 
 		return IdResponse.from(bookmark.getId());
 	}
@@ -128,6 +138,18 @@ public class BookmarkService {
 			return;
 		}
 
-		bookmarkRepository.deleteByTargetTypeAndUserIdAndTargetIdIn(BookmarkTargetType.CARD_SET, userId, privateCardSetIds);
+		BookmarkTargetType targetType = BookmarkTargetType.CARD_SET;
+		List<Bookmark> bookmarks
+			= bookmarkRepository.findAllByTargetTypeAndUserIdAndTargetIdIn(targetType, userId, privateCardSetIds);
+		if (bookmarks.isEmpty()) {
+			return;
+		}
+
+		bookmarkRepository.deleteAll(bookmarks);
+
+		List<Long> targetIds = bookmarks.stream()
+			.map(Bookmark::getTargetId)
+			.toList();
+		eventPublisher.publishEvent(new BulkBookmarkRemovedEvent(targetType.toEventType(), targetIds, userId));
 	}
 }
