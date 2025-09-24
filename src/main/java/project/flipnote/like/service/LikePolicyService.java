@@ -3,27 +3,23 @@ package project.flipnote.like.service;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.cardset.service.CardSetService;
-import project.flipnote.like.entity.LikeTargetType;
+import project.flipnote.bookmark.exception.BookmarkErrorCode;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
+import project.flipnote.like.model.LikeTargetResponse;
 import project.flipnote.like.repository.LikeRepository;
 
 @RequiredArgsConstructor
 @Service
 public class LikePolicyService {
 
-	private final CardSetService cardSetService;
 	private final LikeRepository likeRepository;
+	private final LikeTargetFetchService<LikeTargetResponse> likeTargetFetchService;
 
-	public void validateTargetExists(LikeTargetType targetType, Long targetId) {
-		boolean targetExists = false;
-		switch (targetType) {
-			case CARD_SET -> targetExists = cardSetService.existsById(targetId);
-		}
-
-		if (!targetExists) {
-			throw new BizException(LikeErrorCode.LIKE_TARGET_NOT_FOUND);
+	public void validateTargetExists(LikeTargetType targetType, Long targetId, Long userId) {
+		if (!likeTargetFetchService.isTargetViewable(targetType, targetId, userId)) {
+			throw new BizException(BookmarkErrorCode.BOOKMARK_TARGET_NOT_FOUND);
 		}
 	}
 

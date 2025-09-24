@@ -1,10 +1,8 @@
 package project.flipnote.like.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -13,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -27,7 +24,6 @@ import project.flipnote.like.model.LikeResponse;
 import project.flipnote.like.model.LikeSearchRequest;
 import project.flipnote.like.model.LikeTargetResponse;
 import project.flipnote.like.repository.LikeRepository;
-import project.flipnote.like.service.fetcher.LikeTargetFetcher;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,15 +34,8 @@ public class LikeService {
 	private final LikeRepository likeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 	private final LikePolicyService likePolicyService;
-	private final List<LikeTargetFetcher<?>> fetchers;
-
-	private Map<LikeTargetType, LikeTargetFetcher<?>> fetcherMap;
-
-	@PostConstruct
-	public void init() {
-		this.fetcherMap = this.fetchers.stream()
-			.collect(Collectors.toMap(LikeTargetFetcher::getTargetType, Function.identity()));
-	}
+	private final LikeTargetFetchService<LikeTargetResponse> likeTargetFetchService;
+	private final LikeReader likeReader;
 
 	/**
 	 * 좋아요 추가
@@ -58,7 +47,7 @@ public class LikeService {
 	 */
 	@Transactional
 	public void addLike(Long userId, LikeTargetType targetType, Long targetId) {
-		likePolicyService.validateTargetExists(targetType, targetId);
+		likePolicyService.validateTargetExists(targetType, targetId, userId);
 		likePolicyService.validateNotAlreadyLiked(targetType, targetId, userId);
 
 		Like like = Like.builder()
@@ -86,8 +75,7 @@ public class LikeService {
 	 */
 	@Transactional
 	public void removeLike(Long userId, LikeTargetType targetType, Long targetId) {
-		Like like = likeRepository.findByTargetTypeAndTargetIdAndUserId(targetType, targetId, userId)
-			.orElseThrow(() -> new BizException(LikeErrorCode.LIKE_NOT_FOUND));
+		Like like = likeReader.findByTargetAndUserId(targetType, targetId, userId);
 
 		likeRepository.delete(like);
 
@@ -100,11 +88,10 @@ public class LikeService {
 	 * @param userId   좋아요 누른 목록을 조회하는 회원의 ID
 	 * @param targetType 조회할 좋아요 대상 타입
 	 * @param req      페이징 및 검색 조건이 포함된 요청 정보
-	 * @param <T>      좋아요 대상의 상세 정보를 담은 DTO 타입 (LikeTargetResponse 하위 타입)
 	 * @return 페이징된 좋아요 누른 목록
 	 * @author 윤정환
 	 */
-	public <T extends LikeTargetResponse> PagingResponse<LikeResponse<T>> getLikes(
+	public PagingResponse<LikeResponse<LikeTargetResponse>> getLikes(
 		Long userId,
 		LikeTargetType targetType,
 		LikeSearchRequest req
@@ -114,14 +101,9 @@ public class LikeService {
 			.collect(Collectors.toMap(Like::getTargetId, Like::getCreatedAt));
 		Set<Long> targetIds = likedAtMap.keySet();
 
-		// TODO: 제네릭이 아닌 타입 별로 엔드포인트를 따로 만드는게 좋으려나 고민중, 현재 방법을 유지하면서 더 나은 구조 알고싶음...
-		LikeTargetFetcher<T> fetcher = (LikeTargetFetcher<T>)fetcherMap.get(targetType);
-		if (fetcher == null) {
-			throw new BizException(LikeErrorCode.INVALID_LIKE_TYPE);
-		}
-
-		Map<Long, T> targetMap = fetcher.fetchByIds(targetIds);
-		Page<LikeResponse<T>> content = likePage
+		Map<Long, LikeTargetResponse> targetMap
+			= likeTargetFetchService.fetchByTypeAndIds(targetType, targetIds, userId);
+		Page<LikeResponse<LikeTargetResponse>> content = likePage
 			.map(like -> new LikeResponse<>(targetMap.get(like.getTargetId()), likedAtMap.get(like.getTargetId())));
 
 		return PagingResponse.from(content);

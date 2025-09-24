@@ -25,7 +25,12 @@ public class LikeCardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse
 	}
 
 	@Override
-	public Map<Long, CardSetLikeResponse> fetchByIds(Set<Long> ids) {
+	public boolean isTargetViewable(Long targetId, Long userId) {
+		return cardSetService.isCardSetViewable(targetId, userId);
+	}
+
+	@Override
+	public Map<Long, CardSetLikeResponse> fetchByIds(Set<Long> ids, Long userId) {
 		return cardSetService.getCardSetsByIds(ids).stream()
 			.map(CardSetLikeResponse::from)
 			.collect(Collectors.toMap(LikeTargetResponse::getId, Function.identity()));

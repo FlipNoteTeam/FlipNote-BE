@@ -9,5 +9,7 @@ import project.flipnote.like.model.LikeTargetResponse;
 public interface LikeTargetFetcher<T extends LikeTargetResponse> {
 	LikeTargetType getTargetType();
 
-	Map<Long, T> fetchByIds(Set<Long> ids);
+	boolean isTargetViewable(Long targetId, Long userId);
+
+	Map<Long, T> fetchByIds(Set<Long> targetIds, Long userId);
 }
