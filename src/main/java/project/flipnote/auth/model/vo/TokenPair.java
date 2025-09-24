@@ -1,4 +1,4 @@
-package project.flipnote.auth.model;
+package project.flipnote.auth.model.vo;
 
 public record TokenPair(
 	String accessToken,

@@ -25,6 +25,7 @@ public class AuthPolicyService {
 	private final TokenBlacklistRedisRepository tokenBlacklistRedisRepository;
 	private final PasswordResetRedisRepository passwordResetRedisRepository;
 
+
 	public void validateEmailVerified(String email) {
 		if (!emailVerificationRedisRepository.isVerified(email)) {
 			throw new BizException(AuthErrorCode.UNVERIFIED_EMAIL);

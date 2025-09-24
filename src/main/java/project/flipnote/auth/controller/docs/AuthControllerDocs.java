@@ -4,15 +4,15 @@ import org.springframework.http.ResponseEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import project.flipnote.auth.model.ChangePasswordRequest;
-import project.flipnote.auth.model.EmailVerificationRequest;
-import project.flipnote.auth.model.EmailVerifyRequest;
-import project.flipnote.auth.model.PasswordResetCreateRequest;
-import project.flipnote.auth.model.PasswordResetRequest;
-import project.flipnote.auth.model.UserLoginRequest;
-import project.flipnote.auth.model.UserLoginResponse;
-import project.flipnote.auth.model.UserRegisterRequest;
-import project.flipnote.auth.model.UserRegisterResponse;
+import project.flipnote.auth.model.request.ChangePasswordRequest;
+import project.flipnote.auth.model.request.EmailVerificationRequest;
+import project.flipnote.auth.model.request.EmailVerifyRequest;
+import project.flipnote.auth.model.request.PasswordResetCreateRequest;
+import project.flipnote.auth.model.request.PasswordResetRequest;
+import project.flipnote.auth.model.request.UserLoginRequest;
+import project.flipnote.auth.model.response.UserLoginResponse;
+import project.flipnote.auth.model.request.UserRegisterRequest;
+import project.flipnote.auth.model.response.UserRegisterResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.user.model.SocialLinksResponse;
 
