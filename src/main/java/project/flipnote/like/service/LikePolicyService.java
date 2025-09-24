@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.service.CardSetService;
-import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
 import project.flipnote.like.repository.LikeRepository;
 
