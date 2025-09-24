@@ -226,22 +226,18 @@ public class ImageService {
 	}
 
 	public String assignImageUrl(ReferenceType type, Long imageRefId) {
-		String url = getDefaultImage(type);
-		Optional<ImageRef> imageRef = Optional.empty();
 
-		if(imageRefId != null) {
-			imageRef = imageRefService.findById(imageRefId);
+		if(imageRefId==null) {
+			return getDefaultImage(type);
 		}
 
-		if(imageRef.isPresent()) {
-			Image image = imageRef.get().getImage();
-			if(imageRef.get().getReferenceId()!=null) {
-				throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
+		ImageRef ref = imageRefService.findById(imageRefId).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+		if (ref.getReferenceId() != null) {
+			throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
 			}
-			url = generateUrl(image.getS3Key()).toString();
-		}
-
-		return url;
+		return generateUrl(ref.getImage().getS3Key()).toString();
 	}
 
 
