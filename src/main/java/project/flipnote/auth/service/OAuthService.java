@@ -11,14 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.OAuthConstants;
 import project.flipnote.auth.entity.OAuthLink;
-import project.flipnote.auth.exception.AuthErrorCode;
 import project.flipnote.auth.model.vo.AuthorizationRedirect;
 import project.flipnote.auth.model.vo.TokenPair;
 import project.flipnote.auth.repository.OAuthLinkRepository;
 import project.flipnote.auth.repository.SocialLinkTokenRedisRepository;
 import project.flipnote.auth.repository.UserAuthRepository;
 import project.flipnote.common.config.OAuthProperties;
-import project.flipnote.common.exception.BizException;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtComponent;
 import project.flipnote.common.util.CookieUtil;
@@ -92,7 +90,8 @@ public class OAuthService {
 	public TokenPair socialLogin(String providerName, String code, String codeVerifier, HttpServletRequest request) {
 		OAuth2UserInfo userInfo = oAuthUserInfoService.getOAuth2UserInfo(providerName, code, codeVerifier, request);
 
-		OAuthLink userOAuthLink = oAuthReader.findOAuthLinkByProviderOrThrow(providerName, userInfo.getProviderId());
+		OAuthLink userOAuthLink
+			= oAuthReader.findOAuthLinkByProviderOrThrow(userInfo.getProvider(), userInfo.getProviderId());
 
 		return jwtComponent.generateTokenPair(userOAuthLink.getUserAuth());
 	}

@@ -1,7 +1,8 @@
 package project.flipnote.auth.service;
 
-import java.util.Optional;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -18,10 +19,21 @@ public class OAuthProviderResolver {
 	private final OAuthProperties oAuthProperties;
 
 	public OAuthProperties.Provider getProvider(String providerName) {
-		return Optional.ofNullable(oAuthProperties.getProviders().get(providerName.toLowerCase()))
-			.orElseThrow(() -> {
-				log.warn("지원하지 않는 OAuth Provider 입니다. provider: {}", providerName);
-				return new BizException(AuthErrorCode.INVALID_OAUTH_PROVIDER);
-			});
+		if (StringUtils.isEmpty(providerName)) {
+			throw new BizException(AuthErrorCode.INVALID_OAUTH_PROVIDER);
+		}
+
+		Map<String, OAuthProperties.Provider> providers = oAuthProperties.getProviders();
+		if (providers == null) {
+			throw new BizException(AuthErrorCode.INVALID_OAUTH_PROVIDER);
+		}
+
+		OAuthProperties.Provider provider = providers.get(providerName.toLowerCase());
+		if (provider == null) {
+			log.warn("지원하지 않는 OAuth Provider 입니다. provider: {}", providerName);
+			throw new BizException(AuthErrorCode.INVALID_OAUTH_PROVIDER);
+		}
+
+		return provider;
 	}
 }
