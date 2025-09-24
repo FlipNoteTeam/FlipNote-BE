@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.service.CardSetService;
 import project.flipnote.like.entity.LikeTargetType;
-import project.flipnote.like.model.CardSetLikeResponse;
-import project.flipnote.like.model.LikeTargetResponse;
+import project.flipnote.like.model.response.CardSetLikeResponse;
+import project.flipnote.like.model.response.LikeTargetResponse;
 
 @RequiredArgsConstructor
 @Component

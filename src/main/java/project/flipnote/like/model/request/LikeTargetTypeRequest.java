@@ -1,4 +1,4 @@
-package project.flipnote.like.model;
+package project.flipnote.like.model.request;
 
 import project.flipnote.like.entity.LikeTargetType;
 

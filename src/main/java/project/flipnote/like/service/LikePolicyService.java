@@ -7,7 +7,7 @@ import project.flipnote.bookmark.exception.BookmarkErrorCode;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
-import project.flipnote.like.model.LikeTargetResponse;
+import project.flipnote.like.model.response.LikeTargetResponse;
 import project.flipnote.like.repository.LikeRepository;
 
 @RequiredArgsConstructor
