@@ -21,8 +21,13 @@ public class CardSetMetadata {
 	@Column(nullable = false)
 	private int likeCount;
 
+	@Column(nullable = false)
+	private int bookmarkCount;
+
 	@Builder
 	public CardSetMetadata(Long id) {
 		this.id = id;
+		this.likeCount = 0;
+		this.bookmarkCount = 0;
 	}
 }

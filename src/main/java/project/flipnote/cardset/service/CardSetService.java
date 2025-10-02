@@ -101,7 +101,7 @@ public class CardSetService {
 		String hashtags = (req.hashtag() != null && !req.hashtag().isEmpty())
 			? String.join(",", req.hashtag())
 			: null;
-		
+
 		//이미지 url 찾기
 		String url = imageService.assignImageUrl(REFERENCE_TYPE, req.imageRefId());
 
@@ -256,7 +256,7 @@ public class CardSetService {
 	 * 사용자가 특정 카드셋에 접근할 수 있는지 여부를 확인
 	 *
 	 * @param cardSetId 확인할 카드셋의 ID
-	 * @param userId 	접근 권한을 확인할 사용자의 ID
+	 * @param userId    접근 권한을 확인할 사용자의 ID
 	 * @return 접근 가능 여부
 	 * @author 윤정환
 	 */
@@ -270,7 +270,7 @@ public class CardSetService {
 	 * 카드셋 ID 목록에 해당하는 카드셋 목록 조회
 	 *
 	 * @param targetIds 조회할 카드셋 ID 목록
-	 * @param userId 	카드셋 목록을 조회하는 회원 ID
+	 * @param userId    카드셋 목록을 조회하는 회원 ID
 	 * @return 조회된 카드셋 목록
 	 * @author 윤정환
 	 */
@@ -292,5 +292,38 @@ public class CardSetService {
 	 */
 	public Set<Long> findPrivateCardSetIds(Long groupId) {
 		return cardSetRepository.findPrivateIdsByGroupId(groupId);
+	}
+
+	/**
+	 * 카드셋 즐겨찾기 수를 1 증가
+	 *
+	 * @param cardSetId 즐겨찾기 수를 증가시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void incrementBookmarkCount(Long cardSetId) {
+		cardSetMetadataRepository.incrementBookmarkCount(cardSetId);
+	}
+
+	/**
+	 * 카드셋 즐겨찾기 수를 1 감소
+	 *
+	 * @param cardSetId 즐겨찾기 수를 감소시킬 카드셋 ID
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void decrementBookmarkCount(Long cardSetId) {
+		cardSetMetadataRepository.decrementBookmarkCount(cardSetId);
+	}
+
+	/**
+	 * 여러 카드셋 즐겨찾기 수를 1 감소
+	 *
+	 * @param cardSetIds 즐겨찾기 수를 감소시킬 카드셋 ID 목록
+	 * @author 윤정환
+	 */
+	@Transactional
+	public void decrementBookmarkCount(List<Long> cardSetIds) {
+		cardSetMetadataRepository.decrementBookmarkCount(cardSetIds);
 	}
 }
