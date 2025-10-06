@@ -19,7 +19,7 @@ public class LikePolicyService {
 
 	public void validateTargetExists(LikeTargetType targetType, Long targetId, Long userId) {
 		if (!likeTargetFetchService.isTargetViewable(targetType, targetId, userId)) {
-			throw new BizException(BookmarkErrorCode.BOOKMARK_TARGET_NOT_FOUND);
+			throw new BizException(LikeErrorCode.LIKE_TARGET_NOT_FOUND);
 		}
 	}
 
