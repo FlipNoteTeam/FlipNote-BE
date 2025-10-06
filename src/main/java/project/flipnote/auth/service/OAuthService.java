@@ -77,7 +77,7 @@ public class OAuthService {
 
 		OAuth2UserInfo userInfo = oAuthUserInfoService.getOAuth2UserInfo(providerName, code, codeVerifier, request);
 
-		oAuthPolicyService.validateOAuthLinkExists(authId, userInfo.getProviderId());
+		oAuthPolicyService.validateLinkNotExists(authId, userInfo.getProvider(), userInfo.getProviderId());
 
 		OAuthLink userOAuthLink = new OAuthLink(
 			userInfo.getProvider(),

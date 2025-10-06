@@ -13,8 +13,8 @@ public class OAuthPolicyService {
 
 	private final OAuthLinkRepository oAuthLinkRepository;
 
-	public void validateOAuthLinkExists(Long authId, String providerId) {
-		if (oAuthLinkRepository.existsByUserAuth_IdAndProviderId(authId, providerId)) {
+	public void validateLinkNotExists(Long authId, String provider, String providerId) {
+		if (oAuthLinkRepository.existsByUserAuth_IdAndProviderAndProviderId(authId, provider, providerId)) {
 			throw new BizException(AuthErrorCode.ALREADY_LINKED_SOCIAL_ACCOUNT);
 		}
 	}
