@@ -3,7 +3,6 @@ package project.flipnote.like.service;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import project.flipnote.bookmark.exception.BookmarkErrorCode;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
