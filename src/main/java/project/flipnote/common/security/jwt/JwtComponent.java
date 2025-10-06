@@ -14,7 +14,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.entity.UserAuth;
-import project.flipnote.auth.model.TokenPair;
+import project.flipnote.auth.model.vo.TokenPair;
 import project.flipnote.auth.service.TokenVersionService;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.exception.CustomSecurityException;

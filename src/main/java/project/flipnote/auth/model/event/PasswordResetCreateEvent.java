@@ -1,4 +1,4 @@
-package project.flipnote.auth.event;
+package project.flipnote.auth.model.event;
 
 public record PasswordResetCreateEvent(
 	String to,

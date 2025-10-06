@@ -6,8 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.entity.Like;
+import project.flipnote.like.entity.LikeTargetType;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
 	boolean existsByTargetTypeAndTargetIdAndUserId(LikeTargetType targetType, Long targetId, Long userId);

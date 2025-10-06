@@ -1,16 +1,17 @@
 package project.flipnote.auth.listener;
 
-import org.springframework.context.event.EventListener;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.VerificationConstants;
-import project.flipnote.auth.event.EmailVerificationSendEvent;
+import project.flipnote.auth.model.event.EmailVerificationSendEvent;
 import project.flipnote.common.exception.EmailSendException;
 import project.flipnote.infra.email.EmailService;
 
@@ -27,7 +28,7 @@ public class EmailVerificationEventListener {
 		retryFor = { EmailSendException.class },
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
-	@EventListener
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleEmailVerificationSendEvent(EmailVerificationSendEvent event) {
 		emailService.sendEmailVerificationCode(event.to(), event.code(), VerificationConstants.CODE_TTL_MINUTES);
 	}

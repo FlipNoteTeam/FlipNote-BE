@@ -1,4 +1,4 @@
-package project.flipnote.auth.model;
+package project.flipnote.auth.model.request;
 
 import project.flipnote.common.validation.annotation.ValidPassword;
 

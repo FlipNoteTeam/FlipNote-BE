@@ -11,7 +11,7 @@ import project.flipnote.auth.entity.OAuthLink;
 
 public interface OAuthLinkRepository extends JpaRepository<OAuthLink, Long> {
 
-	boolean existsByUserAuth_IdAndProviderId(Long authId, String providerId);
+	boolean existsByUserAuth_IdAndProviderAndProviderId(Long authId, String provider, String providerId);
 
 	List<OAuthLink> findByUserAuth_Id(Long authId);
 

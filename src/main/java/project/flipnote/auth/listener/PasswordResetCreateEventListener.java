@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.auth.constants.PasswordResetConstants;
-import project.flipnote.auth.event.PasswordResetCreateEvent;
+import project.flipnote.auth.model.event.PasswordResetCreateEvent;
 import project.flipnote.common.exception.EmailSendException;
 import project.flipnote.infra.email.EmailService;
 
@@ -24,10 +24,10 @@ public class PasswordResetCreateEventListener {
 	@Async
 	@Retryable(
 		maxAttempts = 3,
-		retryFor = { EmailSendException.class },
+		retryFor = {EmailSendException.class},
 		backoff = @Backoff(delay = 2000, multiplier = 2)
 	)
-	@EventListener
+	@EventListener()
 	public void handlePasswordResetCreateEvent(PasswordResetCreateEvent event) {
 		emailService.sendPasswordResetLink(event.to(), event.link(), PasswordResetConstants.TOKEN_TTL_MINUTES);
 	}
