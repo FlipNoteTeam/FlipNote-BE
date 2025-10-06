@@ -4,10 +4,12 @@ import java.util.Map;
 import java.util.Set;
 
 import project.flipnote.like.entity.LikeTargetType;
-import project.flipnote.like.model.LikeTargetResponse;
+import project.flipnote.like.model.response.LikeTargetResponse;
 
 public interface LikeTargetFetcher<T extends LikeTargetResponse> {
 	LikeTargetType getTargetType();
 
-	Map<Long, T> fetchByIds(Set<Long> ids);
+	boolean isTargetViewable(Long targetId, Long userId);
+
+	Map<Long, T> fetchByIds(Set<Long> targetIds, Long userId);
 }

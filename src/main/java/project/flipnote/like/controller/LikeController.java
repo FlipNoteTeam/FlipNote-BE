@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.like.controller.docs.LikeControllerDocs;
-import project.flipnote.like.model.LikeResponse;
-import project.flipnote.like.model.LikeSearchRequest;
-import project.flipnote.like.model.LikeTargetResponse;
-import project.flipnote.like.model.LikeTargetTypeRequest;
+import project.flipnote.like.model.response.LikeResponse;
+import project.flipnote.like.model.request.LikeSearchRequest;
+import project.flipnote.like.model.response.LikeTargetResponse;
+import project.flipnote.like.model.request.LikeTargetTypeRequest;
 import project.flipnote.like.service.LikeService;
 
 @RequiredArgsConstructor

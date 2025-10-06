@@ -7,10 +7,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
-import project.flipnote.like.model.LikeResponse;
-import project.flipnote.like.model.LikeSearchRequest;
-import project.flipnote.like.model.LikeTargetResponse;
-import project.flipnote.like.model.LikeTargetTypeRequest;
+import project.flipnote.like.model.response.LikeResponse;
+import project.flipnote.like.model.request.LikeSearchRequest;
+import project.flipnote.like.model.response.LikeTargetResponse;
+import project.flipnote.like.model.request.LikeTargetTypeRequest;
 
 @Tag(name = "Like", description = "Like API")
 public interface LikeControllerDocs {

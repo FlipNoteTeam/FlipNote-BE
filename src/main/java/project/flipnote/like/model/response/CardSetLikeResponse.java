@@ -1,4 +1,4 @@
-package project.flipnote.like.model;
+package project.flipnote.like.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

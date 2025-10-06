@@ -1,4 +1,4 @@
-package project.flipnote.like.model;
+package project.flipnote.like.model.request;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.service.CardSetService;
 import project.flipnote.like.entity.LikeTargetType;
-import project.flipnote.like.model.CardSetLikeResponse;
-import project.flipnote.like.model.LikeTargetResponse;
+import project.flipnote.like.model.response.CardSetLikeResponse;
+import project.flipnote.like.model.response.LikeTargetResponse;
 
 @RequiredArgsConstructor
 @Component
@@ -25,7 +25,12 @@ public class LikeCardSetFetcher implements LikeTargetFetcher<CardSetLikeResponse
 	}
 
 	@Override
-	public Map<Long, CardSetLikeResponse> fetchByIds(Set<Long> ids) {
+	public boolean isTargetViewable(Long targetId, Long userId) {
+		return cardSetService.isCardSetViewable(targetId, userId);
+	}
+
+	@Override
+	public Map<Long, CardSetLikeResponse> fetchByIds(Set<Long> ids, Long userId) {
 		return cardSetService.getCardSetsByIds(ids).stream()
 			.map(CardSetLikeResponse::from)
 			.collect(Collectors.toMap(LikeTargetResponse::getId, Function.identity()));
