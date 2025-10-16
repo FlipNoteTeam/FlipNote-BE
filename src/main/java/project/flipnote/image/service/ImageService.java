@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
 import project.flipnote.image.entity.Image;
+import project.flipnote.image.entity.ImageMeta;
 import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.exception.ImageErrorCode;
@@ -42,6 +43,9 @@ public class ImageService {
 
 	@Value("${image.default.user}")
 	private String defaultUserImage;
+
+	@Value("${image.default.cardSet}")
+	private String defaultCardSetImage;
 
 	private final ImageRefService imageRefService;
 	private final ImageRepository imageRepository;
@@ -162,7 +166,6 @@ public class ImageService {
 		}
 	}
 
-
 	public String getURLByReferenceId(ReferenceType type, Long referenceId) {
 		Image image = imageRepository.findImageByReferenceId(type, referenceId).orElseThrow(
 			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
@@ -173,16 +176,8 @@ public class ImageService {
 		return url.toString();
 	}
 
-	private String getDefaultUrl(ReferenceType type) {
-		return switch (type) {
-			case GROUP -> defaultGroupImage;
-			case USER  -> defaultUserImage;
-			default    -> throw new BizException(ImageErrorCode.INVALID_URL);
-		};
-	}
-
 	@Transactional
-	public String changeImage(ReferenceType type, Long referenceId, Long imageRefId) {
+	public ImageMeta changeImage(ReferenceType type, Long referenceId, Long imageRefId) {
 
 		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(type, referenceId);
 
@@ -190,18 +185,61 @@ public class ImageService {
 			if(imageRef.isPresent()) {
 				imageRefService.delete(imageRef.get());
 			}
-			return getDefaultUrl(type);
+
+			String url = getDefaultImage(type);
+
+			return ImageMeta.from(null, url);
+
+		}
+
+		// 신규 imageRef가 이미 다른 대상에 묶여있는지 선검증
+		ImageRef targetRef = imageRefService.findById(imageRefId).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+		if (targetRef.getReferenceId() != null &&
+			!(type.equals(targetRef.getReferenceType()) && referenceId.equals(targetRef.getReferenceId()))) {
+			throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
 		}
 
 		if(imageRef.isPresent()) {
 			if (imageRef.get().getId().equals(imageRefId)) {
-				return getURLByReferenceId(type, referenceId);
+				String url = getURLByReferenceId(type, referenceId);
+
+				return ImageMeta.from(imageRef.get().getId(), url);
 			}
 			imageRefService.delete(imageRef.get());
 		}
 
 		imageRefService.imageActivate(imageRefId, type, referenceId);
 
-		return getURLByReferenceId(type, referenceId);
+		String url = getURLByReferenceId(type, referenceId);
+
+		return ImageMeta.from(imageRefId, url);
 	}
+
+	private String getDefaultImage(ReferenceType type) {
+		return switch (type) {
+			case USER -> defaultUserImage;
+			case GROUP -> defaultGroupImage;
+			case CARD_SET -> defaultCardSetImage;
+		};
+	}
+
+	public String assignImageUrl(ReferenceType type, Long imageRefId) {
+
+		if(imageRefId==null) {
+			return getDefaultImage(type);
+		}
+
+		ImageRef ref = imageRefService.findById(imageRefId).orElseThrow(
+			() -> new BizException(ImageErrorCode.IMAGE_NOT_FOUND)
+		);
+		if (ref.getReferenceId() != null) {
+			throw new BizException(ImageErrorCode.CONFLICT_IMAGE_REF);
+			}
+		return generateUrl(ref.getImage().getS3Key()).toString();
+	}
+
+
+
 }

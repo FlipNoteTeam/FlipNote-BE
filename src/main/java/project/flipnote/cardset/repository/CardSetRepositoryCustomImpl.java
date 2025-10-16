@@ -3,7 +3,9 @@ package project.flipnote.cardset.repository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -22,8 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.QCardSet;
 import project.flipnote.cardset.entity.QCardSetMetadata;
+import project.flipnote.cardset.model.CardSetInfo;
 import project.flipnote.cardset.model.CardSetSortField;
 import project.flipnote.group.entity.Category;
+import project.flipnote.image.entity.QImageRef;
+import project.flipnote.image.entity.ReferenceType;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,9 +40,10 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 
 	private final QCardSet cardSet = QCardSet.cardSet;
 	private final QCardSetMetadata cardSetMetadata = QCardSetMetadata.cardSetMetadata;
+	private final QImageRef imageRef = QImageRef.imageRef;
 
 	@Override
-	public Page<CardSet> searchByNameContainingAndCategory(
+	public Page<CardSetInfo> searchByNameContainingAndCategory(
 		String name,
 		Category category,
 		Pageable pageable
@@ -71,16 +78,29 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 			orders.add(cardSet.id.desc());
 		}
 
-		JPAQuery<CardSet> selectQuery = queryFactory
-			.select(cardSet)
+		JPAQuery<CardSetInfo> selectQuery = queryFactory
+			.select(
+				Projections.constructor(
+					CardSetInfo.class,
+					cardSet,
+					cardSet.group,
+					cardSet.name,
+					cardSet.category,
+					cardSet.hashtag,
+					cardSet.imageUrl,
+					imageRef.id
+				))
 			.from(cardSet)
-			.where(buildCardSetSearchFilterConditions(name, category));
+			.where(buildCardSetSearchFilterConditions(name, category))
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
+				.and(imageRef.referenceId.eq(cardSet.id)));
 
 		if (useMetadata) {
 			selectQuery.leftJoin(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
 		}
 
-		List<CardSet> content = selectQuery
+		List<CardSetInfo> content = selectQuery
 			.orderBy(orders.toArray(new OrderSpecifier[0]))
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
@@ -93,6 +113,26 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 			.fetchOne();
 
 		return new PageImpl<>(content, pageable, total != null ? total : 0L);
+	}
+
+	public List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets) {
+		return queryFactory.select(
+			Projections.constructor(
+				CardSetInfo.class,
+				cardSet,
+				cardSet.group,
+				cardSet.name,
+				cardSet.category,
+				cardSet.hashtag,
+				cardSet.imageUrl,
+				imageRef.id
+			))
+			.from(cardSet)
+			.where(cardSet.id.in(cardSets))
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
+				.and(imageRef.referenceId.eq(cardSet.id)))
+			.fetch();
 	}
 
 	private OrderSpecifier<?> toOrderSpecifier(

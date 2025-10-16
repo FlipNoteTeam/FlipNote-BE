@@ -20,11 +20,13 @@ public record GroupPutResponse(
 
 	String imageUrl,
 
+	Long imageRefId,
+
 	LocalDateTime createdAt,
 
 	LocalDateTime modifiedAt
 ) {
-	public static GroupPutResponse from(Group group) {
+	public static GroupPutResponse from(Group group, Long imageRefId) {
 		return new GroupPutResponse(
 			group.getName(),
 			group.getCategory(),
@@ -33,6 +35,7 @@ public record GroupPutResponse(
 			group.getPublicVisible(),
 			group.getMaxMember(),
 			group.getImageUrl(),
+			imageRefId,
 			group.getCreatedAt(),
 			group.getModifiedAt()
 		);

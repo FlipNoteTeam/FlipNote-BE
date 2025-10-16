@@ -24,7 +24,6 @@ public record CreateCardSetRequest(
 	@NotNull
 	List<String> hashtag,
 
-	@URL
-	String image
+	Long imageRefId
 ) {
 }

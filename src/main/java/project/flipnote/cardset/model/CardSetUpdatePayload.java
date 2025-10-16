@@ -7,7 +7,7 @@ public record CardSetUpdatePayload(
 	Boolean publicVisible,
 	Category category,
 	String hashtag,
-	String imageUrl
+	Long imageRefId
 ) {
 
 	public static CardSetUpdatePayload from(CardSetUpdateRequest req) {
@@ -16,7 +16,7 @@ public record CardSetUpdatePayload(
 			req.publicVisible(),
 			req.category(),
 			req.getHashTag(),
-			req.image()
+			req.imageRefId()
 		);
 	}
 }

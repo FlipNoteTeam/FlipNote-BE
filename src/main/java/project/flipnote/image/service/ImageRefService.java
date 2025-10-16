@@ -3,6 +3,7 @@ package project.flipnote.image.service;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.common.exception.BizException;
@@ -16,6 +17,7 @@ import project.flipnote.image.repository.ImageRefRepository;
 public class ImageRefService {
 	private final ImageRefRepository imageRefRepository;
 
+	@Transactional
 	public void save(ImageRef imageRef) {
 		imageRefRepository.save(imageRef);
 	}

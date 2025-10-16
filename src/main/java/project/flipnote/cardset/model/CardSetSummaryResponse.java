@@ -8,17 +8,19 @@ public record CardSetSummaryResponse(
 	String name,
 	String category,
 	String hashtag,
-	String imageUrl
+	String imageUrl,
+	Long imageRefId
 ) {
 
-	public static CardSetSummaryResponse from(CardSet cardSet) {
+	public static CardSetSummaryResponse from(CardSetInfo cardSetInfo) {
 		return new CardSetSummaryResponse(
-			cardSet.getId(),
-			cardSet.getGroup().getId(),
-			cardSet.getName(),
-			cardSet.getCategory().name(),
-			cardSet.getHashtag(),
-			cardSet.getImageUrl()
+			cardSetInfo.cardSet().getId(),
+			cardSetInfo.group().getId(),
+			cardSetInfo.name(),
+			cardSetInfo.category().name(),
+			cardSetInfo.hashtag(),
+			cardSetInfo.imageUrl(),
+			cardSetInfo.imageRefId()
 		);
 	}
 }
