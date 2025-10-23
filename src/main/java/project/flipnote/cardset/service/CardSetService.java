@@ -34,11 +34,10 @@ import project.flipnote.group.entity.Group;
 import project.flipnote.group.exception.GroupErrorCode;
 import project.flipnote.group.repository.GroupMemberRepository;
 import project.flipnote.group.repository.GroupRepository;
-import project.flipnote.image.entity.Image;
+import project.flipnote.group.service.GroupService;
 import project.flipnote.image.entity.ImageMeta;
 import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
-import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.service.ImageRefService;
 import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
@@ -61,6 +60,7 @@ public class CardSetService {
 	private final CardSetMetadataRepository cardSetMetadataRepository;
 	private final ImageService imageService;
 	private final ImageRefService imageRefService;
+	private final GroupService groupService;
 
 	@Value("${image.default.cardSet}")
 	private String defaultCardSetImage;
@@ -336,6 +336,8 @@ public class CardSetService {
 	 * @author 윤정환
 	 */
 	public PagingResponse<CardSetSummaryResponse> getCardSets(long groupId, CardSetSearchRequest req) {
+		groupService.validateGroupExists(groupId);
+
 		// TODO: Projection 튜닝 필요
 		Page<CardSetInfo> cardSetPage = cardSetRepository.searchByGroupIdAndNameContainingAndCategory(
 			groupId, req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()

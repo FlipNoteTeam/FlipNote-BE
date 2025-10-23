@@ -38,11 +38,9 @@ import project.flipnote.group.repository.GroupPermissionRepository;
 import project.flipnote.group.repository.GroupRepository;
 import project.flipnote.group.repository.GroupRolePermissionRepository;
 import project.flipnote.groupjoin.exception.GroupJoinErrorCode;
-import project.flipnote.image.entity.Image;
 import project.flipnote.image.entity.ImageMeta;
 import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
-import project.flipnote.image.exception.ImageErrorCode;
 import project.flipnote.image.service.ImageRefService;
 import project.flipnote.image.service.ImageService;
 import project.flipnote.user.entity.UserProfile;
@@ -446,6 +444,19 @@ public class GroupService {
 			user.getId());
 
 		return createGroupInfoCursorPagingResponse(req, groups);
+	}
+
+	/**
+	 * 지정된 그룹 ID가 존재하는지 검사합니다.
+	 *
+	 * @param groupId 존재 여부를 확인할 그룹의 ID
+	 * @throws BizException 그룹이 존재하지 않을 경우 발생
+	 * @author 윤정환
+	 */
+	public void validateGroupExists(Long groupId) {
+		if (!groupRepository.existsById(groupId)) {
+			throw new BizException(GroupErrorCode.GROUP_NOT_FOUND);
+		}
 	}
 
 	//리스트 조회시 response 생성

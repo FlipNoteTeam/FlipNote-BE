@@ -1,7 +1,5 @@
 package project.flipnote.cardset.model;
 
-import project.flipnote.cardset.entity.CardSet;
-
 public record CardSetSummaryResponse(
 	Long cardSetId,
 	Long groupId,
