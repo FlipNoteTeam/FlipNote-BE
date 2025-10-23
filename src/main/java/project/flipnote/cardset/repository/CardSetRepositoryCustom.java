@@ -20,7 +20,7 @@ public interface CardSetRepositoryCustom {
 	List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets);
 
 	Page<CardSetInfo> searchByGroupIdAndNameContainingAndCategory(
-		long groupId,
+		Long groupId,
 		String name,
 		Category category,
 		Pageable pageable

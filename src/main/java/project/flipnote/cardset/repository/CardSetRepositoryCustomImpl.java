@@ -46,71 +46,7 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 		Category category,
 		Pageable pageable
 	) {
-		List<OrderSpecifier<?>> orders = new ArrayList<>();
-
-		boolean useMetadata = false;
-		boolean hasIdSort = false;
-		for (Sort.Order order : pageable.getSort()) {
-			CardSetSortField sortField = null;
-			try {
-				sortField = CardSetSortField.valueOf(order.getProperty());
-			} catch (IllegalArgumentException iae) {
-				log.warn(
-					"Unknown sort property: {}. Valid values are {}",
-					order.getProperty(), Arrays.toString(CardSetSortField.values()), iae
-				);
-			}
-			if (sortField == CardSetSortField.LIKE) {
-				orders.add(toOrderSpecifier(cardSetMetadata.likeCount, order));
-				useMetadata = true;
-			} else if (sortField == CardSetSortField.BOOKMARK) {
-				orders.add(toOrderSpecifier(cardSetMetadata.bookmarkCount, order));
-				useMetadata = true;
-			} else {
-				orders.add(toOrderSpecifier(cardSet.id, order));
-				hasIdSort = true;
-			}
-		}
-
-		if (!hasIdSort) {
-			orders.add(cardSet.id.desc());
-		}
-
-		JPAQuery<CardSetInfo> selectQuery = queryFactory
-			.select(
-				Projections.constructor(
-					CardSetInfo.class,
-					cardSet,
-					cardSet.group,
-					cardSet.name,
-					cardSet.category,
-					cardSet.hashtag,
-					cardSet.imageUrl,
-					imageRef.id
-				))
-			.from(cardSet)
-			.where(buildCardSetSearchFilterConditions(null, name, category))
-			.leftJoin(imageRef)
-			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
-				.and(imageRef.referenceId.eq(cardSet.id)));
-
-		if (useMetadata) {
-			selectQuery.leftJoin(cardSetMetadata).on(cardSet.id.eq(cardSetMetadata.id));
-		}
-
-		List<CardSetInfo> content = selectQuery
-			.orderBy(orders.toArray(new OrderSpecifier[0]))
-			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
-			.fetch();
-
-		Long total = queryFactory
-			.select(cardSet.count())
-			.from(cardSet)
-			.where(buildCardSetSearchFilterConditions(null, name, category))
-			.fetchOne();
-
-		return new PageImpl<>(content, pageable, total != null ? total : 0L);
+		return searchByGroupIdAndNameContainingAndCategory(null, name, category, pageable);
 	}
 
 	public List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets) {
@@ -135,7 +71,7 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 
 	@Override
 	public Page<CardSetInfo> searchByGroupIdAndNameContainingAndCategory(
-		long groupId,
+		Long groupId,
 		String name,
 		Category category,
 		Pageable pageable
