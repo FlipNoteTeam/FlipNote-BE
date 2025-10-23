@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,10 +16,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import project.flipnote.cardset.controller.docs.GroupCardSetControllerDocs;
 import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CardSetSearchRequest;
+import project.flipnote.cardset.model.CardSetSummaryResponse;
 import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.service.CardSetService;
+import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 
 @RequiredArgsConstructor
@@ -62,4 +66,13 @@ public class GroupCardSetController implements GroupCardSetControllerDocs {
 		return ResponseEntity.ok(res);
 	}
 
+	@GetMapping
+	public ResponseEntity<PagingResponse<CardSetSummaryResponse>> getCardSets(
+		@PathVariable("groupId") Long groupId,
+		@Valid @ModelAttribute CardSetSearchRequest req
+	) {
+		PagingResponse<CardSetSummaryResponse> res = cardSetService.getCardSets(groupId, req);
+
+		return ResponseEntity.ok(res);
+	}
 }

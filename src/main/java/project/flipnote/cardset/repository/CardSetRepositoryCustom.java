@@ -6,7 +6,6 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.model.CardSetInfo;
 import project.flipnote.group.entity.Category;
 
@@ -19,4 +18,11 @@ public interface CardSetRepositoryCustom {
 	);
 
 	List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets);
+
+	Page<CardSetInfo> searchByGroupIdAndNameContainingAndCategory(
+		long groupId,
+		String name,
+		Category category,
+		Pageable pageable
+	);
 }
