@@ -106,4 +106,15 @@ public class GroupController implements GroupControllerDocs {
 
 		return ResponseEntity.ok(res);
 	}
+
+	//내가 생성한 그룹 전체 조회
+	@GetMapping("/created")
+	public ResponseEntity<CursorPagingResponse<GroupInfo>> findCreatedGroup(
+		@AuthenticationPrincipal AuthPrinciple authPrinciple,
+		@Valid @ModelAttribute GroupListRequest req
+	) {
+		CursorPagingResponse<GroupInfo> res = groupService.findCreatedGroup(authPrinciple, req);
+
+		return ResponseEntity.ok(res);
+	}
 }

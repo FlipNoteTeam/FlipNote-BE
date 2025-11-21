@@ -9,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 import project.flipnote.group.entity.Category;
+import project.flipnote.group.entity.GroupMemberRole;
 import project.flipnote.group.entity.QGroup;
 import project.flipnote.group.entity.QGroupMember;
 import project.flipnote.group.model.GroupInfo;
@@ -87,6 +88,43 @@ public class GroupRepositoryImpl implements GroupRepositoryCustom {
 				.and(imageRef.referenceId.eq(group.id)))
 			.orderBy(group.id.desc())
 			.limit(pageSize+1)
+			.fetch();
+	}
+
+	/**
+	 * 그룹 테이블에 생성한 유저 추가?
+	 * @param lastId
+	 * @param category
+	 * @param pageSize
+	 * @param userId
+	 * @return
+	 */
+	@Override
+	public List<GroupInfo> findAllByCursorAndCreatedUserId(Long lastId, Category category, int pageSize, Long userId) {
+		return queryFactory
+			.select(Projections.constructor(
+				GroupInfo.class,
+				group.id,
+				group.name,
+				group.description,
+				group.category,
+				group.imageUrl,
+				imageRef.id
+			))
+			.from(group)
+			.join(groupMember).on(groupMember.group.eq(group))
+			.where(
+				group.deletedAt.isNull(),
+				groupMember.user.id.eq(userId),
+				groupMember.role.eq(GroupMemberRole.OWNER),
+				lastId != null ? group.id.lt(lastId) : null,
+				category != null ? group.category.eq(category) : null
+			)
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.GROUP)
+				.and(imageRef.referenceId.eq(group.id)))
+			.orderBy(group.id.desc())
+			.limit(pageSize + 1)
 			.fetch();
 	}
 

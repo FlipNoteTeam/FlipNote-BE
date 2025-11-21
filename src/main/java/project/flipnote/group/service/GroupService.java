@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.common.exception.BizException;
@@ -460,5 +461,20 @@ public class GroupService {
 		Long nextCursor = hasNext ? groups.get(groups.size() - 1).groupId() : null;
 
 		return CursorPagingResponse.of(groups, hasNext, nextCursor);
+	}
+
+	//리팩토링
+	public CursorPagingResponse<GroupInfo> findCreatedGroup(AuthPrinciple authPrinciple, GroupListRequest req) {
+		//1. 유저 가져오기
+		UserProfile user = getUser(authPrinciple);
+
+		//2. 카테고리 변환
+		Category category = convertCategory(req.getCategory());
+
+		List<GroupInfo> groups = groupRepository.findAllByCursorAndCreatedUserId(req.getCursorId(), category, req.getSize(),
+			user.getId());
+
+
+		return createGroupInfoCursorPagingResponse(req, groups);
 	}
 }
