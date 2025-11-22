@@ -2,8 +2,6 @@ package project.flipnote.group.repository;
 
 import java.util.List;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import project.flipnote.group.entity.Category;
 import project.flipnote.group.model.GroupInfo;
 
