@@ -6,7 +6,7 @@ COPY src ./src
 
 RUN gradle bootJar --no-daemon
 
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:17-alpine
 WORKDIR /app
 
 ENV TZ=Asia/Seoul
