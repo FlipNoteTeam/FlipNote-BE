@@ -6,15 +6,13 @@ COPY src ./src
 
 RUN gradle bootJar --no-daemon
 
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:17.0.17-alpine3.22
 WORKDIR /app
 
 ENV TZ=Asia/Seoul
-RUN apt-get update \
-    && apt-get install -y tzdata \
+RUN apk add --no-cache tzdata \
     && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
-    && echo $TZ > /etc/timezone \
-    && rm -rf /var/lib/apt/lists/*
+    && echo $TZ > /etc/timezone
 
 COPY --from=build /app/build/libs/flipnote-0.0.1-SNAPSHOT.jar .
 
