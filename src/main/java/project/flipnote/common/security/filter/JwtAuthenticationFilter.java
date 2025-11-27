@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		FilterChain filterChain
 	) throws ServletException, IOException {
 		String token = extractToken(request);
+		System.out.println(token);
 
 		if (StringUtils.hasText(token)) {
 			AuthPrinciple userAuth = jwtComponent.extractUserAuthFromToken(token);
@@ -45,9 +47,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	private String extractToken(HttpServletRequest request) {
-		String bearerToken = request.getHeader(JwtConstants.AUTH_HEADER);
-		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(JwtConstants.TOKEN_PREFIX)) {
-			return bearerToken.substring(JwtConstants.TOKEN_PREFIX.length());
+		Cookie[] cookies = request.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (JwtConstants.ACCESS_TOKEN.equals(cookie.getName())) {
+					String token = cookie.getValue();
+					if (StringUtils.hasText(token)) {
+						return token;
+					}
+				}
+			}
 		}
 		return null;
 	}

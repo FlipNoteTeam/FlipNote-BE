@@ -42,7 +42,7 @@ public class OAuthController implements OAuthControllerDocs {
 	private final CookieUtil cookieUtil;
 
 	@GetMapping("/oauth2/authorization/{provider}")
-	public ResponseEntity<Void> redirectToProviderAuthorization(
+	public ResponseEntity<String> redirectToProviderAuthorization(
 		@PathVariable("provider") String provider,
 		HttpServletRequest request,
 		@AuthenticationPrincipal AuthPrinciple userAuth

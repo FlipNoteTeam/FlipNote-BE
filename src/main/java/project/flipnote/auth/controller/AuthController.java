@@ -23,11 +23,10 @@ import project.flipnote.auth.model.request.EmailVerificationRequest;
 import project.flipnote.auth.model.request.EmailVerifyRequest;
 import project.flipnote.auth.model.request.PasswordResetCreateRequest;
 import project.flipnote.auth.model.request.PasswordResetRequest;
-import project.flipnote.auth.model.vo.TokenPair;
 import project.flipnote.auth.model.request.UserLoginRequest;
-import project.flipnote.auth.model.response.UserLoginResponse;
 import project.flipnote.auth.model.request.UserRegisterRequest;
 import project.flipnote.auth.model.response.UserRegisterResponse;
+import project.flipnote.auth.model.vo.TokenPair;
 import project.flipnote.auth.service.AuthService;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.common.security.jwt.JwtConstants;
@@ -51,10 +50,17 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<UserLoginResponse> login(
+	public ResponseEntity<Void> login(
 		@Valid @RequestBody UserLoginRequest req
 	) {
 		TokenPair tokenPair = authService.login(req);
+
+		long accessTokenExpire = jwtProperties.getAccessTokenExpiration().toSeconds();
+		ResponseCookie accessCookie = cookieUtil.createCookie(
+			JwtConstants.ACCESS_TOKEN,
+			tokenPair.accessToken(),
+			Math.toIntExact(accessTokenExpire)
+		);
 
 		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
 		ResponseCookie cookie = cookieUtil.createCookie(
@@ -64,8 +70,9 @@ public class AuthController implements AuthControllerDocs {
 		);
 
 		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, accessCookie.toString())
 			.header(HttpHeaders.SET_COOKIE, cookie.toString())
-			.body(UserLoginResponse.from(tokenPair.accessToken()));
+			.build();
 	}
 
 	@PostMapping("/logout")
@@ -94,10 +101,17 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/token/refresh")
-	public ResponseEntity<UserLoginResponse> refreshToken(
+	public ResponseEntity<Void> refreshToken(
 		@CookieValue(name = JwtConstants.REFRESH_TOKEN) String refreshToken
 	) {
 		TokenPair tokenPair = authService.refreshToken(refreshToken);
+
+		long accessTokenExpire = jwtProperties.getAccessTokenExpiration().toSeconds();
+		ResponseCookie accessCookie = cookieUtil.createCookie(
+			JwtConstants.ACCESS_TOKEN,
+			tokenPair.accessToken(),
+			Math.toIntExact(accessTokenExpire)
+		);
 
 		long expirationSeconds = jwtProperties.getRefreshTokenExpiration().toSeconds();
 		ResponseCookie cookie = cookieUtil.createCookie(
@@ -107,8 +121,9 @@ public class AuthController implements AuthControllerDocs {
 		);
 
 		return ResponseEntity.ok()
+			.header(HttpHeaders.SET_COOKIE, accessCookie.toString())
 			.header(HttpHeaders.SET_COOKIE, cookie.toString())
-			.body(UserLoginResponse.from(tokenPair.accessToken()));
+			.build();
 	}
 
 	@PostMapping("/password-reset/request")
