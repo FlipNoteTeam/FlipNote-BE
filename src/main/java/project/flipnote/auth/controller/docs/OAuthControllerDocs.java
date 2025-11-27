@@ -11,7 +11,7 @@ import project.flipnote.common.security.dto.AuthPrinciple;
 public interface OAuthControllerDocs {
 
 	@Operation(summary = "소셜 인증 URL로 리다이렉트")
-	ResponseEntity<Void> redirectToProviderAuthorization(
+	ResponseEntity<String> redirectToProviderAuthorization(
 		String provider,
 		HttpServletRequest request,
 		AuthPrinciple userAuth

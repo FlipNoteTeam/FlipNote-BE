@@ -10,7 +10,6 @@ import project.flipnote.auth.model.request.EmailVerifyRequest;
 import project.flipnote.auth.model.request.PasswordResetCreateRequest;
 import project.flipnote.auth.model.request.PasswordResetRequest;
 import project.flipnote.auth.model.request.UserLoginRequest;
-import project.flipnote.auth.model.response.UserLoginResponse;
 import project.flipnote.auth.model.request.UserRegisterRequest;
 import project.flipnote.auth.model.response.UserRegisterResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
@@ -22,9 +21,9 @@ public interface AuthControllerDocs {
 	ResponseEntity<UserRegisterResponse> register(UserRegisterRequest req);
 
 	@Operation(summary = "로그인")
-	ResponseEntity<UserLoginResponse> login(UserLoginRequest req);
+	ResponseEntity<Void> login(UserLoginRequest req);
 
-	@Operation(summary = "로그아웃", security = { @SecurityRequirement(name = "access-token") })
+	@Operation(summary = "로그아웃", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<Void> logout();
 
 	@Operation(summary = "이메일 인증번호 전송")
@@ -34,7 +33,7 @@ public interface AuthControllerDocs {
 	ResponseEntity<Void> verifyEmail(EmailVerifyRequest req);
 
 	@Operation(summary = "토큰 갱신")
-	ResponseEntity<UserLoginResponse> refreshToken(String refreshToken);
+	ResponseEntity<Void> refreshToken(String refreshToken);
 
 	@Operation(summary = "비밀번호 재설정 링크 전송")
 	ResponseEntity<Void> requestPasswordReset(PasswordResetCreateRequest req);
@@ -42,12 +41,12 @@ public interface AuthControllerDocs {
 	@Operation(summary = "비밀번호 재설정")
 	ResponseEntity<Void> resetPassword(PasswordResetRequest req);
 
-	@Operation(summary = "내 비밀번호 변경", security = { @SecurityRequirement(name = "access-token") })
+	@Operation(summary = "내 비밀번호 변경", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<Void> updatePassword(AuthPrinciple userAuth, ChangePasswordRequest req);
 
-	@Operation(summary = "내 소셜 연동 계정 목록 조회", security = { @SecurityRequirement(name = "access-token") })
+	@Operation(summary = "내 소셜 연동 계정 목록 조회", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<SocialLinksResponse> getSocialLinks(AuthPrinciple userAuth);
 
-	@Operation(summary = "소셜 연동 해제", security = { @SecurityRequirement(name = "access-token") })
+	@Operation(summary = "소셜 연동 해제", security = {@SecurityRequirement(name = "access-token")})
 	ResponseEntity<Void> deleteSocialLink(AuthPrinciple userAuth, Long socialLinkId);
 }
