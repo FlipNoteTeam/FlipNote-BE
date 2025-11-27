@@ -472,4 +472,19 @@ public class GroupService {
 
 		return CursorPagingResponse.of(groups, hasNext, nextCursor);
 	}
+
+	//리팩토링
+	public CursorPagingResponse<GroupInfo> findCreatedGroup(AuthPrinciple authPrinciple, GroupListRequest req) {
+		//1. 유저 가져오기
+		UserProfile user = getUser(authPrinciple);
+
+		//2. 카테고리 변환
+		Category category = convertCategory(req.getCategory());
+
+		List<GroupInfo> groups = groupRepository.findAllByCursorAndCreatedUserId(req.getCursorId(), category, req.getSize(),
+			user.getId());
+
+
+		return createGroupInfoCursorPagingResponse(req, groups);
+	}
 }

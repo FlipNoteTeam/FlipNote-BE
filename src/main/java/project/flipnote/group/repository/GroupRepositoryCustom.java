@@ -9,4 +9,6 @@ public interface GroupRepositoryCustom {
 	List<GroupInfo> findAllByCursor(Long lastId, Category category, int pageSize);
 
 	List<GroupInfo> findAllByCursorAndUserId(Long lastId, Category category, int pageSize, Long userId);
+
+	List<GroupInfo> findAllByCursorAndCreatedUserId(Long cursorId, Category category, int size, Long id);
 }
