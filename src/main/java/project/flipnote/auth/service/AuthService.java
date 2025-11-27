@@ -90,6 +90,7 @@ public class AuthService {
 		return jwtComponent.generateTokenPair(userAuth);
 	}
 
+	@Transactional
 	public void sendEmailVerificationCode(EmailVerificationRequest req) {
 		String email = req.email();
 
@@ -125,6 +126,7 @@ public class AuthService {
 		return jwtComponent.generateTokenPair(userAuth);
 	}
 
+	@Transactional
 	public void requestPasswordReset(PasswordResetCreateRequest req) {
 		String email = req.email();
 
