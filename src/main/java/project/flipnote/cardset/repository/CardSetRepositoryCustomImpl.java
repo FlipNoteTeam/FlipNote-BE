@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +21,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.QCardSet;
 import project.flipnote.cardset.entity.QCardSetMetadata;
 import project.flipnote.cardset.model.CardSetInfo;
@@ -44,6 +42,36 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 
 	@Override
 	public Page<CardSetInfo> searchByNameContainingAndCategory(
+		String name,
+		Category category,
+		Pageable pageable
+	) {
+		return searchByGroupIdAndNameContainingAndCategory(null, name, category, pageable);
+	}
+
+	public List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets) {
+		return queryFactory.select(
+			Projections.constructor(
+				CardSetInfo.class,
+				cardSet,
+				cardSet.group,
+				cardSet.name,
+				cardSet.category,
+				cardSet.hashtag,
+				cardSet.imageUrl,
+				imageRef.id
+			))
+			.from(cardSet)
+			.where(cardSet.id.in(cardSets))
+			.leftJoin(imageRef)
+			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
+				.and(imageRef.referenceId.eq(cardSet.id)))
+			.fetch();
+	}
+
+	@Override
+	public Page<CardSetInfo> searchByGroupIdAndNameContainingAndCategory(
+		Long groupId,
 		String name,
 		Category category,
 		Pageable pageable
@@ -91,7 +119,7 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 					imageRef.id
 				))
 			.from(cardSet)
-			.where(buildCardSetSearchFilterConditions(name, category))
+			.where(buildCardSetSearchFilterConditions(groupId, name, category))
 			.leftJoin(imageRef)
 			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
 				.and(imageRef.referenceId.eq(cardSet.id)));
@@ -109,30 +137,10 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 		Long total = queryFactory
 			.select(cardSet.count())
 			.from(cardSet)
-			.where(buildCardSetSearchFilterConditions(name, category))
+			.where(buildCardSetSearchFilterConditions(groupId, name, category))
 			.fetchOne();
 
 		return new PageImpl<>(content, pageable, total != null ? total : 0L);
-	}
-
-	public List<CardSetInfo> findAllByIdWithImageRefId(Set<Long> cardSets) {
-		return queryFactory.select(
-			Projections.constructor(
-				CardSetInfo.class,
-				cardSet,
-				cardSet.group,
-				cardSet.name,
-				cardSet.category,
-				cardSet.hashtag,
-				cardSet.imageUrl,
-				imageRef.id
-			))
-			.from(cardSet)
-			.where(cardSet.id.in(cardSets))
-			.leftJoin(imageRef)
-			.on(imageRef.referenceType.eq(ReferenceType.CARD_SET)
-				.and(imageRef.referenceId.eq(cardSet.id)))
-			.fetch();
 	}
 
 	private OrderSpecifier<?> toOrderSpecifier(
@@ -150,8 +158,13 @@ public class CardSetRepositoryCustomImpl implements CardSetRepositoryCustom {
 		return category == null ? null : cardSet.category.eq(category);
 	}
 
-	private BooleanExpression[] buildCardSetSearchFilterConditions(String name, Category category) {
-		return new BooleanExpression[]{
+	private BooleanExpression groupIdEquals(Long groupId) {
+		return groupId == null ? null : cardSet.group.id.eq(groupId);
+	}
+
+	private BooleanExpression[] buildCardSetSearchFilterConditions(Long groupId, String name, Category category) {
+		return new BooleanExpression[] {
+			groupIdEquals(groupId),
 			nameContains(name),
 			categoryEquals(category),
 			cardSet.publicVisible.isTrue()

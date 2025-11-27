@@ -49,7 +49,8 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	public ResponseEntity<String> handleMissingServletRequestParameter(
-		MissingServletRequestParameterException exception) {
+		MissingServletRequestParameterException exception
+	) {
 		String missingParam = exception.getParameterName();
 		String message = String.format("필수 파라미터 '%s'가 없습니다.", missingParam);
 		return ResponseEntity.badRequest().body(message);
