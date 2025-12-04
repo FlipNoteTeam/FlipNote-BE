@@ -20,8 +20,8 @@ import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.like.entity.Like;
 import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
-import project.flipnote.like.model.response.LikeResponse;
 import project.flipnote.like.model.request.LikeSearchRequest;
+import project.flipnote.like.model.response.LikeResponse;
 import project.flipnote.like.model.response.LikeTargetResponse;
 import project.flipnote.like.repository.LikeRepository;
 
