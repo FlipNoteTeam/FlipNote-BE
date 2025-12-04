@@ -64,7 +64,7 @@ public class SecurityConfig {
 				.requestMatchers(
 					HttpMethod.POST,
 					"/*/auth/login", "/*/auth/email-verification", "/*/auth/email-verification/request",
-					"/*/auth/password-reset", "/*/auth/password-resets/request"
+					"/*/auth/password-reset", "/*/auth/password-reset/request"
 				).permitAll()
 				.requestMatchers(
 					HttpMethod.GET, "/oauth2/authorization/{provider}", "/oauth2/callback/{provider}"
