@@ -15,6 +15,8 @@ public record CardSetDetailResponse(
 	String imageUrl,
 	Long imageRefId,
 	boolean publicVisible,
+	boolean liked,
+	boolean bookmarked,
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	LocalDateTime createdAt,
@@ -23,7 +25,7 @@ public record CardSetDetailResponse(
 	LocalDateTime modifiedAt
 ) {
 
-	public static CardSetDetailResponse from(CardSet cardSet, Long imageRefId) {
+	public static CardSetDetailResponse from(CardSet cardSet, boolean liked, boolean bookmarked, Long imageRefId) {
 		return new CardSetDetailResponse(
 			cardSet.getId(),
 			cardSet.getGroup().getId(),
@@ -33,6 +35,8 @@ public record CardSetDetailResponse(
 			cardSet.getImageUrl(),
 			imageRefId,
 			cardSet.getPublicVisible(),
+			liked,
+			bookmarked,
 			cardSet.getCreatedAt(),
 			cardSet.getModifiedAt()
 		);

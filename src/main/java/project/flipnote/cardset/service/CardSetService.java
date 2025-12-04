@@ -1,7 +1,6 @@
 package project.flipnote.cardset.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import project.flipnote.bookmark.entity.BookmarkTargetType;
+import project.flipnote.bookmark.service.BookmarkService;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.entity.CardSetMetadata;
@@ -40,6 +41,8 @@ import project.flipnote.image.entity.ImageRef;
 import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.service.ImageRefService;
 import project.flipnote.image.service.ImageService;
+import project.flipnote.like.entity.LikeTargetType;
+import project.flipnote.like.service.LikeService;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -61,6 +64,8 @@ public class CardSetService {
 	private final ImageService imageService;
 	private final ImageRefService imageRefService;
 	private final GroupService groupService;
+	private final LikeService likeService;
+	private final BookmarkService bookmarkService;
 
 	@Value("${image.default.cardSet}")
 	private String defaultCardSetImage;
@@ -116,7 +121,7 @@ public class CardSetService {
 
 		cardSetRepository.save(cardSet);
 
-		if(req.imageRefId()!=null) {
+		if (req.imageRefId() != null) {
 			// 이미지 활성화
 			imageService.changeUrlStatus(req.imageRefId(), REFERENCE_TYPE, cardSet.getId());
 		}
@@ -147,7 +152,7 @@ public class CardSetService {
 	public PagingResponse<CardSetSummaryResponse> getCardSets(CardSetSearchRequest req) {
 		// TODO: Projection 튜닝 필요
 		Page<CardSetInfo> cardSetPage = cardSetRepository.searchByNameContainingAndCategory(
-				req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
+			req.getKeyword(), Category.from(req.getCategory()), req.getPageRequest()
 		);
 
 		Page<CardSetSummaryResponse> res = cardSetPage.map(CardSetSummaryResponse::from);
@@ -169,13 +174,14 @@ public class CardSetService {
 
 		cardSetPolicyService.validateCardSetViewable(cardSet, userId);
 
-		Optional<ImageRef> imageRef = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId);
+		boolean liked = likeService.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
+		boolean bookmarked = bookmarkService.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
 
 		Long imageRefId = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId)
 			.map(ImageRef::getId)
 			.orElse(null);
 
-		return CardSetDetailResponse.from(cardSet, imageRefId);
+		return CardSetDetailResponse.from(cardSet, liked, bookmarked, imageRefId);
 	}
 
 	/**
@@ -201,7 +207,10 @@ public class CardSetService {
 
 		cardSetRepository.saveAndFlush(cardSet);
 
-		return CardSetDetailResponse.from(cardSet, imageMeta.imageRefId());
+		boolean liked = likeService.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
+		boolean bookmarked = bookmarkService.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
+
+		return CardSetDetailResponse.from(cardSet, liked, bookmarked, imageMeta.imageRefId());
 	}
 
 	/**

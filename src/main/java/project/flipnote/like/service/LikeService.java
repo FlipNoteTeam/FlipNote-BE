@@ -20,8 +20,8 @@ import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.like.entity.Like;
 import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.exception.LikeErrorCode;
-import project.flipnote.like.model.response.LikeResponse;
 import project.flipnote.like.model.request.LikeSearchRequest;
+import project.flipnote.like.model.response.LikeResponse;
 import project.flipnote.like.model.response.LikeTargetResponse;
 import project.flipnote.like.repository.LikeRepository;
 
@@ -107,5 +107,18 @@ public class LikeService {
 			.map(like -> new LikeResponse<>(targetMap.get(like.getTargetId()), likedAtMap.get(like.getTargetId())));
 
 		return PagingResponse.from(content);
+	}
+
+	/**
+	 * 좋아요 누른 여부를 조회합니다.
+	 *
+	 * @param userId      좋아요를 눌렀는지 확인할 회원 ID
+	 * @param targetType  좋아요 대상의 타입
+	 * @param targetId    좋아요 대상의 ID
+	 * @return 타겟을 좋아요 눌렀으면 true, 아니면 false
+	 * @author 윤정환
+	 */
+	public boolean isLiked(Long userId, LikeTargetType targetType, Long targetId) {
+		return likeRepository.existsByTargetTypeAndTargetIdAndUserId(targetType, targetId, userId);
 	}
 }
