@@ -1,7 +1,5 @@
 package project.flipnote.cardset.entity;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +15,7 @@ import project.flipnote.common.entity.BaseEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "cardset_contents")
+@Table(name = "cardset_incrementals")
 @Entity
 public class CardSetIncremental extends BaseEntity {
 
