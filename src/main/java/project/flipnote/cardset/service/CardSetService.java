@@ -386,6 +386,10 @@ public class CardSetService {
 		// 카드셋 메타데이터
 		cardSetMetadataRepository.deleteById(cardSetId);
 
+		// 이미지
+		imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId)
+			.ifPresent(imageRef -> imageRefService.deleteByReferenceAndId(REFERENCE_TYPE, imageRef.getId()));
+
 		// 카드셋
 		cardSetRepository.delete(cardSet);
 
