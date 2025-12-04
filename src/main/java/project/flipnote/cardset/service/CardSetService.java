@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
+import project.flipnote.bookmark.service.BookmarkReader;
 import project.flipnote.bookmark.service.BookmarkService;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
@@ -42,7 +43,7 @@ import project.flipnote.image.entity.ReferenceType;
 import project.flipnote.image.service.ImageRefService;
 import project.flipnote.image.service.ImageService;
 import project.flipnote.like.entity.LikeTargetType;
-import project.flipnote.like.service.LikeService;
+import project.flipnote.like.service.LikeReader;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -64,8 +65,8 @@ public class CardSetService {
 	private final ImageService imageService;
 	private final ImageRefService imageRefService;
 	private final GroupService groupService;
-	private final LikeService likeService;
-	private final BookmarkService bookmarkService;
+	private final LikeReader likeReader;
+	private final BookmarkReader bookmarkReader;
 
 	@Value("${image.default.cardSet}")
 	private String defaultCardSetImage;
@@ -174,8 +175,8 @@ public class CardSetService {
 
 		cardSetPolicyService.validateCardSetViewable(cardSet, userId);
 
-		boolean liked = likeService.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
-		boolean bookmarked = bookmarkService.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
+		boolean liked = likeReader.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
+		boolean bookmarked = bookmarkReader.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
 
 		Long imageRefId = imageRefService.findByTypeAndReferenceId(REFERENCE_TYPE, cardSetId)
 			.map(ImageRef::getId)
@@ -207,8 +208,8 @@ public class CardSetService {
 
 		cardSetRepository.saveAndFlush(cardSet);
 
-		boolean liked = likeService.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
-		boolean bookmarked = bookmarkService.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
+		boolean liked = likeReader.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
+		boolean bookmarked = bookmarkReader.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
 
 		return CardSetDetailResponse.from(cardSet, liked, bookmarked, imageMeta.imageRefId());
 	}
