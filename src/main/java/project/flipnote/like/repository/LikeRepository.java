@@ -15,4 +15,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 	Optional<Like> findByTargetTypeAndTargetIdAndUserId(LikeTargetType targetType, Long targetId, Long userId);
 
 	Page<Like> findByTargetTypeAndUserId(LikeTargetType targetType, Long userId, Pageable pageable);
+
+	int deleteByTargetTypeAndTargetId(LikeTargetType targetType, Long targetId);
 }

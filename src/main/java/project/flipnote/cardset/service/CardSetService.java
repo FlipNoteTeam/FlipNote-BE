@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.flipnote.bookmark.entity.BookmarkTargetType;
 import project.flipnote.bookmark.service.BookmarkReader;
-import project.flipnote.bookmark.service.BookmarkService;
+import project.flipnote.bookmark.service.BookmarkWriter;
 import project.flipnote.cardset.entity.CardSet;
 import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.entity.CardSetMetadata;
@@ -25,10 +25,13 @@ import project.flipnote.cardset.model.CardSetUpdatePayload;
 import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
+import project.flipnote.cardset.repository.CardSetContentRepository;
+import project.flipnote.cardset.repository.CardSetIncrementalRepository;
 import project.flipnote.cardset.repository.CardSetManagerRepository;
 import project.flipnote.cardset.repository.CardSetMetadataRepository;
 import project.flipnote.cardset.repository.CardSetRepository;
 import project.flipnote.common.exception.BizException;
+import project.flipnote.common.model.response.IdResponse;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 import project.flipnote.group.entity.Category;
@@ -44,6 +47,7 @@ import project.flipnote.image.service.ImageRefService;
 import project.flipnote.image.service.ImageService;
 import project.flipnote.like.entity.LikeTargetType;
 import project.flipnote.like.service.LikeReader;
+import project.flipnote.like.service.LikeWriter;
 import project.flipnote.user.entity.UserProfile;
 import project.flipnote.user.entity.UserStatus;
 import project.flipnote.user.exception.UserErrorCode;
@@ -67,6 +71,10 @@ public class CardSetService {
 	private final GroupService groupService;
 	private final LikeReader likeReader;
 	private final BookmarkReader bookmarkReader;
+	private final LikeWriter likeWriter;
+	private final BookmarkWriter bookmarkWriter;
+	private final CardSetContentRepository cardSetContentRepository;
+	private final CardSetIncrementalRepository cardSetIncrementalRepository;
 
 	@Value("${image.default.cardSet}")
 	private String defaultCardSetImage;
@@ -356,5 +364,37 @@ public class CardSetService {
 		Page<CardSetSummaryResponse> res = cardSetPage.map(CardSetSummaryResponse::from);
 
 		return PagingResponse.from(res);
+	}
+
+	@Transactional
+	public IdResponse deleteCardSet(Long userId, Long groupId, Long cardSetId) {
+		CardSet cardSet = cardSetPolicyService.findByIdAndGroupIdOrThrow(groupId, cardSetId);
+
+		cardSetPolicyService.validateCardSetEditable(userId, cardSetId);
+
+		// 카드셋 관리자
+		cardSetManagerRepository.deleteByCardSet_Id(cardSetId);
+
+		// 카드셋 내용
+		cardSetContentRepository.deleteByCardSetId(cardSetId);
+
+		// 카드셋 증분값
+		cardSetIncrementalRepository.deleteByCardSetId(cardSetId);
+
+		// 카드셋 스냅샷
+
+		// 카드셋 메타데이터
+		cardSetMetadataRepository.deleteById(cardSetId);
+
+		// 카드셋
+		cardSetRepository.delete(cardSet);
+
+		// 좋아요
+		likeWriter.delete(LikeTargetType.CARD_SET, cardSetId);
+
+		// 즐겨찾기
+		bookmarkWriter.delete(BookmarkTargetType.CARD_SET, cardSetId);
+
+		return IdResponse.from(cardSetId);
 	}
 }

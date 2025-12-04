@@ -3,6 +3,7 @@ package project.flipnote.cardset.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
 import project.flipnote.cardset.service.CardSetService;
+import project.flipnote.common.model.response.IdResponse;
 import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 
@@ -72,6 +74,17 @@ public class GroupCardSetController implements GroupCardSetControllerDocs {
 		@Valid @ModelAttribute CardSetSearchRequest req
 	) {
 		PagingResponse<CardSetSummaryResponse> res = cardSetService.getCardSets(groupId, req);
+
+		return ResponseEntity.ok(res);
+	}
+
+	@DeleteMapping("/{cardSetId}")
+	public ResponseEntity<IdResponse> deleteCardSet(
+		@PathVariable("groupId") Long groupId,
+		@PathVariable("cardSetId") Long cardSetId,
+		@AuthenticationPrincipal AuthPrinciple authPrinciple
+	) {
+		IdResponse res = cardSetService.deleteCardSet(authPrinciple.userId(), groupId, cardSetId);
 
 		return ResponseEntity.ok(res);
 	}

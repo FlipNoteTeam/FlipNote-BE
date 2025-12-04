@@ -9,4 +9,6 @@ import project.flipnote.cardset.entity.CardSetManager;
 public interface CardSetManagerRepository extends JpaRepository<CardSetManager, Long> {
 
 	boolean existsByUser_IdAndCardSet_Id(Long userId, Long cardSetId);
+
+	int deleteByCardSet_Id(Long cardSetId);
 }
