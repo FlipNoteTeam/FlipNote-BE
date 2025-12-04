@@ -19,6 +19,6 @@ public class BookmarkWriter {
 	 * @author 윤정환
 	 */
 	public void delete(BookmarkTargetType targetType, Long targetId) {
-		return bookmarkRepository.deleteByTar(targetType, targetId);
+		bookmarkRepository.deleteByTargetTypeAndTargetId(targetType, targetId);
 	}
 }
