@@ -14,7 +14,6 @@ import project.flipnote.bookmark.entity.BookmarkTargetType;
 import project.flipnote.bookmark.service.BookmarkReader;
 import project.flipnote.bookmark.service.BookmarkWriter;
 import project.flipnote.cardset.entity.CardSet;
-import project.flipnote.cardset.entity.CardSetManager;
 import project.flipnote.cardset.entity.CardSetMetadata;
 import project.flipnote.cardset.exception.CardSetErrorCode;
 import project.flipnote.cardset.model.CardSetDetailResponse;
@@ -64,6 +63,7 @@ public class CardSetService {
 	private final GroupRepository groupRepository;
 	private final GroupMemberRepository groupMemberRepository;
 	private final CardSetManagerRepository cardSetManagerRepository;
+	private final CardSetManagerWriter cardSetManagerWriter;
 	private final CardSetPolicyService cardSetPolicyService;
 	private final CardSetMetadataRepository cardSetMetadataRepository;
 	private final ImageService imageService;
@@ -121,6 +121,7 @@ public class CardSetService {
 
 		CardSet cardSet = CardSet.builder()
 			.name(req.name())
+			.author(user.getId())
 			.group(group)
 			.publicVisible(req.publicVisible())
 			.category(req.category())
@@ -140,13 +141,7 @@ public class CardSetService {
 			.build();
 		cardSetMetadataRepository.save(metadata);
 
-		//카드셋 매니저도 저장
-		CardSetManager cardSetManager = CardSetManager.builder()
-			.user(user)
-			.cardSet(cardSet)
-			.build();
-
-		cardSetManagerRepository.save(cardSetManager);
+		cardSetManagerWriter.assignManagers(cardSet, req.managers());
 
 		return CreateCardSetResponse.from(cardSet.getId());
 	}
@@ -215,6 +210,8 @@ public class CardSetService {
 		cardSet.update(updatePayload, imageMeta.url());
 
 		cardSetRepository.saveAndFlush(cardSet);
+
+		cardSetManagerWriter.updateManagers(cardSet, req.managers());
 
 		boolean liked = likeReader.isLiked(userId, LikeTargetType.CARD_SET, cardSetId);
 		boolean bookmarked = bookmarkReader.isBookmarked(userId, BookmarkTargetType.CARD_SET, cardSetId);
