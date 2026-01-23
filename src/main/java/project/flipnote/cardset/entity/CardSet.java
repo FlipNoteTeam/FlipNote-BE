@@ -32,6 +32,9 @@ public class CardSet extends BaseEntity {
 	@Column(nullable = false, length = 50)
 	private String name;
 
+	@Column(nullable = false)
+	private Long author;
+
 	@ManyToOne
 	@JoinColumn(name = "group_id", nullable = false)
 	private Group group;
@@ -48,9 +51,17 @@ public class CardSet extends BaseEntity {
 	private String imageUrl;
 
 	@Builder
-	private CardSet(String name, Group group, Boolean publicVisible, Category category, String hashtag,
-		String imageUrl) {
+	private CardSet(
+		String name,
+		Long author,
+		Group group,
+		Boolean publicVisible,
+		Category category,
+		String hashtag,
+		String imageUrl
+	) {
 		this.name = name;
+		this.author = author;
 		this.group = group;
 		this.publicVisible = publicVisible;
 		this.category = category;

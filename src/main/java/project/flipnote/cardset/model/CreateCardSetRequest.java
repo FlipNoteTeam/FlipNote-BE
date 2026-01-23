@@ -1,8 +1,7 @@
 package project.flipnote.cardset.model;
 
 import java.util.List;
-
-import org.hibernate.validator.constraints.URL;
+import java.util.Set;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +22,9 @@ public record CreateCardSetRequest(
 
 	@NotNull
 	List<String> hashtag,
+
+	@Size(min = 1)
+	Set<Long> managers,
 
 	Long imageRefId
 ) {

@@ -6,9 +6,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import project.flipnote.cardset.model.CardSetDetailResponse;
+import project.flipnote.cardset.model.CardSetSearchRequest;
+import project.flipnote.cardset.model.CardSetSummaryResponse;
 import project.flipnote.cardset.model.CardSetUpdateRequest;
 import project.flipnote.cardset.model.CreateCardSetRequest;
 import project.flipnote.cardset.model.CreateCardSetResponse;
+import project.flipnote.common.model.response.IdResponse;
+import project.flipnote.common.model.response.PagingResponse;
 import project.flipnote.common.security.dto.AuthPrinciple;
 
 @Tag(name = "CardSet", description = "CardSet API")
@@ -29,4 +33,10 @@ public interface GroupCardSetControllerDocs {
 		CardSetUpdateRequest req,
 		AuthPrinciple authPrinciple
 	);
+
+	@Operation(summary = "그룹별 카드셋 조회", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<PagingResponse<CardSetSummaryResponse>> getCardSets(Long groupId, CardSetSearchRequest req);
+
+	@Operation(summary = "카드셋 삭제", security = {@SecurityRequirement(name = "access-token")})
+	ResponseEntity<IdResponse> deleteCardSet(Long groupId, Long cardSetId, AuthPrinciple authPrinciple);
 }
