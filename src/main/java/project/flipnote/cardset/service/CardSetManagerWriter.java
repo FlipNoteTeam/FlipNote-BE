@@ -21,7 +21,7 @@ public class CardSetManagerWriter {
 
 	/**
 	 * 카드셋에 매니저들을 할당
-	 * 생성자는 항상 매니저로 포함됨
+	 * 카드셋 생성시 생성자는 항상 매니저로 포함됨
 	 *
 	 * @param cardSet    매니저를 할당할 카드셋
 	 * @param managerIds 요청된 매니저 ID 목록
